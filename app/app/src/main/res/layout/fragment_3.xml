@@ -6,9 +6,16 @@
     tools:context=".Fragment3">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="식물관리" />
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="식물관리" />
+    </LinearLayout>
 
 </FrameLayout>

@@ -1,26 +1,31 @@
 package com.example.app;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager2.widget.ViewPager2;
 
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     Toolbar toolbar;
     TabLayout tabLayout;
     ViewPager2 viewPager;
     TabPagerAdapter adapter;
-    String[] tabstr = new String[] {"대시보드", "상세분석", "식물관리"};
+    String[] tabName = new String[] {"대시보드", "상세분석", "식물관리"};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,11 +47,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onConfigureTab(@NonNull TabLayout.Tab tab, int position) {
                 TextView textView = new TextView(MainActivity.this);
-                textView.setText(tabstr[position]);
+                textView.setText(tabName[position]);
                 textView.setTextSize(18);
                 textView.setGravity(Gravity.CENTER);
                 tab.setCustomView(textView);
             }
         }).attach();
+
+        findViewById(R.id.wifi_button).setOnClickListener(this);
+    }
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()){
+            case R.id.wifi_button:
+                startActivity(new Intent(this, popup.class));
+
+                break;
+        }
     }
 }
