@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     tools:context=".Fragment2">
 
+    <!--여기서부터 작업-->
     <!-- TODO: Update blank fragment layout -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,5 +18,5 @@
             android:layout_gravity="center"
             android:text="상세분석" />
     </LinearLayout>
-
+    <!--여기까지만 작업-->
 </FrameLayout>
