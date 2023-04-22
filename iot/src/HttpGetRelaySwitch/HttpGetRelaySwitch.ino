@@ -1,7 +1,7 @@
 #include <WiFi.h>
 
 #define LINE2 32
-#define LINE1 33
+#define LINE1 23
 
 const char* ssid = "Juice";
 const char* password = "01086550507";
