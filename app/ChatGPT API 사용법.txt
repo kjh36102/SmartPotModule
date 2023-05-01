@@ -1,0 +1,13 @@
+ChatGPT 클래스 파일을 가져온다.
+build.gradle(Module)파일에서 dependencies안에 implementation 'com.googlecode.json-simple:json-simple:1.1.1' 추가 후 //json 파일 사용하기 위한 라이브러리 추가
+AndroidManifest.xml에 <uses-permission android:name="android.permission.INTERNET" /> 추가 //internet permission
+MainActivity.java(Android Studio에서 실행 예제)를 보며 실행해본다.
+
+Duplicate class org.hamcrest.BaseDescription found in modules jetified-hamcrest-core-1.1 (org.hamcrest:hamcrest-core:1.1) and jetified-junit-4.10 (junit:junit:4.10)
+이런 오류가 뜬다면, build.gradle(Module)에 들어가서
+configurations.all {
+    resolutionStrategy.dependencySubstitution {
+        substitute module('org.hamcrest:hamcrest-core:1.1') with module('junit:junit:4.10')
+    }
+}
+추가 //junit과 hamcrest의 종속성 문제, 간단하게 hamcrest말고 junit으로 우선수위를 부여해주는 코드
