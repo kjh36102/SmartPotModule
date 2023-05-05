@@ -445,9 +445,5 @@
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-
-
     <!--여기까지만 작업-->
 </FrameLayout>
