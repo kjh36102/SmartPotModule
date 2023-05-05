@@ -14,4 +14,8 @@
         <!-- Customize your theme here. -->
     </style>
 
+    <style name="tab_text" parent="TextAppearance.Design.Tab">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">28sp</item>
+    </style>
 </resources>
