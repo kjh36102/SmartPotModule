@@ -13,25 +13,25 @@ public class ChatGPT {
     HttpURLConnection con;
     JSONObject input;
     String key;
-    public ChatGPT(String key){
+    public ChatGPT(){
         try {
             url = new URL("https://api.openai.com/v1/completions");
             input = new JSONObject();
             input.put("model", "text-davinci-003");
             input.put("prompt", "");
             input.put("max_tokens", 2048);
-            this.key = key;
+            this.key = "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";
         }catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public String feedback(String name, double temperature, double humidity, double nitrogen, double phosphorus, double potassium, double ph, double elect) {
-        this.input.put("prompt", "식물 "+name+"의 토양 온도는 "+temperature+"도, 토양 습도는 "+humidity+"%, 질소가 "+nitrogen+"mg/kg, 인이 "+phosphorus+"mg/kg, 칼륨이 "+potassium+" mg/kg, 토양 ph가 "+ph+" 전기 전도도는 "+elect+"us/cm, 광량은 6500lux이다. 문제가 있는 것을 분석해주고, 개선방안을 제안해줘.");
+    public String feedback(String name, double temperature, double humidity, double nitrogen, double phosphorus, double potassium, double ph, double ec, double lux) {
+        this.input.put("prompt", "식물 "+name+"의 토양 온도는 "+temperature+"도, 토양 습도는 "+humidity+"%, 질소가 "+nitrogen+"mg/kg, 인이 "+phosphorus+"mg/kg, 칼륨이 "+potassium+" mg/kg, 토양 ph가 "+ph+" 전기 전도도는 "+ec+"us/cm, 광량은 "+lux+"lux이다. 문제가 있는 것을 분석해주고, 개선방안을 제안해줘.");
         return process();
     }
     public String recommand(String name){
-        this.input.put("prompt", "식물 "+name+"의 추천 토양 온도(섭씨), 추천 토양 습도(%), 추천 N(mg/kg), 추천 P(mg/kg), 추천 K(mg/kg), 추천 토양산화도(ph), 추천 토양전기전도도(us/cm) 의 각 수치를 범위로 만들어서 아래처럼 json을 만들어줘\n" +
-                "{\"추천_토양온도\": {\"최소값\": xx,\"최대값\": xx,\"단위\": \"℃\"}, \"추천_토양습도\": {...}, \"추천_N\": {...}, \"추천_P\": {...}, \"추천_K\": {...}, \"추천_토양산화도\": {...}, \"추천_토양전기전도도\": {...} }");
+        this.input.put("prompt", "식물 "+name+"의 추천 토양 온도(섭씨), 추천 토양 습도(%), 추천 N(mg/kg), 추천 P(mg/kg), 추천 K(mg/kg), 추천 토양산화도(ph), 추천 토양전기전도도(us/cm), 추천 광량(lux)의 각 수치를 범위로 만들어서 아래처럼 json을 만들어줘\n" +
+                "{\"추천_토양온도\": {\"최소값\": xx,\"최대값\": xx,\"단위\": \"℃\"}, \"추천_토양습도\": {...}, \"추천_N\": {...}, \"추천_P\": {...}, \"추천_K\": {...}, \"추천_토양산화도\": {...}, \"추천_토양전기전도도\": {...},  \"추천_광량\": {...}}");
         return process();
     }
     public String process(){
