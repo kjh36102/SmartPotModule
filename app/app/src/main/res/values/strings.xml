@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">app</string>
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="wifi">WIFI</string>
     <string name="title_name">SmartPotModule</string>
     <string name="dashboard">대시보드</string>
@@ -9,4 +8,6 @@
     <string name="pot_manage">식물관리</string>
     <string name="close">닫기</string>
     <string name="enroll_item">제품등록하기</string>
+    <string name="register">제품등록</string>
+    <string name="register_hint"> 1. 제품에서 페어링모드 버튼을 누른다. \n 2. 핸드폰에서 제품의 핫스팟에 연결한다. \n 3. 제품에 상시 연결할 와이파이의 SSID, \n 비밀 번호, 포트번호를 입력한다. \n 4. 제품등록 버튼을 누른다. \n 5. 핸드폰을 상시 연결할 와이파이에 연결한다. \n 6. 제품의 MAC, IP주소가 조회되면 등록성공</string>
 </resources>
