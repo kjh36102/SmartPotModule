@@ -1,7 +1,7 @@
 //RelaySwitchTest.ino
 
-#define PUMP_PIN 12
-#define LED_PIN 13
+#define PUMP_PIN 18
+#define LED_PIN 19
 
 void setup() {
   pinMode(PUMP_PIN, OUTPUT);
@@ -11,12 +11,17 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(PUMP_PIN, HIGH);
-  delay(5000);
-  digitalWrite(PUMP_PIN, LOW);
-  // delay(5000);
-  digitalWrite(LED_PIN, HIGH);
-  delay(5000);
   digitalWrite(LED_PIN, LOW);
+  digitalWrite(PUMP_PIN, LOW);
 
+  delay(3000);
+
+  digitalWrite(PUMP_PIN, HIGH);
+  digitalWrite(LED_PIN, HIGH);
+
+
+
+
+
+  delay(1000);
 }
