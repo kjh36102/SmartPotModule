@@ -71,6 +71,7 @@
 
 
 
+<<<<<<< Updated upstream
                    <!-- <Button
                         android:id="@+id/button3"
                         android:layout_width="match_parent"
@@ -96,6 +97,33 @@
                         android:text="TextView" />
 
 -->
+=======
+                    <!-- <Button
+                         android:id="@+id/button3"
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:text="Button" />
+
+                     <TextView
+                         android:id="@+id/textView3"
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:text="TextView" />
+
+                     <TextView
+                         android:id="@+id/textView6"
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:text="TextView" />
+
+                     <TextView
+                         android:id="@+id/textView7"
+                         android:layout_width="match_parent"
+                         android:layout_height="wrap_content"
+                         android:text="TextView" />
+
+ -->
+>>>>>>> Stashed changes
                     <com.google.android.material.tabs.TabLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -137,11 +165,19 @@
 
                             android:layout_marginTop="30dp"
                             android:layout_gravity="center_horizontal"/>
+<<<<<<< Updated upstream
                             <!--app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintHorizontal_bias="0.5"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"-->
+=======
+                        <!--app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"-->
+>>>>>>> Stashed changes
 
                         <com.github.mikephil.charting.charts.BarChart
                             android:id="@+id/chart_humid"
@@ -230,7 +266,11 @@
                             android:layout_height="250dp"
                             android:layout_gravity="center_horizontal"
                             android:layout_marginTop="10dp"
+<<<<<<< Updated upstream
                              />
+=======
+                            />
+>>>>>>> Stashed changes
                     </LinearLayout>
 
 
