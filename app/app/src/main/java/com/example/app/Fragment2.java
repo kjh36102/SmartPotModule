@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -65,35 +66,46 @@ public class Fragment2 extends Fragment {
     String textExplan = explan;  //현재 화면에 나와야할 설명
 
     String temp,humid,light,ph,phos,pota,nitro,ec; //현재 온도,습도,조도,산화도,n,p,k,전기 전도도 값
-    float temp_f,humid_f,light_f,ph_f,phos_f,pota_f,nitro_f,ec_f;
+    float s_temp,s_humid,s_light,s_ph,s_phos,s_pota,s_nitro,s_ec;
     String name = "선인장"; //현재 이름
 
 
     BarChart bar_chart[] = new BarChart[8]; // 그래프들
     HashMap<String,BarChart> allBarChart; // 그래프들의 hashmap
     HashMap<String, Float> value = new HashMap<>();// 현재 식물의 상태값들
-    String recommandResponse ;
+    String recommandResponse = "..." ;
 
-    public void null_judge(){
+    public boolean null_judge(){
+        int i = 0;
         if(temp == null){
             temp = "0";
+            i++;
         }
         if(humid == null){
             humid = "0";
+            i++;
         }if(light == null){
             light = "0";
+            i++;
         }if(nitro == null){
             nitro = "0";
+            i++;
         }if(ph == null){
             ph = "0";
+            i++;
         }if(phos== null){
             phos = "0";
+            i++;
         }if(pota == null){
             pota = "0";
+            i++;
         }
         if(ec == null){
             ec= "0";
+            i++;
         }
+        if(i == 8) return true;
+        else return false;
 
     }//혹시 식물정보가 불려지지 않았을경우 0으로 표기
     public void reset(){
@@ -126,6 +138,108 @@ public class Fragment2 extends Fragment {
         }//설명이 짧을 경우 짧은 설명은 NULL
 
     }//짧은 설명 판단 및 만드는 함수
+    private class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
+        @Override
+        protected HashMap<String, String> doInBackground(String... urls) {
+            mDataHashMap=null;
+            HashMap<String, String> resultHashMap = new HashMap<>();
+            try {
+                URL url = new URL(urls[0]);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+                InputStream inputStream = httpURLConnection.getInputStream();
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                String line;
+                StringBuilder stringBuilder = new StringBuilder();
+                while ((line = bufferedReader.readLine()) != null) {
+                    stringBuilder.append(line);
+                }
+                bufferedReader.close();
+                inputStream.close();
+                httpURLConnection.disconnect();
+                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
+                resultHashMap.put("temp", jsonObject.getString("temp"));
+                resultHashMap.put("humid", jsonObject.getString("humid"));
+                resultHashMap.put("light", jsonObject.getString("light"));
+                resultHashMap.put("ph", jsonObject.getString("ph"));
+                resultHashMap.put("nitro", jsonObject.getString("nitro"));
+                resultHashMap.put("phos", jsonObject.getString("phos"));
+                resultHashMap.put("pota", jsonObject.getString("pota"));
+                resultHashMap.put("ec", jsonObject.getString("ec"));
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+            return resultHashMap;
+        }
+        @Override
+        public void onPostExecute(HashMap<String, String> resultHashMap) {
+            mDataHashMap = resultHashMap;
+            updateDataTextView();
+        }
+        public String getTemp() {return temp;}
+        public String getHumid() {return humid;}
+        public String getLight() {return light;}
+        public String getNitro() {return nitro;}
+        public String getPhos() {return phos;}
+        public String getPota() {return pota;}
+        public String getPh() {return ph;}
+        public String getEc() {return ec;}
+
+
+    }
+
+    private void updateDataTextView() {
+        if (mDataHashMap != null) {
+            temp = mDataHashMap.get("temp");
+            humid = mDataHashMap.get("humid");
+            light = mDataHashMap.get("light");
+            ph = mDataHashMap.get("ph");
+            nitro = mDataHashMap.get("nitro");
+            phos = mDataHashMap.get("phos");
+            pota = mDataHashMap.get("pota");
+            ec = mDataHashMap.get("ec");
+            TextView tempText = getView().findViewById(R.id.temp);
+            TextView humidText = getView().findViewById(R.id.humid);
+            TextView lightText = getView().findViewById(R.id.light);
+            TextView phText = getView().findViewById(R.id.ph);
+            TextView nitroText =getView().findViewById(R.id.nitro);
+            TextView phosText = getView().findViewById(R.id.phos);
+            TextView potaText =getView().findViewById(R.id.pota);
+            TextView ecText = getView().findViewById(R.id.ec);
+            TextView rTxt = getView().findViewById(R.id.rTxt);
+            if(null_judge() == true) {
+                TextView textview = (TextView)getView().findViewById(R.id.explan_text);
+                textview.setText("오류입니다 새로고침을 눌러주세요");
+            }
+            else {
+                gpt_feedback(getView(), Float.parseFloat(temp), Float.parseFloat(humid), Float.parseFloat(light), Float.parseFloat(ph), Float.parseFloat(nitro), Float.parseFloat(phos), Float.parseFloat(pota), Float.parseFloat(ec));
+            }
+            initChart(getView(),allBarChart.get("temp"),"온도",21,Float.parseFloat(temp));
+            initChart(getView(),allBarChart.get("humid"),"습도",12.5f,Float.parseFloat(humid));
+            initChart(getView(),allBarChart.get("light"),"조도",10000,Float.parseFloat(light));
+            initChart(getView(),allBarChart.get("ph"),"PH",6.25F,Float.parseFloat(ph));
+            initChart(getView(),allBarChart.get("nitro"),"N",11.5f,Float.parseFloat(nitro));
+            initChart(getView(),allBarChart.get("phos"),"P",5.5f,Float.parseFloat(phos));
+            initChart(getView(),allBarChart.get("pota"),"k",11.5f,Float.parseFloat(pota));
+            initChart(getView(),allBarChart.get("ec"),"EC",3,Float.parseFloat(ec));
+            tempText.setText(temp);
+            humidText.setText(humid);
+            lightText.setText(light);
+            phText.setText(ph);
+            nitroText.setText(nitro);
+            phosText.setText(phos);
+            potaText.setText(pota);
+            ecText.setText(ec);
+            Calendar calendar = Calendar.getInstance();
+            SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm", Locale.CANADA);
+            String dateTime = dateFormat.format(calendar.getTime());
+
+            rTxt.setText(dateTime);
+        }
+    }
 
     @SuppressLint("SuspiciousIndentation")
     @Override
@@ -136,15 +250,9 @@ public class Fragment2 extends Fragment {
 
         new GetJsonDataTask().execute(MainActivity.URL);// 처음에 더미데이터 불러오기
         reset();//Value 초기화
-        null_judge();
-        temp_f = Float.parseFloat(temp);
-        humid_f = Float.parseFloat(humid);
-        light_f = Float.parseFloat(light);
-        ph_f = Float.parseFloat(ph);
-        nitro_f = Float.parseFloat(nitro);
-        phos_f = Float.parseFloat(phos);
-        pota_f = Float.parseFloat(pota);
-        ec_f = Float.parseFloat(ec);
+
+
+
 
 
         /*TextView trash = (TextView) view.findViewById(R.id.trash);
@@ -160,7 +268,11 @@ public class Fragment2 extends Fragment {
         TextView trash2= view.findViewById(R.id.trash2);
         TextView trash3 = view.findViewById(R.id.trash3);
         Button button = view.findViewById(R.id.t_button);
-        trash1.setVisibility(View.GONE);
+        trash1.setVisibility(View.VISIBLE);
+        ChatGPT chatgpt = new ChatGPT();
+
+        //gpt_standard(getView());
+
 
         trash2.setVisibility(View.GONE);
         trash3.setVisibility(View.GONE);
@@ -173,49 +285,9 @@ public class Fragment2 extends Fragment {
         btn2.setVisibility(View.GONE);
 
         String explan_1;
-        ChatGPT chatGPT = new ChatGPT();
-
-        new Thread() {
-            public void run() {
-                explan = chatGPT.feedback(name, 23.0, 35.0, 10.0, 5.0, 10.0, 5.0, 5.0, 10000.0);
-
-                Handler handler = new Handler(Looper.getMainLooper());
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        btn2.setVisibility(View.GONE);//닫기 버튼 비활성화
-
-                        getShortExplan(btn);// 설명 길이 판단및 짧은 설명 제작
-                        textView1.setText(textExplan);// 최종 현재 설명 적용
-
-                        if (btn.getVisibility() == View.VISIBLE) {
-                            btn.setOnClickListener(new View.OnClickListener() {
-                                public void onClick(View view) {
-                                    btn2.setVisibility(View.VISIBLE);
-                                    btn.setVisibility(View.GONE);
-                                    textView1.setText(explan);
-
-                                }
-
-                            });
-                        }//더보기 버튼이 있고, 클릭이 되면 닫기 버튼 활성화및 더보기 버튼 비활성화
 
 
-                        btn2.setOnClickListener(new View.OnClickListener() {
-                            public void onClick(View view) {
-                                btn.setVisibility(View.VISIBLE);
-                                btn2.setVisibility(View.GONE);
-                                textView1.setText(shortExplan);
 
-                            }
-
-                        });//닫기 버튼을 누르면 더보기 버튼 활성화 및 닫기 버튼 비활성화
-                    }
-                });
-            }
-
-        }.start();
 
 
         LinearLayout graph_1 = (LinearLayout) view.findViewById(R.id.graph_layout_1);//그래프 첫째줄 레이아웃
@@ -269,6 +341,7 @@ public class Fragment2 extends Fragment {
 
         Button btn_1 = view.findViewById(R.id.update);
 
+
         btn_1.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
@@ -278,47 +351,8 @@ public class Fragment2 extends Fragment {
                 btn.setVisibility(View.GONE);
                 btn2.setVisibility(View.GONE);
 
-                new Thread() {
-                    public void run() {
-                        explan = chatGPT.feedback(name, 23.0, 35.0, 10.0, 5.0, 10.0, 5.0, 5.0, 10000.0);
-
-                        Handler handler = new Handler(Looper.getMainLooper());
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-
-                                btn2.setVisibility(View.GONE);//닫기 버튼 비활성화
-
-                                getShortExplan(btn);// 설명 길이 판단및 짧은 설명 제작
-                                textView1.setText(textExplan);// 최종 현재 설명 적용
-
-                                if (btn.getVisibility() == View.VISIBLE) {
-                                    btn.setOnClickListener(new View.OnClickListener() {
-                                        public void onClick(View view) {
-                                            btn2.setVisibility(View.VISIBLE);
-                                            btn.setVisibility(View.GONE);
-                                            textView1.setText(explan);
-
-                                        }
-
-                                    });
-                                }//더보기 버튼이 있고, 클릭이 되면 닫기 버튼 활성화및 더보기 버튼 비활성화
 
 
-                                btn2.setOnClickListener(new View.OnClickListener() {
-                                    public void onClick(View view) {
-                                        btn.setVisibility(View.VISIBLE);
-                                        btn2.setVisibility(View.GONE);
-                                        textView1.setText(shortExplan);
-
-                                    }
-
-                                });//닫기 버튼을 누르면 더보기 버튼 활성화 및 닫기 버튼 비활성화
-                            }
-                        });
-                    }
-
-                }.start();
             }
         });//새로고침 버튼을 클릭하면 새 더미데이터 가져옴
 
@@ -354,18 +388,14 @@ public class Fragment2 extends Fragment {
             @Override
             public void onRefresh() {
                 new GetJsonDataTask().execute(MainActivity.URL);//새 더미데이터 가지오기
+                textView1.setText("...로딩중...");
+                btn.setVisibility(View.GONE);
+                btn2.setVisibility(View.GONE);
                 //null_judge();
 
 
-               ;
-                initChart(finalView,allBarChart.get("temp"),"온도",21,23);
-                initChart(finalView,allBarChart.get("humid"),"습도",12.5f,20);
-                initChart(finalView,allBarChart.get("light"),"조도",10000,10000);
-                initChart(finalView,allBarChart.get("ph"),"PH",6.25F,5);
-                initChart(finalView,allBarChart.get("nitro"),"N",11.5f,10);
-                initChart(finalView,allBarChart.get("phos"),"P",5.5f,5);
-                initChart(finalView,allBarChart.get("pota"),"k",11.5f,11);
-                initChart(finalView,allBarChart.get("ec"),"EC",3,3);
+
+
                 //그래프 그리기
 
 
@@ -380,14 +410,7 @@ public class Fragment2 extends Fragment {
         hashMap(view);// 그래프 레이아웃들을 그래프 해시맵에 저장
         //reset();
 
-        initChart(finalView,allBarChart.get("temp"),"온도",21,23);
-        initChart(finalView,allBarChart.get("humid"),"습도",12.5f,20);
-        initChart(finalView,allBarChart.get("light"),"조도",10000,10000);
-        initChart(finalView,allBarChart.get("ph"),"PH",6.25F,5);
-        initChart(finalView,allBarChart.get("nitro"),"N",11.5f,10);
-        initChart(finalView,allBarChart.get("phos"),"P",5.5f,5);
-        initChart(finalView,allBarChart.get("pota"),"k",11.5f,11);
-        initChart(finalView,allBarChart.get("ec"),"EC",3,3);
+
         //그래프 그리기
 
         /*if(value != null){
@@ -406,16 +429,75 @@ public class Fragment2 extends Fragment {
     }
 
 
-
-    public String gpt_view(View gptview) {
+    public void gpt_standard(View gptview) {
         ChatGPT chatgpt = new ChatGPT();
-        TextView explan_textview = gptview.findViewById(R.id.explan_text);
-        String explan_2 = chatgpt.feedback(name,23.0,35.0,10.0,5.0,10.0,5.0,5.0,10000.0);
-        return explan_2;
+        TextView trash2 = (TextView)gptview.findViewById(R.id.trash2);
+        new Thread() {
+            public void run() {
+                recommandResponse = chatgpt.recommand(name);
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        trash2.setText("완료");
+                    }
+                });
+            }
+        }.start();
+
 
 
 
     }//chat gpt 적용하여 피드백 가져오기
+    public void gpt_feedback(View view,float temp,float humid,float light,float ph,float nitro,float phos,float pota,float ec){
+        ChatGPT chatgpt_1 = new ChatGPT();
+        Button btn = (Button) view.findViewById(R.id.button);//더보기 버튼
+        Button btn2 = (Button) view.findViewById(R.id.button2);//닫기 버튼
+        TextView textView1 = (TextView) view.findViewById(R.id.explan_text) ;
+        new Thread() {
+            public void run() {
+
+                explan = chatgpt_1.feedback(name, temp, humid, nitro, phos, pota, ph, ec, light);
+
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        btn2.setVisibility(View.GONE);//닫기 버튼 비활성화
+
+                        getShortExplan(btn);// 설명 길이 판단및 짧은 설명 제작
+                        textView1.setText(textExplan);// 최종 현재 설명 적용
+
+                        if (btn.getVisibility() == View.VISIBLE) {
+                            btn.setOnClickListener(new View.OnClickListener() {
+                                public void onClick(View view) {
+                                    btn2.setVisibility(View.VISIBLE);
+                                    btn.setVisibility(View.GONE);
+                                    textView1.setText(explan);
+
+                                }
+
+                            });
+                        }//더보기 버튼이 있고, 클릭이 되면 닫기 버튼 활성화및 더보기 버튼 비활성화
+
+
+                        btn2.setOnClickListener(new View.OnClickListener() {
+                            public void onClick(View view) {
+                                btn.setVisibility(View.VISIBLE);
+                                btn2.setVisibility(View.GONE);
+                                textView1.setText(shortExplan);
+
+                            }
+
+                        });//닫기 버튼을 누르면 더보기 버튼 활성화 및 닫기 버튼 비활성화
+                    }
+                });
+            }
+
+        }.start();
+    }
+
     public void hashMap(View chartView){
         allBarChart = new HashMap<>();
 
@@ -499,85 +581,5 @@ public class Fragment2 extends Fragment {
     }
 
 
-    private class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
-        @Override
-        protected HashMap<String, String> doInBackground(String... urls) {
-            mDataHashMap=null;
-            HashMap<String, String> resultHashMap = new HashMap<>();
-            try {
-                URL url = new URL(urls[0]);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                InputStream inputStream = httpURLConnection.getInputStream();
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-                StringBuilder stringBuilder = new StringBuilder();
-                while ((line = bufferedReader.readLine()) != null) {
-                    stringBuilder.append(line);
-                }
-                bufferedReader.close();
-                inputStream.close();
-                httpURLConnection.disconnect();
-                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                resultHashMap.put("temp", jsonObject.getString("temp"));
-                resultHashMap.put("humid", jsonObject.getString("humid"));
-                resultHashMap.put("light", jsonObject.getString("light"));
-                resultHashMap.put("ph", jsonObject.getString("ph"));
-                resultHashMap.put("nitro", jsonObject.getString("nitro"));
-                resultHashMap.put("phos", jsonObject.getString("phos"));
-                resultHashMap.put("pota", jsonObject.getString("pota"));
-                resultHashMap.put("ec", jsonObject.getString("ec"));
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
-            return resultHashMap;
-        }
-        @Override
-        public void onPostExecute(HashMap<String, String> resultHashMap) {
-            mDataHashMap = resultHashMap;
-            updateDataTextView();
-        }
-    }
-
-    private void updateDataTextView() {
-        if (mDataHashMap != null) {
-            temp = mDataHashMap.get("temp");
-            humid = mDataHashMap.get("humid");
-            light = mDataHashMap.get("light");
-            ph = mDataHashMap.get("ph");
-            nitro = mDataHashMap.get("nitro");
-            phos = mDataHashMap.get("phos");
-            pota = mDataHashMap.get("pota");
-            ec = mDataHashMap.get("ec");
-            TextView tempText = getView().findViewById(R.id.temp);
-            TextView humidText = getView().findViewById(R.id.humid);
-            TextView lightText = getView().findViewById(R.id.light);
-            TextView phText = getView().findViewById(R.id.ph);
-            TextView nitroText =getView().findViewById(R.id.nitro);
-            TextView phosText = getView().findViewById(R.id.phos);
-            TextView potaText =getView().findViewById(R.id.pota);
-            TextView ecText = getView().findViewById(R.id.ec);
-            TextView rTxt = getView().findViewById(R.id.rTxt);
-            if(temp == null){
-                temp = "error";
-            }
-            tempText.setText(temp);
-            humidText.setText(humid);
-            lightText.setText(light);
-            phText.setText(ph);
-            nitroText.setText(nitro);
-            phosText.setText(phos);
-            potaText.setText(pota);
-            ecText.setText(ec);
-            Calendar calendar = Calendar.getInstance();
-            SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm", Locale.CANADA);
-            String dateTime = dateFormat.format(calendar.getTime());
-
-            rTxt.setText(dateTime);
-        }
-    }
 
 }
