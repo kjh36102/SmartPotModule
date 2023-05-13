@@ -1,20 +1,19 @@
 package com.example.app;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager2.widget.ViewPager2;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.TableLayout;
 import android.widget.TextView;
 
 import com.google.android.material.tabs.TabLayout;
@@ -22,6 +21,7 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,30 +34,31 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
-    public static final String URL = "http://cofon.xyz:9090/read?col=temp_humid_light_ph_nitro_phos_pota_ec";
-    public static HashMap<String, String> mDataHashMap;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     Toolbar toolbar;
     TabLayout tabLayout;
     ViewPager2 viewPager;
     TabPagerAdapter adapter;
-    String[] tabName = new String[] {"대시보드", "상세분석", "식물관리"};
+    String[] tabName = new String[]{"대시보드", "상세분석", "식물관리"};
+    public static final String URL = "http://cofon.xyz:9090/read?col=temp_humid_light_ph_nitro_phos_pota_ec";
+    //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
+    public static HashMap<String, String> mDataHashMap;
 
-
-
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        toolbar =(Toolbar)findViewById(R.id.toolbar);           // actionbar에서 toolbar로 변경
+        toolbar = (Toolbar) findViewById(R.id.toolbar);           // actionbar에서 toolbar로 변경
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         //getSupportActionBar().setTitle("SmartPotModule");
 
         //xml 연결
-        tabLayout=findViewById(R.id.tabs);
-        viewPager=findViewById(R.id.pager);
+        tabLayout = findViewById(R.id.tabs);
+        viewPager = findViewById(R.id.pager);
         //adapter 준비 및 연결
         adapter = new TabPagerAdapter(this);
         viewPager.setAdapter(adapter);
@@ -72,28 +73,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 tab.setCustomView(textView);
             }
         }).attach();
-
         findViewById(R.id.wifi_button).setOnClickListener(this);
-        //new GetJsonDataTask().execute(URL);
+        //JSON서버 연결
+        new GetJsonDataTask().execute(URL);
+        //조명상태 불러오는 코드 추가해야함
     }
-
+     
     @Override
     public void onClick(View v) {
-        switch(v.getId()){
+        switch (v.getId()) {
             case R.id.wifi_button:
                 startActivity(new Intent(this, popup.class));
-
                 break;
         }
-    }
+    }   //wifi버튼-페이지 연결
 
-    private class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
+    public class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
         @Override
         protected HashMap<String, String> doInBackground(String... urls) {
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                java.net.URL url = new URL(urls[0]);
+                URL url = new URL(urls[0]);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
                 InputStream inputStream = httpURLConnection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -148,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             TextView phosText = findViewById(R.id.phos);
             TextView potaText =findViewById(R.id.pota);
             TextView ecText = findViewById(R.id.ec);
-            TextView rTxt = findViewById(R.id.rTxt);
+            TextView rTxt = findViewById(R.id.rText);
             tempText.setText(temp);
             humidText.setText(humid);
             lightText.setText(light);
@@ -160,7 +161,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Calendar calendar = Calendar.getInstance();
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
             String dateTime = dateFormat.format(calendar.getTime());
-
             rTxt.setText(dateTime);
         }
     }

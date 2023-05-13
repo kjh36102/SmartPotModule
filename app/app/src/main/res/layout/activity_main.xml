@@ -28,8 +28,9 @@
             android:layout_width="50dp"
             android:layout_height="48dp"
             android:layout_gravity="end"
-            android:background="#90CD49"
-            android:text="@string/wifi"
+            android:layout_marginRight="5dp"
+            android:background="@drawable/wifi_round"
+            android:text="등록"
             android:textColor="@color/black"
             android:textSize="16sp"/>
     </androidx.appcompat.widget.Toolbar>
@@ -42,7 +43,7 @@
             android:id="@+id/tab1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/dashboard" />
+            android:text="@string/dashboard"/>
         <com.google.android.material.tabs.TabItem
             android:id="@+id/tab2"
             android:layout_width="wrap_content"
