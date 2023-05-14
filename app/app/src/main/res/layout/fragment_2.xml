@@ -574,7 +574,7 @@
                         android:text="마지막업데이트" />
 
                     <Button
-                        android:id="@+id/button4"
+                        android:id="@+id/update"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="right"
@@ -583,13 +583,34 @@
                         android:text="업데이트"
                         android:textColor="#000000" />
 
+
+
+                    <Button
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:id="@+id/t_button"
+                        />
                     <TextView
                         android:id="@+id/trash"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="right"
                         android:gravity="right"
-                        android:text="" />
+                        android:text="abc" />
+                    <TextView
+                        android:id="@+id/trash2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right"
+                        android:gravity="right"
+                        android:text="abc" />
+                    <TextView
+                        android:id="@+id/trash3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right"
+                        android:gravity="right"
+                        android:text="abc" />
 
                 </LinearLayout>
             </LinearLayout>
