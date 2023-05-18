@@ -30,7 +30,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:text="A"
+                    android:text="수동급수시간"
                     android:textColor="@color/black"
                     android:textSize="20sp" />
 
@@ -43,7 +43,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:text="B"
+                    android:text=""
                     android:textColor="@color/black"
                     android:textSize="20sp" />
             </TableRow>
