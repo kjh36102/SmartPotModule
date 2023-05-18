@@ -12,6 +12,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.json.simple.JSONObject;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link Fragment2#newInstance} factory method to
@@ -22,6 +24,7 @@ public class Fragment2 extends Fragment {
     TextView textView2;
     TextView textView3;
     Button button;
+    Button button2;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -34,41 +37,34 @@ public class Fragment2 extends Fragment {
         textView2 = view.findViewById(R.id.textView2);
         textView3 = view.findViewById(R.id.textView3);
         button = view.findViewById(R.id.button);
+        button2 = view.findViewById(R.id.button2);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 new Thread(){
                     public void run(){
-                        String recommandResponse = chatGPT.recommand("선인장");
+                        JSONObject recommandResponse = chatGPT.recommand("선인장");
                         Handler handler = new Handler(Looper.getMainLooper());
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                textView.setText(recommandResponse);
+                                textView.setText(recommandResponse.toJSONString());
                             }
                         });
                     }
                 }.start();
-                new Thread(){
-                    public void run(){
-                        String recommandResponse = chatGPT.recommand("선인장");
+            }
+        });
+        button2.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                new Thread() {
+                    public void run () {
+                        JSONObject feedbackResponse = chatGPT.feedback("선인장", 20, 60, 120, 60, 100, 6, 400, 5000);
                         Handler handler = new Handler(Looper.getMainLooper());
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                textView2.setText(recommandResponse);
-                            }
-                        });
-                    }
-                }.start();
-                new Thread(){
-                    public void run(){
-                        String recommandResponse = chatGPT.recommand("선인장");
-                        Handler handler = new Handler(Looper.getMainLooper());
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                textView3.setText(recommandResponse);
+                                textView2.setText(feedbackResponse.toJSONString());
                             }
                         });
                     }
