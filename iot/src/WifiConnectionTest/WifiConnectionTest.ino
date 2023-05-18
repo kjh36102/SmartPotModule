@@ -1,14 +1,19 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <ArduinoJson.h>
+#include "UDPLibrary.h"
 
 const char* ssid = "LoLin D32 Pro";  // 핫스팟 이름
 const char* password = "12345678";   // 핫스팟 비밀번호
+String remote_ssid = "";
+String remote_password = "";
+String smartphone_ip = "";
+bool connected_same_wifi = false;
 
 WiFiServer server(80);  // 80번 포트에서 서버를 시작
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   WiFi.softAP(ssid, password);  // 핫스팟 시작
 
@@ -20,13 +25,15 @@ void setup() {
 }
 
 void loop() {
-  WiFiClient client = server.available();  // 클라이언트 접속 대기
 
-  if (client) {
+
+  if (!connected_same_wifi) {
+    WiFiClient client = server.available();  // 클라이언트 접속 대기
+
     String json = "";        // JSON 데이터를 저장할 변수
     bool jsonStart = false;  // JSON 시작 태그를 확인하는 플래그
 
-    while (client.connected()) {
+    while (client && client.connected()) {
       while (client.available()) {
         char c = client.read();  // 클라이언트로부터 데이터 읽기
         json += c;
@@ -47,54 +54,43 @@ void loop() {
             continue;
           }
 
-          const char* remote_ssid = doc["ssid"];
-          const char* remote_pw = doc["pw"];
+          remote_ssid = doc["ssid"].as<String>();
+          remote_password = doc["pw"].as<String>();
 
           // 출력
-          Serial.println(remote_ssid);
-          Serial.println(remote_pw);
+          Serial.println("전달받은 와이파이 SSID: " + String(remote_ssid));
+          Serial.println("전달받은 와이파이 Password: " + String(remote_password));
 
-          json = "";          // JSON 문자열 초기화
-          jsonStart = false;  // JSON 시작 플래그 초기화
-
-          // Disconnect from the AP
+          // 핫스팟 종료
           WiFi.softAPdisconnect(true);
 
-          // Connect to the external network
-          WiFi.begin(remote_ssid, remote_pw);
+          // 외부 와이파이에 연결
+          WiFi.begin(remote_ssid.c_str(), remote_password.c_str());
 
-          // Wait for connection
+          // 외부 와이파이에 연결 대기
           while (WiFi.status() != WL_CONNECTED) {
+            Serial.println("외부 와이파이 연결중...");
             delay(500);
-            Serial.println("Connecting to WiFi..");
           }
 
-          // Print the IP address
-          Serial.println(WiFi.localIP());
+          //외부 와이파이 주소 출력
+          IPAddress ip = WiFi.localIP();
+          Serial.print("외부 와이파이에 연결됨: ");
+          Serial.printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
 
-          // Send the IP address back to the client
-          client.println(WiFi.localIP().toString());
+          //같은 네트워크 내 broadcast를 통해 스마트폰에게 외부ip주소 전송하기
+          if(sendUDPMessageUntilACK(("SmartPotModule:" + ip.toString()).c_str(), "SmartPotModule:ACK", getBroadcastIP(), 12345, 5000)){
+            Serial.println("UDP 전송 성공!");
+            connected_same_wifi = true;
+            break;
+          }
 
-          // Disconnect from the external network
-          // WiFi.disconnect();
-
-          // Restart the access point
-          // WiFi.softAP(ssid, password);
-
-          //스마트폰은 아두이노의 핫스팟에 계속 연결을 시도하고 있어야함
-          
-          //스마트폰으로 esp32의 외부 네트워크 ip주소 전송
-
-          //핫스팟을 끈다
-
-          //스마트폰은 전달받은 esp32의 ip주소를 가지고 있는 채 같은 외부네트워크에 연결한다.
-
-          //스마트폰이 esp32와 동일네트워크에 연결되면 esp32의 ip주소를 타겟으로 데이터(스마트폰의 ip주소)를 전송한다.
-
-          //상호 ip주소 정보를 저장하고 통신한다.
         }
       }
+
+      if (connected_same_wifi) break;
     }
-    client.stop();  // 클라이언트 접속 종료
+  } else {
+    Serial.println("Now Connected Same Wifi: " + String(connected_same_wifi));
   }
 }
