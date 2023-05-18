@@ -130,7 +130,7 @@ public class Fragment3 extends Fragment {
                             edValue1.setText("");
                             edValue2.setText("");
                         }
-                        changeText("희망값", "임계범위", "1", "25", "급수시간", "A", "B");
+                        changeText("희망값", "임계범위", "1", "25", "급수시간", "수동급수시간", "");
                         dataAdapter.notifyItemRangeRemoved(0, waterDataList.size());
                         dataAdapter.setDataList(waterDataList);
 
@@ -149,7 +149,7 @@ public class Fragment3 extends Fragment {
                             edValue1.setText("");
                             edValue2.setText("");
                         }
-                        changeText("조도값", "감지시간", "600", "60", "조명상태", "C", "D");
+                        changeText("조도값", "감지시간", "600", "60", "조명상태", "수동조명시간", "");
                         dataAdapter.setDataList(lightDataList);
                         break;
 
