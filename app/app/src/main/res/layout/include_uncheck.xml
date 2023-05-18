@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TableLayout
+            android:id="@+id/tab_layout_center_checked"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TableRow android:background="@drawable/backgorund_round_top">
+
+                <TextView
+                    android:id="@+id/tv_a"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="A"
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/tv_b"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="B"
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+            </TableRow>
+
+            <TableRow android:background="@drawable/backgorund_round_bottom">
+
+                <EditText
+                    android:id="@+id/ed_input_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_weight="1"
+                    android:singleLine="true"
+                    android:background="@android:color/transparent"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+
+                <EditText
+                    android:id="@+id/ed_input_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:singleLine="true"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+
+
+            </TableRow>
+        </TableLayout>
+
+        <TableLayout
+            android:id="@+id/tab_layout_bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintTop_toBottomOf="@id/tab_layout_center_checked">
+
+            <TableRow android:background="@drawable/backgorund_round_top">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="단위일"
+
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="지정시간"
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+
+
+                <TextView
+                    android:id="@+id/tv_time_to_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="급수시간"
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+            </TableRow>
+
+        </TableLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_center_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:padding="15dp"
+            app:layout_constraintTop_toBottomOf="@+id/tab_layout_bottom" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="100dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="end"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/rv_center_data">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/ed_value_1"
+                    android:layout_width="80dp"
+                    android:layout_height="40dp"
+                    android:singleLine="true"
+                    android:background="@drawable/background_round_5_gray"
+                    android:gravity="center" />
+
+                <View
+                    android:layout_width="wrap_content"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <EditText
+                    android:id="@+id/ed_value_2"
+                    android:layout_width="80dp"
+                    android:layout_height="40dp"
+                    android:singleLine="true"
+                    android:background="@drawable/background_round_5_gray"
+                    android:gravity="center" />
+
+                <View
+                    android:layout_width="wrap_content"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <EditText
+                    android:id="@+id/ed_value_3"
+                    android:layout_width="80dp"
+                    android:layout_height="40dp"
+                    android:singleLine="true"
+                    android:background="@drawable/background_round_5_gray"
+                    android:gravity="center" />
+
+                <View
+                    android:layout_width="wrap_content"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <Button
+                    android:id="@+id/bt_register"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#BDBDBD"
+                    android:text="등록"
+                    android:textColor="@color/black" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/bt_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#BDBDBD"
+                android:text="삭제"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
