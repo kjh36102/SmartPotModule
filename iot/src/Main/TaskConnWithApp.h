@@ -58,15 +58,25 @@ void tReceiveExtWifiInfo(void* taskParams) {
     WiFiClient client = httpServer.available();
     if (client) {
       if (client.available()) {
-        std::map<String, String> queryMap = getQueryMap(client, 40);  //최대 40바이트 읽기
+        std::map<String, String> queryMap = getQueryMap(client, 100);  //최대 100바이트 읽기
 
         //쿼리 파싱
         if (!queryMap.empty()) {
-          externalSSID = queryMap["ssid"];
-          externalPassword = queryMap["pw"];
-          LOGF("\tReceived externalSSID: %s\texternalPassword: %s\n", externalSSID.c_str(), externalPassword.c_str());
-          sendHttpResponse(client, 200, "OK");
-          LOGLN("Received External Wifi Info Successfully!");
+          String action = queryMap["action"];
+
+          if (action.equals("regExtWifi")) {
+            externalSSID = queryMap["ssid"];
+            externalPassword = queryMap["pw"];
+            LOGF("\tReceived externalSSID: %s\texternalPassword: %s\n", externalSSID.c_str(), externalPassword.c_str());
+            sendHttpResponse(client, 200, "OK");
+            LOGLN("Received External Wifi Info Successfully!");
+          } else {  //알수 없는 action인경우
+            sendHttpResponse(client, 500, "Unknown Action");
+            LOGF("Client sent unknown action: %s\n", action.c_str());
+            continue;
+          }
+
+          client.stop();
 
           stateReceivedWifiInfo = true;
 
@@ -74,14 +84,13 @@ void tReceiveExtWifiInfo(void* taskParams) {
           WiFi.softAPdisconnect(true);
 
           unsigned long connectStartTime = millis();
-          bool connectSuccess = false;
 
           // 외부 와이파이에 연결
           WiFi.begin(externalSSID.c_str(), externalPassword.c_str());
 
           //외부 와이파이 상태 확인
           while (WiFi.status() != WL_CONNECTED) {
-            if (millis() - connectStartTime > 20000) {  // 20초가 지나면 실패
+            if (millis() - connectStartTime > 10000) {  // 10초가 지나면 실패
               LOGLN("Connection time out!!");
               break;
             }
@@ -92,8 +101,7 @@ void tReceiveExtWifiInfo(void* taskParams) {
           if (WiFi.status() == WL_CONNECTED) {  //성공적 연결
             stateConnExtWifi = true;
             LOGLN("Connect to external wifi success!");
-
-          } else {  //시간초과 또는 정보오류 등으로 실패하면
+          } else {  //정보오류로 실패하면
             LOGLN("Connect to external wifi failed! Return to turn hotspot on.");
             initTaskConnWithApp();  //초기화 및 재실행
             continue;
@@ -117,8 +125,6 @@ void tReceiveExtWifiInfo(void* taskParams) {
           sendHttpResponse(client, 500, "Received Empty Query");
           LOGLN("Received empty query, send status 500");
         }
-
-        client.stop();
       }
     }
 
@@ -134,7 +140,7 @@ void tConnExtWifiAndBroadcastUDP(void* taskParams) {
       WiFiClient client = httpServer.available();
 
       if (client) {
-        std::map<String, String> queryMap = getQueryMap(client, 40);  //최대 40바이트 읽기
+        std::map<String, String> queryMap = getQueryMap(client, 100);  //최대 40바이트 읽기
 
         //쿼리 파싱
         if (!queryMap.empty()) {
@@ -143,9 +149,9 @@ void tConnExtWifiAndBroadcastUDP(void* taskParams) {
           if (action.equals("hello")) {  // http://x.x.x.x:12345/?action=hello
             smartphoneIP = client.remoteIP();
             LOGF("\tReceived action: %s\tclientIP: %s\n", action.c_str(), smartphoneIP.toString().c_str());
-            sendHttpResponse(client, 200, "Now All Connected.");
+            sendHttpResponse(client, 200, "Now All Connected");
             stateConnSameWifi = true;
-          } else {  //알수 없는 action인경우 
+          } else {  //알수 없는 action인경우
             sendHttpResponse(client, 500, "Unknown Action");
             LOGF("Client sent unknown action: %s\n", action.c_str());
           }
