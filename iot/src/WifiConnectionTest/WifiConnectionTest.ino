@@ -10,7 +10,7 @@ String remote_password = "";
 String smartphone_ip = "";
 bool connected_same_wifi = false;
 
-WiFiServer server(80);  // 80번 포트에서 서버를 시작
+WiFiServer server(12345);  // 80번 포트에서 서버를 시작
 
 void setup() {
   Serial.begin(9600);
@@ -79,12 +79,11 @@ void loop() {
           Serial.printf("%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
 
           //같은 네트워크 내 broadcast를 통해 스마트폰에게 외부ip주소 전송하기
-          if(sendUDPMessageUntilACK(("SmartPotModule:" + ip.toString()).c_str(), "SmartPotModule:ACK", getBroadcastIP(), 12345, 5000)){
+          if (sendUDPMessageUntilACK(("SmartPotModule:" + ip.toString()).c_str(), "SmartPotModule:ACK", getBroadcastIP(), 12345, 1000)) {
             Serial.println("UDP 전송 성공!");
             connected_same_wifi = true;
             break;
           }
-
         }
       }
 
@@ -92,5 +91,47 @@ void loop() {
     }
   } else {
     Serial.println("Now Connected Same Wifi: " + String(connected_same_wifi));
+  }
+
+  if (connected_same_wifi) {
+    WiFiClient client = server.available();  // listen for incoming clients
+
+    if (client) {                     // if you get a client,
+      Serial.println("New Client.");  // print a message out the serial port
+      String currentLine = "";        // make a String to hold incoming data from the client
+      while (client.connected()) {    // loop while the client's connected
+        if (client.available()) {     // if there's bytes to read from the client,
+          char c = client.read();     // read a byte, then
+          Serial.write(c);            // print it out the serial monitor
+          if (c == '\n') {            // if the byte is a newline character
+
+            // if the current line is blank, you got two newline characters in a row.
+            // that's the end of the client HTTP request, so send a response:
+            if (currentLine.length() == 0) {
+              // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
+              // and a content-type so the client knows what's coming, then a blank line:
+              client.println("HTTP/1.1 200 OK");
+              client.println("Content-type:text/html");
+              client.println();
+
+              // the content of the HTTP response follows the header:
+              client.print("SmartPotModule:SUCCESS"); //미리 정해진 ack값 보내주기
+
+              // The HTTP response ends with another blank line:
+              client.println();
+              // break out of the while loop:
+              break;
+            } else {  // if you got a newline, then clear currentLine:
+              currentLine = "";
+            }
+          } else if (c != '\r') {  // if you got anything else but a carriage return character,
+            currentLine += c;      // add it to the end of the currentLine
+          }
+        }
+      }
+      // close the connection:
+      client.stop();
+      Serial.println("Client Disconnected.");
+    }
   }
 }

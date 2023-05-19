@@ -38,7 +38,7 @@ bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress ta
   WiFiUDP udp;
   char ackBuffer[50] = {'\0', };
 
-  udp.begin(0); //udp 연결 생성
+  udp.begin(targetPort); //udp 연결 생성
 
   while (true) {
     //udp 패킷 전송
@@ -49,8 +49,14 @@ bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress ta
     //interval 만큼 기다림
     delay(interval);
 
+
+
+
     // 응답이 있는지 확인
     int packetSize = udp.parsePacket();
+
+    Serial.println("packet size: " + String(packetSize));
+
     if (packetSize) {
       // received a packet
       Serial.printf("Received %d bytes from %s, port %d\n", packetSize, udp.remoteIP().toString().c_str(), udp.remotePort());
