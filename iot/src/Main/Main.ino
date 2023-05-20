@@ -6,6 +6,7 @@
 
 //태스크 파일들 include
 #include "TaskConnWithApp.h"
+#include "TaskWebDBConsole.h"
 
 //--------------------------------
 #define LOGKEY "Main.ino"
@@ -20,17 +21,24 @@ void setup() {
   enableLogging("PinSetup.h");
   enableLogging("MultitaskRTOS.h");
   enableLogging("TaskConnWithApp.h");
+  enableLogging("TaskWebDBConsole.h");
   enableLogging("UDPLibrary.h");
   // enableLogging("HttpGetLibrary.h");
 
   initPins();  //핀 초기화
 
   createAndRunTask(tReceiveExtWifiInfo, "TaskConnWithApp", 3000);
+  createAndRunTask(tWebDBConsole, "TaskWebDBConsole", 3000);
 }
 
 void loop() {
+  if(stateConnSameWifi){
+
+  }
+  
   LOGF("External SSID: %s, External PW: %s\n", externalSSID.c_str(), externalPassword.c_str());
   LOGF("External IP: %s, Smartphone IP: %s\n", externalIP.toString().c_str(), smartphoneIP.toString().c_str());
   LOGF("stateReceivedWifiInfo: %d\tstateConnExtWifi: %d\tstateConnSameWifi: %d\n", stateReceivedWifiInfo, stateConnExtWifi, stateConnSameWifi);
+  LOGF("FreeHeap: %u bytes\n", xPortGetFreeHeapSize());
   delay(5000);
 }
