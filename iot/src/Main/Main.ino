@@ -17,23 +17,23 @@ void setup() {
   Serial.begin(9600);
 
   //로거 켜고끄기, 주석으로 끔
-  enableLogging("Main.ino");
-  enableLogging("PinSetup.h");
-  enableLogging("MultitaskRTOS.h");
-  enableLogging("TaskConnWithApp.h");
+  // enableLogging("Main.ino");
+  // enableLogging("PinSetup.h");
+  // enableLogging("MultitaskRTOS.h");
+  // enableLogging("TaskConnWithApp.h");
   enableLogging("TaskWebDBConsole.h");
-  enableLogging("UDPLibrary.h");
+  // enableLogging("UDPLibrary.h");
   // enableLogging("HttpGetLibrary.h");
 
   initPins();  //핀 초기화
 
   createAndRunTask(tReceiveExtWifiInfo, "TaskConnWithApp", 3000);
-  createAndRunTask(tWebDBConsole, "TaskWebDBConsole", 3000);
+  createAndRunTask(tWebDBConsole, "TaskWebDBConsole", 6000);
 }
 
 void loop() {
   if(stateConnSameWifi){
-
+    
   }
   
   LOGF("External SSID: %s, External PW: %s\n", externalSSID.c_str(), externalPassword.c_str());
