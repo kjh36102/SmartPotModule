@@ -1,5 +1,7 @@
 package com.example.app;
 
+
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -8,12 +10,18 @@ import androidx.viewpager2.widget.ViewPager2;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.tabs.TabLayout;
@@ -44,7 +52,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String URL = "http://cofon.xyz:9090/read?col=temp_humid_light_ph_nitro_phos_pota_ec";
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
-
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +84,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //JSON서버 연결
         new GetJsonDataTask().execute(URL);
         //조명상태 불러오는 코드 추가해야함
+
+
+
+        SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        popup.plant = sharedPreferences.getString("userInput", ""); // 두 번째 매개변수는 기본값으로 사용될 값입니다.
+
     }
      
     @Override
@@ -164,4 +177,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             rTxt.setText(dateTime);
         }
     }
+
 }

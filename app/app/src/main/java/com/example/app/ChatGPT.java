@@ -22,7 +22,7 @@ public class ChatGPT {
             input.put("model", "text-davinci-003");
             input.put("prompt", "");
             input.put("max_tokens", 2048);
-            this.key = "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";
+            this.key = "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";
         }catch (Exception e) {
             e.printStackTrace();
         }
