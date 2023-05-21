@@ -1,8 +1,8 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
-const char* ssid = "Barrier";
-const char* password = "01063445377";
+const char* ssid = "fdfdfd";
+const char* password = "01086550507";
 
 WebServer server(12345);
 
@@ -10,15 +10,19 @@ String globalVar = "initial value";
 
 void setup() {
   Serial.begin(9600);
-  
-  WiFi.begin(ssid, password);
+    
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi...");
-  }
+
+  WiFi.softAP(ssid, password);
+
+  server.begin();
+
+  // while (WiFi.status() != WL_CONNECTED) {
+  //   delay(1000);
+  //   Serial.println("Connecting to WiFi...");
+  // }
   
-  Serial.println("Connected to WiFi");
+  Serial.println("Connected to WiFi" + String(WiFi.localIP()));
 
   server.on("/", HTTP_GET, []() {
     if (server.hasArg("newVal")) {
@@ -34,7 +38,7 @@ void setup() {
     server.send(200, "text/plain", "Global variable is now: " + globalVar);
   });
 
-  server.begin();
+
 
    xTaskCreatePinnedToCore(
     task1,       /* Function to implement the task */

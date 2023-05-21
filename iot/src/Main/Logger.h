@@ -1,6 +1,6 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
-//------------------------------------------
+//-------------------------------------------------------------
 
 /*
 각 파일마다 로그를 켜고 끌수있게 해주는 라이브러리
@@ -14,8 +14,6 @@ enableLogging("TheFilename.h")
 
 이렇게 하면 TheFilename.h 내에서 사용한 로그매크로만 작동함
 */
-
-
 #include <Arduino.h>
 #include <map>
 
@@ -33,24 +31,27 @@ void disableLogging(const char* key) {
   loggingID.erase(key);
 }
 
-template <typename T>
+template<typename T>
 void log(const char* key, T value) {
-  if (loggingID.count(key) > 0)
+  if (loggingID.count(key) > 0) {
     Serial.print(value);
+  }
 }
 
-template <typename T>
+template<typename T>
 void logln(const char* key, T value) {
-  if (loggingID.count(key) > 0)
+  if (loggingID.count(key) > 0) {
     Serial.println(value);
+  }
 }
 
-template <typename... Args>
+template<typename... Args>
 void logf(const char* key, const char* format, Args... args) {
-  if (loggingID.count(key) > 0)
+  if (loggingID.count(key) > 0) {
     Serial.printf(format, args...);
+  }
 }
 
 
-//------------------------------------------
+//-------------------------------------------------------------
 #endif  // __LOGGER_H__

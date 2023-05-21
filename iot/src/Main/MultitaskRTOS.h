@@ -1,7 +1,7 @@
 #ifndef __MULTITASK_RTOS_H__
 #define __MULTITASK_RTOS_H__
 
-//-------------------------------------------
+//-------------------------------------------------------------
 
 //RTOS 라이브러리 가져오기
 #include "freertos/FreeRTOS.h"
@@ -10,10 +10,10 @@
 #define PRINT_STACK_USAGE false
 #define printStack if(PRINT_STACK_USAGE) printStack
 
-//--------------------------------
+//-------------------------------------------------------------
 #define LOGKEY "MultitaskRTOS.h"
 #include "Logger.h"
-//--------------------------------
+//-------------------------------------------------------------
 
 /**
 새로운 태스크를 생성하고 실행하는 함수
@@ -24,7 +24,7 @@ void myTask(void* taskParams) {
 }
 createAndRunTask(myTask, "MyTask"); //태스크 등록 및 실행
 */
-void createAndRunTask(TaskFunction_t pvTaskCode, const char* const pcName, uint16_t stackDepth = 1000, void* taskParams = NULL, UBaseType_t priority = 1) {
+void createAndRunTask(TaskFunction_t pvTaskCode, const char* const pcName, uint16_t stackDepth = 2000, void* taskParams = NULL, UBaseType_t priority = 1) {
     TaskHandle_t xHandle = NULL;
     BaseType_t xReturned;
 
@@ -66,5 +66,5 @@ extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskNa
 }
 
 
-//-------------------------------------------
+//-------------------------------------------------------------
 #endif //__MULTITASK_RTOS_H__

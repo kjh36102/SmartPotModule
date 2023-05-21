@@ -4,7 +4,6 @@
 //----------------------------------------
 #include <WiFiUdp.h>
 
-
 //--------------------------------
 #define LOGKEY "UDPLibrary.h"
 #include "Logger.h"
@@ -36,8 +35,8 @@ IPAddress getBroadcastIP() {
 * @param interval 전송 간격
 * @return 전송 성공시 true
 */
-bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress targetIP, unsigned int targetPort, unsigned int interval) {
-  LOGLN("SendUDPMessageUntilACK Running...");
+bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress targetIP, unsigned int targetPort, unsigned int interval = 1000) {
+  LOGLN(F("Start UDP Broadcasting..."));
   LOGF("\tmsg: %s\n", msg);
   LOGF("\texpectAck: %s\n", expectAck);
   LOGF("\ttargetIP: %s\n", targetIP.toString().c_str());
@@ -45,10 +44,9 @@ bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress ta
   LOGF("\tinterval: %d\n", interval);
 
   WiFiUDP udp;
-  char ackBuffer[50] = {
-    '\0',
-  };
+  char ackBuffer[50];
 
+  unsigned long transferStartTime = millis();
   udp.begin(targetPort);  //udp 연결 생성
 
   while (true) {
@@ -60,6 +58,12 @@ bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress ta
     //interval 만큼 기다림
     delay(interval);
 
+    // //시간초과 확인
+    // if(millis() - transferStartTime > timeout){
+    //   LOGLN(F("UDP Broadcast reached to timeout!"));
+    //   return false;
+    // }
+
     // 응답이 있는지 확인
     int packetSize = udp.parsePacket();
 
@@ -69,17 +73,32 @@ bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress ta
         ackBuffer[len] = '\0';
       }
 
-#ifdef DEBUG_UDP_LIBRARY
-      LOGF("Received %d bytes from %s, port %d\n", packetSize, udp.remoteIP().toString().c_str(), udp.remotePort());
-      LOGF("UDP packet contents: %s\n", ackBuffer);
-#endif  //DEBUG_UDP_LIBRARY
-
       if (strcmp(ackBuffer, expectAck) == 0) {  //응답이 ack와 같으면 return true
         udp.stop();
         return true;
       }
     }
   }
+}
+
+/*
+nTime만큼 ACK를 전송하는 함수
+패킷손실에 대비해 여러번 전송
+*/
+bool sendAckNtime(byte nTime, IPAddress targetIP, unsigned int targetPort, unsigned int interval = 200) {
+  WiFiUDP udp;
+  udp.begin(STA_PORT);
+
+  //udp 패킷 전송
+  for (byte i = 0; i < nTime; i++) {
+    udp.beginPacket(getBroadcastIP(), STA_PORT);
+    const char* msg = "SmartPotModule:ACK";
+    udp.write((const uint8_t*)msg, strlen(msg));
+    udp.endPacket();
+    delay(interval);
+  }
+
+  udp.stop();
 }
 
 
