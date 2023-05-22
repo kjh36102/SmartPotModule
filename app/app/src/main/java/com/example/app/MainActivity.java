@@ -41,6 +41,14 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -52,11 +60,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String URL = "http://cofon.xyz:9090/read?col=temp_humid_light_ph_nitro_phos_pota_ec";
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
+    private static final int PERMISSION_REQUEST_CODE = 1;
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // 앱 권한 동의 요청
+        requestPermissions();
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);           // actionbar에서 toolbar로 변경
         setSupportActionBar(toolbar);
@@ -178,4 +189,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private void requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String[] permissions = {
+                    Manifest.permission.INTERNET,
+                    Manifest.permission.ACCESS_WIFI_STATE,
+                    Manifest.permission.CHANGE_WIFI_STATE
+            };
+
+            boolean allPermissionsGranted = true;
+            for (String permission : permissions) {
+                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+
+            if (!allPermissionsGranted) {
+                ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            // 권한 동의 결과 처리
+            boolean allPermissionsGranted = true;
+            for (int grantResult : grantResults) {
+                if (grantResult != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+
+            if (allPermissionsGranted) {
+                // 필요한 권한이 모두 동의됨
+            } else {
+                // 필요한 권한 중 일부 또는 모두 거부됨
+            }
+        }
+    }
 }
+
