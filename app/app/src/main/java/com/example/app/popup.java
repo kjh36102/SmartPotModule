@@ -1,5 +1,7 @@
 package com.example.app;
 
+import static android.content.ContentValues.TAG;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,12 +9,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
@@ -32,11 +36,8 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
     public static String ip;
     public static String plant;
     public static TextView connText;
-    private String aduIP = "192.168.0.1";
-    private int aduPort = 12345;
     private int responseCode;
     public static boolean connCheck;
-    private WifiConnectionManager wifiConnectionManager;
     private Context context;
 
     @Override
@@ -51,15 +52,22 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         connText = findViewById(R.id.show_conn);
         EditText editPlant = findViewById(R.id.plantName);
         editPlant.setText(plant); //과거에 저장된값이 있다면 실행시 보여주기
-        wifiConnectionManager=null;
         regiBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 getText();
                 register(ssid, pw);
                 if (responseCode == 200) {
-                    wifiConnectionManager = new WifiConnectionManager(getApplicationContext());
-                    wifiConnectionManager.startWifiCheck(); //아두이노핫스팟 연결 끊기면, ssid,pw이용 와이파이 연결
+                    WifiUtils wifiUtils = new WifiUtils(getApplicationContext());
+                    boolean isConnected = wifiUtils.connectToWifi(ssid, pw);
+                    if (isConnected) {
+                        // Wi-Fi 연결 성공
+                        connText.setText("앱이 "+ ssid + "에 연결됨");
+                        connCheck=true;
+                    } else {
+                        // Wi-Fi 연결 실패
+                        connText.setText("앱이 "+ ssid + "에 연결실패");
+                    }
                 if(connCheck==true){     //와아파이에 연결 성공시
                     Runnable udpClientRunnable = new UdpClientRunnable(context); //udp로 ip저
                     Thread udpClientThread = new Thread(udpClientRunnable);
@@ -81,6 +89,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 // 값을 SharedPreferences에 저장
                 editor.putString("userInput", plant);
                 editor.apply();
+                Toast.makeText(getApplicationContext(), "식물 등록 성공", Toast.LENGTH_SHORT).show(); //토스트메시지 표시
             }
         });
     }
@@ -95,13 +104,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         if(event.getAction() == MotionEvent.ACTION_OUTSIDE) {return false;}
         return true;
     }  //팝업 영역 밖 클릭시 닫힘 방지
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (wifiConnectionManager != null) {
-            wifiConnectionManager.stopWifiCheck();
-        }
-    }
+
 
     public void getText(){
         ssid=pw=ip=null;
@@ -112,20 +115,24 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
     }
     public void register(String SSID, String PW){
         connText.setText("연결중");
+        responseCode=0;
         connCheck=false;
         try {
             // URL 생성
-            String urlString = "http://" + aduIP + ":" + aduPort + "/?action=regExtWifi&ssid=" + URLEncoder.encode(ssid, "UTF-8") + "&pw=" + URLEncoder.encode(pw, "UTF-8");
+            String urlString = "http://" + "192.168.0.1:" + 12345 + "/?action=regExtWifi&ssid=" + URLEncoder.encode(ssid, "UTF-8") + "&pw=" + URLEncoder.encode(pw, "UTF-8");
             URL url = new URL(urlString);
 
             // HTTP GET 요청 설정
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(10000); // 10초 동안 연결 시도
+            connection.setReadTimeout(5000);
             // 응답 코드 확인
             responseCode = connection.getResponseCode();
+            Log.d(TAG, "Response code: " + responseCode);
+
             if(responseCode == 200)
-                connText.setText("SSID,PW 전송성공");
+                connText.setText("아두이노가 " + ssid +"에 연결성공");
             else
                 connText.setText("정보 확인 후 다시 등록");
 
@@ -148,7 +155,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
             // 응답 코드 확인
             responseCode = connection.getResponseCode();
             if(responseCode==200)
-                connText.setText("접속성공");
+                connText.setText("최종접속성공");
             else
                 connText.setText("최종실패, 다시등록바랍니다");
 
