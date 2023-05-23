@@ -38,6 +38,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
     public static TextView connText;
     private int responseCode;
     public static boolean connCheck;
+    public static boolean ipGetCheck;
     private Context context;
 
     @Override
@@ -50,32 +51,37 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         Button regiBtn = findViewById(R.id.btnregister);
         Button plantBtn = findViewById(R.id.btnPlant);
         connText = findViewById(R.id.show_conn);
+
         EditText editPlant = findViewById(R.id.plantName);
+        EditText editSsid = findViewById(R.id.in_ssid);
+        EditText editPw = findViewById(R.id.in_pw);
+
         editPlant.setText(plant); //과거에 저장된값이 있다면 실행시 보여주기
+        editSsid.setText(ssid);
+        editPw.setText(pw);
         regiBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                getText();
-                register(ssid, pw);
+                getText();              //입력값 SSID,PW 가져오기
+                register(ssid, pw);     //아두이노로 SSID,PW넘겨주고 아두이노의 접속확인까지
                 if (responseCode == 200) {
                     WifiUtils wifiUtils = new WifiUtils(getApplicationContext());
-                    boolean isConnected = wifiUtils.connectToWifi(ssid, pw);
-                    if (isConnected) {
-                        // Wi-Fi 연결 성공
-                        connText.setText("앱이 "+ ssid + "에 연결됨");
-                        connCheck=true;
-                    } else {
-                        // Wi-Fi 연결 실패
-                        connText.setText("앱이 "+ ssid + "에 연결실패");
+                    boolean isConnected = wifiUtils.connectToWifi(ssid, pw); //앱에서 SSID와이파이에 연결체크
+                    if (isConnected) { // Wi-Fi 연결 성공
+                        connText.setText("앱이 " + ssid + "에 연결됨");
+                        connCheck = true;
+                    } else { // Wi-Fi 연결 실패
+                        connText.setText("앱이 " + ssid + "에 연결실패");
                     }
+                }
                 if(connCheck==true){     //와아파이에 연결 성공시
-                    Runnable udpClientRunnable = new UdpClientRunnable(context); //udp로 ip저
+                    Runnable udpClientRunnable = new UdpClientRunnable(context); //udp로 ip수신
                     Thread udpClientThread = new Thread(udpClientRunnable);
                     udpClientThread.start();
                 }
-                webCheck();   //웹서버 열렸는지 접속확인
+                if(ipGetCheck==true)
+                    webCheck();   //웹서버 열렸는지 접속확인
                 }
-            }
         });
         plantBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,9 +93,9 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 // 값을 편집하기 위한 Editor 객체 생성
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 // 값을 SharedPreferences에 저장
-                editor.putString("userInput", plant);
+                editor.putString("plant", plant);
                 editor.apply();
-                Toast.makeText(getApplicationContext(), "식물 등록 성공", Toast.LENGTH_SHORT).show(); //토스트메시지 표시
+                Toast.makeText(getApplicationContext(), "식물 등록 성공", Toast.LENGTH_LONG).show(); //토스트메시지 표시
             }
         });
     }
@@ -117,9 +123,10 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         connText.setText("연결중");
         responseCode=0;
         connCheck=false;
+        ipGetCheck=false;
         try {
             // URL 생성
-            String urlString = "http://" + "192.168.0.1:" + 12345 + "/?action=regExtWifi&ssid=" + URLEncoder.encode(ssid, "UTF-8") + "&pw=" + URLEncoder.encode(pw, "UTF-8");
+            String urlString = "http://192.168.4.1:12345/?action=regExtWifi&ssid=" + URLEncoder.encode(ssid, "UTF-8") + "&pw=" + URLEncoder.encode(pw, "UTF-8");
             URL url = new URL(urlString);
 
             // HTTP GET 요청 설정
@@ -144,7 +151,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
     public void webCheck(){
         try {
             // URL 생성
-            String urlString = "http://" + ip + ":" + 12345 + "/?action=hello";
+            String urlString = "http://" + ip + ":12345/?action=hello";
             URL url = new URL(urlString);
 
             // HTTP GET 요청 설정
@@ -154,11 +161,19 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
 
             // 응답 코드 확인
             responseCode = connection.getResponseCode();
-            if(responseCode==200)
+            if(responseCode==200) {
                 connText.setText("최종접속성공");
+                // 값을 저장할 SharedPreferences 객체 생성
+                SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                // 값을 편집하기 위한 Editor 객체 생성
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("ssid", ssid);
+                editor.putString("pw",pw);
+                editor.putString("ip",ip);
+                editor.apply();
+            }
             else
                 connText.setText("최종실패, 다시등록바랍니다");
-
             connection.disconnect();
         } catch (IOException e) {
             e.printStackTrace();

@@ -45,6 +45,8 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -96,11 +98,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new GetJsonDataTask().execute(URL);
         //조명상태 불러오는 코드 추가해야함
 
-
-
         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        popup.plant = sharedPreferences.getString("userInput", ""); // 두 번째 매개변수는 기본값으로 사용될 값입니다.
+        popup.plant = sharedPreferences.getString("plant", ""); // 두 번째 매개변수는 기본값으로 사용될 값입니다.
+        popup.ssid = sharedPreferences.getString("ssid", "");
+        popup.pw = sharedPreferences.getString("pw", "");
+        popup.ip = sharedPreferences.getString("ip", "");
 
+        if(popup.ip != null && !popup.ip.isEmpty()){        //아두이노 접속 테스트
+            try {
+                // URL 생성
+                String urlString = "http://" + popup.ip + ":12345/?action=hello";
+                URL url = new URL(urlString);
+
+                // HTTP GET 요청 설정
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000); // 10초 동안 연결 시도
+
+                // 응답 코드 확인
+                int responseCode = connection.getResponseCode();
+                if(responseCode==200)
+                    Toast.makeText(getApplicationContext(), "서버 연결 성공", Toast.LENGTH_LONG).show(); //토스트메시지 표시
+                else
+                    Toast.makeText(getApplicationContext(), "서버 연결 실패", Toast.LENGTH_LONG).show(); //토스트메시지 표시
+                connection.disconnect();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else
+            Toast.makeText(getApplicationContext(), "서버 연결 필요", Toast.LENGTH_LONG).show(); //토스트메시지 표시
     }
      
     @Override

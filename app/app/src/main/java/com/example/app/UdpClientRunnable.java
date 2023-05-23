@@ -33,6 +33,7 @@ public class UdpClientRunnable implements Runnable {
                 String ipAddress = packetData.substring("SmartPotModule:".length());
                 popup.ip = ipAddress;  // IP 주소 저장
                 popup.connText.setText("IP정보 수신");
+                popup.ipGetCheck=true;
                 // ACK 패킷 전송
                 String ackMessage = "SmartPotModule:ACK";
                 byte[] ackData = ackMessage.getBytes();
@@ -60,6 +61,7 @@ public class UdpClientRunnable implements Runnable {
                             String ipAddress = packetData.substring("SmartPotModule:".length());
                             popup.ip = ipAddress;  // IP 주소 저장
                             popup.connText.setText("IP정보 수신");
+                            popup.ipGetCheck=true;
                         }
                         // ACK 패킷 다시 보내기
                         udpSocket.send(ackPacket);
