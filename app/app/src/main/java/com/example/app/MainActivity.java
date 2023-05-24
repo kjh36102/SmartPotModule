@@ -2,6 +2,11 @@ package com.example.app;
 
 
 
+import static com.example.app.Fragment1.angryface;
+import static com.example.app.Fragment1.noface;
+import static com.example.app.Fragment1.score;
+import static com.example.app.Fragment1.smileface;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -17,6 +22,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -96,7 +103,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.wifi_button).setOnClickListener(this);
         //JSON서버 연결
         new GetJsonDataTask().execute(URL);
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                setFace();
+            }
+        }, 3000); // 3초 뒤에 setFace() 실행
+
         //조명상태 불러오는 코드 추가해야함
+
 
         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         popup.plant = sharedPreferences.getString("plant", ""); // 두 번째 매개변수는 기본값으로 사용될 값입니다.
@@ -216,6 +232,60 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             Fragment3.humid = humid;
             Fragment3.light = light;
+
+            ChatGPT chatGPT = new ChatGPT();
+            new Thread(){
+                public void run(){
+                    org.json.simple.JSONObject scoreResponse = chatGPT.score(popup.plant, Double.parseDouble(temp),  Double.parseDouble(humid),  Double.parseDouble(nitro),  Double.parseDouble(phos),  Double.parseDouble(pota),  Double.parseDouble(ph),  Double.parseDouble(ec),  Double.parseDouble(light));
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                JSONObject json = new JSONObject(scoreResponse);
+                                String scoreString = json.getString("총점");
+                                score = Integer.parseInt(scoreString);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                }
+            }.start();
+        }
+    }
+    public void setFace(){
+        setBlackImage(smileface, R.drawable.smileface1);
+        setBlackImage(noface, R.drawable.noface1);
+        setBlackImage(angryface, R.drawable.angryface1);
+
+        try{
+            if(score >=80)
+                setColorImage(smileface, R.drawable.smileface);
+            else if(score >=50)
+                setColorImage(noface, R.drawable.noface);
+            else
+                setColorImage(angryface, R.drawable.angryface);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setBlackImage(ImageView imageView, int resourceId) {
+        if (imageView != null) {
+            Resources resources = getResources();
+            Bitmap bitmap = BitmapFactory.decodeResource(resources, resourceId);
+            BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
+            imageView.setImageDrawable(drawable);
+        }
+    }
+
+    public void setColorImage(ImageView imageView, int resourceId) {
+        if (imageView != null) {
+            Resources resources = getResources();
+            Bitmap bitmap = BitmapFactory.decodeResource(resources, resourceId);
+            BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
+            imageView.setImageDrawable(drawable);
         }
     }
 

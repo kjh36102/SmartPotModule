@@ -15,6 +15,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,18 +50,14 @@ import java.util.Iterator;
  */
 public class Fragment1 extends Fragment{
     public static HashMap<String, String> mDataHashMap;
-    public static int score = 80;
-    ImageView smileface;
-    ImageView noface ;
-    ImageView angryface;
+    public static int score;
+    public static ImageView smileface;
+    public static ImageView noface ;
+    public static ImageView angryface;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_1, container, false);
-        ChatGPT chatGPT = new ChatGPT();
-
-
-
         smileface=view.findViewById(R.id.face1);
         noface = view.findViewById(R.id.face2);
         angryface =view.findViewById(R.id.face3);
@@ -76,17 +74,31 @@ public class Fragment1 extends Fragment{
             @Override
             public void onClick(View v) {
                 new GetJsonDataTask().execute(MainActivity.URL);
-                score=40;
-                setFace();
-                }
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        setFace();
+                    }
+                }, 5000); // 3초 뒤에 setFace() 실행
+            }
         });
         water.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View v) {            }
+            public void onClick(View v) {
+                //물키는기능
+            }
         });
         toggleButton.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View v) {       }
+            public void onClick(View v) {
+                if(toggleButton.isChecked()==true){
+                    //켜졌을때 동작할거
+                }
+                else {
+                    //꺼짐기능
+                }
+            }
         });
         toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -173,6 +185,27 @@ public class Fragment1 extends Fragment{
 
             Fragment3.humid = humid;
             Fragment3.light = light;
+
+            ChatGPT chatGPT = new ChatGPT();
+            new Thread(){
+                public void run(){
+                    org.json.simple.JSONObject scoreResponse = chatGPT.score(popup.plant, Double.parseDouble(temp),  Double.parseDouble(humid),  Double.parseDouble(nitro),  Double.parseDouble(phos),  Double.parseDouble(pota),  Double.parseDouble(ph),  Double.parseDouble(ec),  Double.parseDouble(light));
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                JSONObject json = new JSONObject(scoreResponse);
+                                String scoreString = json.getString("총점");
+                                score = Integer.parseInt(scoreString);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                }
+            }.start();
+
         }
     }
 
@@ -180,6 +213,7 @@ public class Fragment1 extends Fragment{
         setBlackImage(smileface, R.drawable.smileface1);
         setBlackImage(noface, R.drawable.noface1);
         setBlackImage(angryface, R.drawable.angryface1);
+
         try{
             if(score >=80)
                 setColorImage(smileface, R.drawable.smileface);
