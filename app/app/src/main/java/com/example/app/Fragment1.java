@@ -2,7 +2,11 @@ package com.example.app;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
@@ -16,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -43,10 +48,22 @@ import java.util.Iterator;
  */
 public class Fragment1 extends Fragment{
     public static HashMap<String, String> mDataHashMap;
+    public static int score = 80;
+    ImageView smileface;
+    ImageView noface ;
+    ImageView angryface;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_1, container, false);
+        ChatGPT chatGPT = new ChatGPT();
+
+
+
+        smileface=view.findViewById(R.id.face1);
+        noface = view.findViewById(R.id.face2);
+        angryface =view.findViewById(R.id.face3);
+        setFace();
         return view;
     }
     @Override
@@ -57,7 +74,11 @@ public class Fragment1 extends Fragment{
         ToggleButton toggleButton = view.findViewById(R.id.toggleButton);
         rBtn.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View v) {new GetJsonDataTask().execute(MainActivity.URL);}
+            public void onClick(View v) {
+                new GetJsonDataTask().execute(MainActivity.URL);
+                score=40;
+                setFace();
+                }
         });
         water.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -74,7 +95,6 @@ public class Fragment1 extends Fragment{
                 else {toggleButton.setBackgroundColor(Color.LTGRAY);}
             }
         });
-
     }
     private class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
         @Override
@@ -150,6 +170,43 @@ public class Fragment1 extends Fragment{
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
             String dateTime = dateFormat.format(calendar.getTime());
             rTxt.setText(dateTime);
+
+            Fragment3.humid = humid;
+            Fragment3.light = light;
+        }
+    }
+
+    public void setFace(){
+        setBlackImage(smileface, R.drawable.smileface1);
+        setBlackImage(noface, R.drawable.noface1);
+        setBlackImage(angryface, R.drawable.angryface1);
+        try{
+            if(score >=80)
+                setColorImage(smileface, R.drawable.smileface);
+            else if(score >=50)
+                setColorImage(noface, R.drawable.noface);
+            else
+                setColorImage(angryface, R.drawable.angryface);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setBlackImage(ImageView imageView, int resourceId) {
+        if (imageView != null) {
+            Resources resources = getResources();
+            Bitmap bitmap = BitmapFactory.decodeResource(resources, resourceId);
+            BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
+            imageView.setImageDrawable(drawable);
+        }
+    }
+
+    public void setColorImage(ImageView imageView, int resourceId) {
+        if (imageView != null) {
+            Resources resources = getResources();
+            Bitmap bitmap = BitmapFactory.decodeResource(resources, resourceId);
+            BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
+            imageView.setImageDrawable(drawable);
         }
     }
 }

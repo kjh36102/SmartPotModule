@@ -1,5 +1,7 @@
 package com.example.app;
 
+
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -8,12 +10,18 @@ import androidx.viewpager2.widget.ViewPager2;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.tabs.TabLayout;
@@ -33,6 +41,16 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -44,12 +62,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String URL = "http://cofon.xyz:9090/read?col=temp_humid_light_ph_nitro_phos_pota_ec";
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
-
+    private static final int PERMISSION_REQUEST_CODE = 1;
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // 앱 권한 동의 요청
+        requestPermissions();
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);           // actionbar에서 toolbar로 변경
         setSupportActionBar(toolbar);
@@ -77,6 +97,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //JSON서버 연결
         new GetJsonDataTask().execute(URL);
         //조명상태 불러오는 코드 추가해야함
+
+        SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        popup.plant = sharedPreferences.getString("plant", ""); // 두 번째 매개변수는 기본값으로 사용될 값입니다.
+        popup.ssid = sharedPreferences.getString("ssid", "");
+        popup.pw = sharedPreferences.getString("pw", "");
+        popup.ip = sharedPreferences.getString("ip", "");
+
+        if(popup.ip != null && !popup.ip.isEmpty()){        //아두이노 접속 테스트
+            try {
+                // URL 생성
+                String urlString = "http://" + popup.ip + ":12345/?action=hello";
+                URL url = new URL(urlString);
+
+                // HTTP GET 요청 설정
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000); // 10초 동안 연결 시도
+
+                // 응답 코드 확인
+                int responseCode = connection.getResponseCode();
+                if(responseCode==200)
+                    Toast.makeText(getApplicationContext(), "서버 연결 성공", Toast.LENGTH_LONG).show(); //토스트메시지 표시
+                else
+                    Toast.makeText(getApplicationContext(), "서버 연결 실패", Toast.LENGTH_LONG).show(); //토스트메시지 표시
+                connection.disconnect();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else
+            Toast.makeText(getApplicationContext(), "서버 연결 필요", Toast.LENGTH_LONG).show(); //토스트메시지 표시
     }
      
     @Override
@@ -162,6 +213,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
             String dateTime = dateFormat.format(calendar.getTime());
             rTxt.setText(dateTime);
+
+            Fragment3.humid = humid;
+            Fragment3.light = light;
+        }
+    }
+
+    private void requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String[] permissions = {
+                    Manifest.permission.INTERNET,
+                    Manifest.permission.ACCESS_WIFI_STATE,
+                    Manifest.permission.CHANGE_WIFI_STATE
+            };
+
+            boolean allPermissionsGranted = true;
+            for (String permission : permissions) {
+                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+
+            if (!allPermissionsGranted) {
+                ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            // 권한 동의 결과 처리
+            boolean allPermissionsGranted = true;
+            for (int grantResult : grantResults) {
+                if (grantResult != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+
+            if (allPermissionsGranted) {
+                // 필요한 권한이 모두 동의됨
+            } else {
+                // 필요한 권한 중 일부 또는 모두 거부됨
+            }
         }
     }
 }
+

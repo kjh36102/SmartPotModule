@@ -56,6 +56,7 @@
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="5dp"
                     android:layout_weight="1"
+                    android:id="@+id/tv_humidity"
                     android:gravity="center"
                     android:padding="10dp"
                     android:text="1.6"
@@ -71,6 +72,7 @@
                     android:gravity="center"
                     android:padding="10dp"
                     android:text="600"
+                    android:id="@+id/tv_light"
                     android:textColor="@color/black"
                     android:textSize="20sp" />
             </TableRow>
@@ -126,12 +128,30 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:gravity="center|start"
             app:layout_constraintTop_toBottomOf="@id/tab_mode">
 
-            <CheckBox
-                android:id="@+id/check_mode"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content">
+
+                <CheckBox
+                    android:id="@+id/check_mode_water"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"/>
+
+                <CheckBox
+                    android:id="@+id/check_mode_light"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 
             <TextView
                 android:id="@+id/tv_check_name"
@@ -158,6 +178,7 @@
                     android:layout_width="match_parent"
                     app:layout_constraintTop_toTopOf="parent"
                     android:layout_height="wrap_content"/>
+
                 <TableLayout
                     android:id="@+id/tab_layout_center"
                     android:layout_width="match_parent"
