@@ -209,37 +209,4 @@ public class Fragment1 extends Fragment{
             imageView.setImageDrawable(drawable);
         }
     }
-    public void setFace(){
-        setBlackImage(smileface, R.drawable.smileface1);
-        setBlackImage(noface, R.drawable.noface1);
-        setBlackImage(angryface, R.drawable.angryface1);
-        try{
-            if(score >=80)
-                setColorImage(smileface, R.drawable.smileface);
-            else if(score >=50)
-                setColorImage(noface, R.drawable.noface);
-            else
-                setColorImage(angryface, R.drawable.angryface);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void setBlackImage(ImageView imageView, int resourceId) {
-        if (imageView != null) {
-            Resources resources = getResources();
-            Bitmap bitmap = BitmapFactory.decodeResource(resources, resourceId);
-            BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
-            imageView.setImageDrawable(drawable);
-        }
-    }
-
-    public void setColorImage(ImageView imageView, int resourceId) {
-        if (imageView != null) {
-            Resources resources = getResources();
-            Bitmap bitmap = BitmapFactory.decodeResource(resources, resourceId);
-            BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
-            imageView.setImageDrawable(drawable);
-        }
-    }
 }
