@@ -35,7 +35,7 @@ IPAddress getBroadcastIP() {
 * @param interval 전송 간격
 * @return 전송 성공시 true
 */
-bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress targetIP, unsigned int targetPort, unsigned int interval = 1000) {
+bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress targetIP, unsigned int targetPort, unsigned int interval = 1000, unsigned int timeout = 10000) {
   LOGLN(F("Start UDP Broadcasting..."));
   LOGF("\tmsg: %s\n", msg);
   LOGF("\texpectAck: %s\n", expectAck);

@@ -1,5 +1,5 @@
-#define EXTPOWER_READ 12
-#define CUT_BATTERY 13
+#define EXTPOWER_READ 14
+#define CUT_BATTERY 12
 #define INTERNAL_LED 5
 
 

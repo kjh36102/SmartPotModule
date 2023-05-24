@@ -1,4 +1,4 @@
-#include "WiFiType.h"
+// #include "WiFiType.h"
 #ifndef __ROUTERS_STA_H__
 #define __ROUTERS_STA_H__
 
