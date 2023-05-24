@@ -1,5 +1,7 @@
 package com.example.app;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -26,14 +28,15 @@ import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.function.ObjIntConsumer;
 
 
 public class Fragment3 extends Fragment {
     private TabLayout tabLayout;
     private TableLayout tableCenter;
     private View includeView;
-    private TextView tvCheck, tvValue, tvRange, tvValue1, tvValue2, tvValue3, tvValue4, tvValue5, edValue1,edValue2, tvValue7, tvValue8, timeToStatus;
-    private CheckBox checkBox;
+    private TextView tvCheck, tvValue, tvRange, tvValue1, tvValue2, tvValue3, tvValue4, tvValue5, edValue1,edValue2, tvLight, tvHumid;
+    private static CheckBox checkBoxWater, checkBoxLight;
     private String curType = WATER;
 
     private Button btDelete, btRegister;
@@ -49,8 +52,6 @@ public class Fragment3 extends Fragment {
     private static final String WATER = "water";
     private static final String LIGHT = "light";
 
-    private static Boolean isWaterCheck = false;
-    private static Boolean isLightCheck = false;
 
     private static String edWater1 = "";
     private static String edWater2 = "";
@@ -58,16 +59,33 @@ public class Fragment3 extends Fragment {
     private static String edLight2 = "";
 
 
+    private String waterValue1 = "";
+    private String waterValue2 = "";
+    private String lightValue1 = "";
+    private String lightValue2 = "";
+    public static String humid = "";
+    public static String light = "";
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.i("##INFO", "onCreateView(): fragment3");
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_3, container, false);
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        tvHumid.setText(humid);
+        tvLight.setText(light);
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        Log.i("##INFO", "onViewCreated(): Fragment3");
 
         tvCheck = view.findViewById(R.id.tv_check_name);
         tabLayout = view.findViewById(R.id.tab_mode);
@@ -77,7 +95,8 @@ public class Fragment3 extends Fragment {
         includeView = view.findViewById(R.id.in_uncheck);
         tvValue1 = view.findViewById(R.id.tv_value_1);
         tvValue2 = view.findViewById(R.id.tv_value_2);
-        checkBox = view.findViewById(R.id.check_mode);
+        checkBoxWater = view.findViewById(R.id.check_mode_water);
+        checkBoxLight = view.findViewById(R.id.check_mode_light);
         tvValue3 = includeView.findViewById(R.id.tv_time_to_status);
         btDelete = includeView.findViewById(R.id.bt_delete);
         btRegister = includeView.findViewById(R.id.bt_register);
@@ -92,6 +111,9 @@ public class Fragment3 extends Fragment {
         edValue1 = includeView.findViewById(R.id.ed_input_1);
         edValue2 = includeView.findViewById(R.id.ed_input_2);
 
+        tvLight = view.findViewById(R.id.tv_light);
+        tvHumid = view.findViewById(R.id.tv_humidity);
+
 
         //리사이클러뷰를 담담하는 어댑터 초기화
         waterDataList = new ArrayList<>();
@@ -102,6 +124,11 @@ public class Fragment3 extends Fragment {
         //리사이클러뷰 초기화 진행
         reData.setAdapter(dataAdapter);
         reData.setLayoutManager(new LinearLayoutManager(getContext()));
+
+
+        tvLight.setText(getData(requireContext(), "light"));
+        tvHumid.setText(getData(requireContext(), "humid"));
+
 
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -117,18 +144,25 @@ public class Fragment3 extends Fragment {
                 switch (position) {
                     case 0:
                         curType = WATER;
-                        Log.i("##INFO", "onTabSelected(): iswaterCheck: " + isWaterCheck);
-                        if (isWaterCheck) {
-                            checkBox.setChecked(true);
-                        } else {
-                            checkBox.setChecked(false);
-                        }
+                        checkBoxLight.setVisibility(View.GONE);
+                        checkBoxWater.setVisibility(View.VISIBLE);
+                        tvValue1.setText(waterValue1);
+                        tvValue2.setText(waterValue2);
+
                         if (edWater1 != null || edWater2 != null) {
                             edValue1.setText(edWater1);
                             edValue2.setText(edWater2);
                         } else {
                             edValue1.setText("");
                             edValue2.setText("");
+                        }
+
+                        if (checkBoxWater.isChecked()) {
+                            tableCenter.setVisibility(View.VISIBLE);
+                            includeView.setVisibility(View.GONE);
+                        } else {
+                            tableCenter.setVisibility(View.GONE);
+                            includeView.setVisibility(View.VISIBLE);
                         }
                         changeText("희망값", "임계범위", "1", "25", "급수시간", "수동급수시간", "");
                         dataAdapter.notifyItemRangeRemoved(0, waterDataList.size());
@@ -137,17 +171,25 @@ public class Fragment3 extends Fragment {
                         break;
                     case 1:
                         curType = LIGHT;
-                        if (isLightCheck) {
-                            checkBox.setChecked(true);
-                        } else {
-                            checkBox.setChecked(false);
-                        }
+                        checkBoxWater.setVisibility(View.GONE);
+                        checkBoxLight.setVisibility(View.VISIBLE);
+                        tvValue1.setText(lightValue1);
+                        tvValue2.setText(lightValue2);
+
                         if (edLight1 != null || edLight2 != null) {
                             edValue1.setText(edLight1);
                             edValue2.setText(edLight2);
                         } else {
                             edValue1.setText("");
                             edValue2.setText("");
+                        }
+
+                        if (checkBoxLight.isChecked()) {
+                            tableCenter.setVisibility(View.VISIBLE);
+                            includeView.setVisibility(View.GONE);
+                        } else {
+                            tableCenter.setVisibility(View.GONE);
+                            includeView.setVisibility(View.VISIBLE);
                         }
                         changeText("조도값", "감지시간", "600", "60", "조명상태", "수동조명시간", "");
                         dataAdapter.setDataList(lightDataList);
@@ -168,30 +210,28 @@ public class Fragment3 extends Fragment {
         });
 
 
-        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        checkBoxWater.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
                 if (isChecked) {
-                    if (curType.equals(WATER)) {
-                        isWaterCheck = true;
-                    } else {
-                        isLightCheck = true;
-                    }
                     includeView.setVisibility(View.GONE);
                     tableCenter.setVisibility(View.VISIBLE);
-                    tvValue1.setText("");
-                    tvValue2.setText("");
                 } else {
-                    Log.i("##INFO", "onCheckedChanged(): ???");
-                    if (curType.equals(WATER)) {
-                        isWaterCheck = false;
-                    } else {
-                        isLightCheck = false;
-                    }
                     includeView.setVisibility(View.VISIBLE);
                     tableCenter.setVisibility(View.GONE);
-                    tvValue1.setText("");
-                    tvValue2.setText("");
+                }
+            }
+        });
+
+        checkBoxLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                if (isChecked) {
+                    includeView.setVisibility(View.GONE);
+                    tableCenter.setVisibility(View.VISIBLE);
+                } else {
+                    includeView.setVisibility(View.VISIBLE);
+                    tableCenter.setVisibility(View.GONE);
                 }
             }
         });
@@ -279,7 +319,7 @@ public class Fragment3 extends Fragment {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                Log.i("##INFO", "afterTextChanged(): editable = " + editable);
+
             }
         });
 
@@ -305,9 +345,48 @@ public class Fragment3 extends Fragment {
         });
 
 
+        tvValue1.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (curType.equals(WATER)) {
+                    waterValue1 = tvValue1.getText().toString();
+                } else {
+                    lightValue1 = tvValue1.getText().toString();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                Log.i("##INFO", "afterTextChanged(): editable = " + editable);
+            }
+        });
+
+        tvValue2.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (curType.equals(WATER)) {
+                    waterValue2 = tvValue2.getText().toString();
+                } else {
+                    lightValue2 = tvValue2.getText().toString();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                Log.i("##INFO", "afterTextChanged(): editable = " + editable);
+            }
+        });
     }
-
 
     private void changeText(String value, String range, String value1, String value2, String value3, String value4, String value5) {
         tvValue.setText(value);
@@ -316,4 +395,16 @@ public class Fragment3 extends Fragment {
         tvValue4.setText(value4);
         tvValue5.setText(value5);
     }
+
+
+    private String getData(Context context, String key) {
+
+        SharedPreferences prefs = requireContext().getSharedPreferences("data",Context.MODE_PRIVATE);
+
+        String value = prefs.getString(key, "");
+
+        return value;
+
+    }
+
 }

@@ -213,6 +213,53 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
             String dateTime = dateFormat.format(calendar.getTime());
             rTxt.setText(dateTime);
+
+            Fragment3.humid = humid;
+            Fragment3.light = light;
+        }
+    }
+
+    private void requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String[] permissions = {
+                    Manifest.permission.INTERNET,
+                    Manifest.permission.ACCESS_WIFI_STATE,
+                    Manifest.permission.CHANGE_WIFI_STATE
+            };
+
+            boolean allPermissionsGranted = true;
+            for (String permission : permissions) {
+                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+
+            if (!allPermissionsGranted) {
+                ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            // 권한 동의 결과 처리
+            boolean allPermissionsGranted = true;
+            for (int grantResult : grantResults) {
+                if (grantResult != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionsGranted = false;
+                    break;
+                }
+            }
+
+            if (allPermissionsGranted) {
+                // 필요한 권한이 모두 동의됨
+            } else {
+                // 필요한 권한 중 일부 또는 모두 거부됨
+            }
         }
     }
 

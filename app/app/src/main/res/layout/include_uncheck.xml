@@ -10,6 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+
+
         <TableLayout
             android:id="@+id/tab_layout_center_checked"
             android:layout_width="match_parent"
@@ -27,7 +29,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="5dp"
-                    android:layout_weight="1"
+                    android:layout_weight="0.5"
                     android:gravity="center"
                     android:padding="10dp"
                     android:text="수동급수시간"
@@ -39,11 +41,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
+                    android:layout_weight="0.5"
                     android:layout_marginBottom="5dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
                     android:padding="10dp"
-                    android:text=""
+                    android:hint="수동급수시간"
+                    android:layout_gravity="center"
+                    android:textColorHint="@android:color/transparent"
                     android:textColor="@color/black"
                     android:textSize="20sp" />
             </TableRow>
