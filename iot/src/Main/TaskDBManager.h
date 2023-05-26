@@ -56,7 +56,7 @@ void closeDB() {
   LOGLN("DB 닫기 완료");
   stateDBOpen = false;
 
-  pinMode(26, OUTPUT);
+  pinMode(27, OUTPUT);
   digitalWrite(26, 1);
   delay(1000);
   digitalWrite(26, 0);
@@ -82,6 +82,10 @@ int executeSql(const char *sql) {
   Serial.print(F("\t소요 시간(ms):"));
   Serial.println(millis() - start);
   return rc;
+}
+
+void createTablesIfNotExists(){
+  
 }
 
 void initTaskDBManager() {

@@ -49,7 +49,7 @@ bool connectStationAP(String SSID, String PW) {
   bool ret = true;
   LOG(F("외부 네트워크 연결중.."));
   while (WiFi.status() != WL_CONNECTED) {
-    if (millis() - staConnStartTime >= 10000) {
+    if (millis() - staConnStartTime >= 30000) {
       LOGLN(F("\n\t연결시간 초과!"));
       ret = false;
       break;

@@ -26,8 +26,9 @@ void setupAPRouters() {
       if (connectStationAP(STA_SSID, STA_PW)) {
         connectPhase = ConnectPhase::STA_CONNECTED;
         serverAP.send(200, HTTP_MIME, F("연결 성공"));
-        // WiFi.softAPdisconnect(true);
         serverSTA.begin();
+        // delay(3000);
+        // WiFi.softAPdisconnect(true);
       } else {
         serverAP.send(500, HTTP_MIME, F("연결 실패"));
         connectPhase = ConnectPhase::SETUP;
@@ -38,10 +39,9 @@ void setupAPRouters() {
         connectPhase = ConnectPhase::UDP_BROADCAST;
 
         if (sendUDPMessageUntilACK(("SmartPotModule:" + WiFi.localIP().toString()).c_str(),
-                                   "SmartPotModule:ACK", getBroadcastIP(), STA_PORT)) {
-          sendAckNtime(5, getBroadcastIP(), STA_PORT);
+                                   "SmartPotModule:ACK", getBroadcastIP(), STA_PORT, 1000, 30000)) {
+          // sendAckNtime(5, getBroadcastIP(), STA_PORT);
           connectPhase = ConnectPhase::UDP_ACK;
-          WiFi.softAPdisconnect(true);  //핫스팟끄기
         }
       }
     } else {

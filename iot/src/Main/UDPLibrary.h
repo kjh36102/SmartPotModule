@@ -35,7 +35,7 @@ IPAddress getBroadcastIP() {
 * @param interval 전송 간격
 * @return 전송 성공시 true
 */
-bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress targetIP, unsigned int targetPort, unsigned int interval = 1000, unsigned int timeout = 10000) {
+bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress targetIP, unsigned int targetPort, unsigned int interval = 1000, unsigned int timeout = 30000) {
   LOGLN(F("Start UDP Broadcasting..."));
   LOGF("\tmsg: %s\n", msg);
   LOGF("\texpectAck: %s\n", expectAck);
@@ -58,11 +58,11 @@ bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress ta
     //interval 만큼 기다림
     delay(interval);
 
-    // //시간초과 확인
-    // if(millis() - transferStartTime > timeout){
-    //   LOGLN(F("UDP Broadcast reached to timeout!"));
-    //   return false;
-    // }
+    //시간초과 확인
+    if(millis() - transferStartTime > timeout){
+      LOGLN(F("UDP Broadcast reached to timeout!"));
+      return false;
+    }
 
     // 응답이 있는지 확인
     int packetSize = udp.parsePacket();
@@ -72,6 +72,9 @@ bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress ta
       if (len > 0) {
         ackBuffer[len] = '\0';
       }
+
+      LOG("UDP MSG: ");
+      LOGLN(ackBuffer);
 
       if (strcmp(ackBuffer, expectAck) == 0) {  //응답이 ack와 같으면 return true
         udp.stop();
