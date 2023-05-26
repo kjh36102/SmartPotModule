@@ -1,0 +1,38 @@
+DROP TABLE IF EXISTS soil_data;
+DROP TABLE IF EXISTS wifi_info 
+DROP TABLE IF EXISTS plant_manage 
+DROP TABLE IF EXISTS manage_auto 
+DROP TABLE IF EXISTS manage_water 
+DROP TABLE IF EXISTS manage_light 
+
+CREATE TABLE IF NOT EXISTS soil_data (id INTEGER PRIMARY KEY, tm REAL, hm REAL, n REAL, p REAL, k REAL, ph REAL, ec INTEGER, lt INTEGER, ts TEXT DEFAULT (datetime('now','localtime')));
+CREATE TABLE IF NOT EXISTS wifi_info (id INTEGER PRIMARY KEY, ssid_ap TEXT, pw_ap TEXT, ssid_sta TEXT, pw_sta TEXT);
+CREATE TABLE IF NOT EXISTS plant_manage (id INTEGER PRIMARY KEY, w_auto INTEGER, l_auto INTEGER, w_on INTEGER, l_on INTEGER);
+CREATE TABLE IF NOT EXISTS manage_auto (id INTEGER PRIMARY KEY, hm REAL, th REAL, lt INTEGER, dr INTEGER);
+CREATE TABLE IF NOT EXISTS manage_water (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, wt INTEGER, no TEXT);
+CREATE TABLE IF NOT EXISTS manage_light (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, ls INTEGER, no TEXT);
+
+토양정보 업데이트
+DELETE FROM soil_data;
+INSERT INTO soil_data(id, tm, hm, n, p, k, ph, ec, lt) values(0, ?, ?, ?, ?, ?, ?, ?);
+
+와이파이 정보초기화
+DELETE FROM wifi_info;
+INSERT INTO wifi_info(id, ssid_ap, pw_ap, ssid_sta, pw_sta) values(0, 'SmartPotModule', NULL, NULL, NULL);
+
+식물관리 설정값 초기화
+DELETE FROM plant_manage;
+INSERT INTO plant_manage values(0, 0, 0, 0, 0);
+
+자동모드 설정값 초기화
+DELETE FROM manage_auto;
+INSERT INTO manage_auto values(0, NULL, NULL, NULL, NULL);
+
+급수 수동모드 테이블 초기화
+DELETE FROM manage_water;
+
+조명 수동모드 테이블 초기화
+DELETE FROM manage_light;
+
+
+SELECT name FROM sqlite_master where type='table';

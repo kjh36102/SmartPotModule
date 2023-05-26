@@ -31,6 +31,7 @@ void setupAPRouters() {
       } else {
         serverAP.send(500, HTTP_MIME, F("연결 실패"));
         connectPhase = ConnectPhase::SETUP;
+        return;
       }
 
       if (connectPhase == ConnectPhase::STA_CONNECTED) {
