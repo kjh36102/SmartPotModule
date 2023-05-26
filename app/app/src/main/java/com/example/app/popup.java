@@ -72,6 +72,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 //getText();              //입력값 SSID,PW 가져오기
                 //register(ssid, pw);     //아두이노로 SSID,PW넘겨주고 아두이노의 접속확인까지
                 webCheck(); //웹서버통신 테스트용
+                
                 }
         });
         plantBtn.setOnClickListener(new View.OnClickListener() {
