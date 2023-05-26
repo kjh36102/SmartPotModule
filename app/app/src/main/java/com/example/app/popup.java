@@ -8,7 +8,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Bundle;
+import android.os.PatternMatcher;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,15 +38,15 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 public class popup extends AppCompatActivity implements View.OnClickListener {
-    public static String ssid;
-    public static String pw;
-    public static String ip;
-    public static String plant;
-    public static TextView connText;
-    private int responseCode;
-    public static boolean connCheck;
-    public static boolean ipGetCheck;
-    private Context context;
+        public static String ssid;
+        public static String pw;
+        public static String ip;
+        public static String plant;
+        public static TextView connText;
+        private int responseCode;
+        public static boolean connCheck;
+        public static boolean ipGetCheck;
+        private Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,25 +69,9 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         regiBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                getText();              //입력값 SSID,PW 가져오기
-                register(ssid, pw);     //아두이노로 SSID,PW넘겨주고 아두이노의 접속확인까지
-                if (responseCode == 200) {
-                    WifiUtils wifiUtils = new WifiUtils(getApplicationContext());
-                    boolean isConnected = wifiUtils.connectToWifi(ssid, pw); //앱에서 SSID와이파이에 연결체크
-                    if (isConnected) { // Wi-Fi 연결 성공
-                        connText.setText("앱이 " + ssid + "에 연결됨");
-                        connCheck = true;
-                    } else { // Wi-Fi 연결 실패
-                        connText.setText("앱이 " + ssid + "에 연결실패");
-                    }
-                }
-                if(connCheck==true){     //와아파이에 연결 성공시
-                    Runnable udpClientRunnable = new UdpClientRunnable(context); //udp로 ip수신
-                    Thread udpClientThread = new Thread(udpClientRunnable);
-                    udpClientThread.start();
-                }
-                if(ipGetCheck==true)
-                    webCheck();   //웹서버 열렸는지 접속확인
+                //getText();              //입력값 SSID,PW 가져오기
+                //register(ssid, pw);     //아두이노로 SSID,PW넘겨주고 아두이노의 접속확인까지
+                webCheck();
                 }
         });
         plantBtn.setOnClickListener(new View.OnClickListener() {
@@ -118,65 +109,142 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         EditText editPw = findViewById(R.id.in_pw);
         ssid = editSsid.getText().toString();
         pw = editPw.getText().toString();
+        Toast.makeText(getApplicationContext(), "입력값 가져오기 성공", Toast.LENGTH_SHORT).show();
     }
     public void register(String SSID, String PW){
         connText.setText("연결중");
-        responseCode=0;
-        connCheck=false;
-        ipGetCheck=false;
-        try {
-            // URL 생성
-            String urlString = "http://192.168.4.1:12345/?action=regExtWifi&ssid=" + URLEncoder.encode(ssid, "UTF-8") + "&pw=" + URLEncoder.encode(pw, "UTF-8");
-            URL url = new URL(urlString);
+        responseCode = 0;
+        connCheck = false;
+        ipGetCheck= false;
 
-            // HTTP GET 요청 설정
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10000); // 10초 동안 연결 시도
-            connection.setReadTimeout(5000);
-            // 응답 코드 확인
-            responseCode = connection.getResponseCode();
-            Log.d(TAG, "Response code: " + responseCode);
-
-            if(responseCode == 200)
-                connText.setText("아두이노가 " + ssid +"에 연결성공");
-            else
-                connText.setText("정보 확인 후 다시 등록");
-
-            connection.disconnect();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        RegisterRunnable registerRunnable = new RegisterRunnable(SSID, PW);
+        Thread registerThread = new Thread(registerRunnable);
+        registerThread.start();
     }
     public void webCheck(){
-        try {
-            // URL 생성
-            String urlString = "http://" + ip + ":12345/?action=hello";
-            URL url = new URL(urlString);
+        WebCheckRunnable webCheckRunnable = new WebCheckRunnable();
+        Thread webCheckThread = new Thread(webCheckRunnable);
+        webCheckThread.start();
+    }
+    private class RegisterRunnable implements Runnable {
+        private String ssid;
+        private String pw;
 
-            // HTTP GET 요청 설정
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10000); // 10초 동안 연결 시도
+        public RegisterRunnable(String ssid, String pw) {
+            this.ssid = ssid;
+            this.pw = pw;
+        }
 
-            // 응답 코드 확인
-            responseCode = connection.getResponseCode();
-            if(responseCode==200) {
-                connText.setText("최종접속성공");
-                // 값을 저장할 SharedPreferences 객체 생성
-                SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-                // 값을 편집하기 위한 Editor 객체 생성
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("ssid", ssid);
-                editor.putString("pw",pw);
-                editor.putString("ip",ip);
-                editor.apply();
+        @Override
+        public void run() {
+            try {
+                // URL 생성
+                String urlString = "http://192.168.4.1:12344/regExtWifi?ssid=" + URLEncoder.encode(ssid, "UTF-8") + "&pw=" + URLEncoder.encode(pw, "UTF-8");
+                URL url = new URL(urlString);
+
+                // HTTP GET 요청 설정
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000); // 10초 동안 연결 시도
+                connection.setReadTimeout(30000);
+                // 응답 코드 확인
+                responseCode = connection.getResponseCode();
+                /*
+                while(responseCode != HttpURLConnection.HTTP_OK) {
+
+                    Thread.sleep(100);
+                    System.out.println("...");
+                }*/
+                //Log.d(TAG, "Response code: " + responseCode);
+                connection.disconnect();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Exception in register: " + e.getMessage());
             }
-            else
-                connText.setText("최종실패, 다시등록바랍니다");
-            connection.disconnect();
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (responseCode == 200) {
+                        System.out.println("아두이노 연결성공");
+                        connText.setText("아두이노가 " + ssid + "에 연결성공");
+
+                    }
+                    else {
+                        System.out.println("정보 확인 후 다시 등록");
+                        connText.setText("정보 확인 후 다시 등록");
+                    }
+                        //여기까지 테스트 성공
+                    if (responseCode == 200) {
+                        System.out.println("와이파이변경코드 직전");
+                        //popup popupObj = new popup();
+                        //popupObj.connText = (TextView) findViewById(R.id.show_conn);
+                        WifiConnector wifiConnector = new WifiConnector(context);
+                        wifiConnector.connectToNetwork(ssid, pw, new WifiConnector.ConnectionCallback() {
+                            @Override
+                            public void onConnectionResult(boolean isConnected) {
+                                if (isConnected) {
+                                    System.out.println("Successfully connected to the network");
+                                } else {
+                                    System.out.println("Failed to connect to the network");
+                                }
+                            }
+                        });
+                    }
+
+                    if (connCheck) {
+                        Runnable udpClientRunnable = new UdpClientRunnable(context);
+                        Thread udpClientThread = new Thread(udpClientRunnable);
+                        udpClientThread.start();
+                    }
+
+                    if (ipGetCheck) {
+                        webCheck();
+                    }
+                }
+            });
+        }
+    }
+    private class WebCheckRunnable implements Runnable {
+        @Override
+        public void run() {
+            try {
+                // URL 생성
+                String urlString = "http://" + ip + ":12345/testData";
+                URL url = new URL(urlString);
+                System.out.println("URL생성");
+                // HTTP GET 요청 설정
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000); // 10초 동안 연결 시도
+
+                // 응답 코드 확인
+                responseCode = connection.getResponseCode();
+                System.out.println(responseCode);
+                connection.disconnect();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Exception in Web: " + e.getMessage());
+            }
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (responseCode == 200) {
+                        connText.setText("최종접속성공");
+                        // 값을 저장할 SharedPreferences 객체 생성
+                        SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                        // 값을 편집하기 위한 Editor 객체 생성
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("ssid", ssid);
+                        editor.putString("pw", pw);
+                        editor.putString("ip", ip);
+                        editor.apply();
+                    } else {
+                        connText.setText("최종실패, 다시등록바랍니다");
+                    }
+                }
+            });
         }
     }
 }

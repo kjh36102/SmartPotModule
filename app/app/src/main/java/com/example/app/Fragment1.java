@@ -21,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -67,9 +68,12 @@ public class Fragment1 extends Fragment{
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        ToggleButton toggleButton = view.findViewById(R.id.toggleButton);
         Button rBtn = view.findViewById(R.id.rButton);
         Button water = view.findViewById(R.id.nowWater);
-        ToggleButton toggleButton = view.findViewById(R.id.toggleButton);
+        CheckBox waterCK = view.findViewById(R.id.check_mode_water);
+        CheckBox lightCK = view.findViewById(R.id.check_mode_light);
+
         rBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
@@ -96,7 +100,7 @@ public class Fragment1 extends Fragment{
                     //켜졌을때 동작할거
                 }
                 else {
-                    //꺼짐기능
+                    //꺼짐기능 코드
                 }
             }
         });

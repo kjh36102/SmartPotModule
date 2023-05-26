@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String URL = "http://cofon.xyz:9090/read?col=temp_humid_light_ph_nitro_phos_pota_ec";
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
-    private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final int PERMISSION_REQUEST_CODE = 0;
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }).attach();
         findViewById(R.id.wifi_button).setOnClickListener(this);
         //JSON서버 연결
-        new GetJsonDataTask().execute(URL);
+        //new GetJsonDataTask().execute(URL);
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
@@ -232,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             Fragment3.humid = humid;
             Fragment3.light = light;
-
+            /*
             ChatGPT chatGPT = new ChatGPT();
             new Thread(){
                 public void run(){
@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });
                 }
-            }.start();
+            }.start(); */
         }
     }
     public void setFace(){
@@ -295,7 +295,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String[] permissions = {
                     Manifest.permission.INTERNET,
                     Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.CHANGE_WIFI_STATE
+                    Manifest.permission.CHANGE_WIFI_STATE,
+                    Manifest.permission.ACCESS_FINE_LOCATION
             };
 
             boolean allPermissionsGranted = true;
