@@ -40,7 +40,7 @@ ConnectPhase connectPhase = ConnectPhase::INITIAL;
 
 const char* HTTP_MIME = "text/html; charset=UTF-8";
 
-bool connectStationAP(String SSID, String PW) {
+bool connectStationAP(String SSID, String PW, unsigned long timeout = 30000) {
 
   //STA 연결 시도
   unsigned long staConnStartTime = millis();
@@ -49,7 +49,8 @@ bool connectStationAP(String SSID, String PW) {
   bool ret = true;
   LOG(F("외부 네트워크 연결중.."));
   while (WiFi.status() != WL_CONNECTED) {
-    if (millis() - staConnStartTime >= 30000) {
+
+    if (millis() - staConnStartTime >= timeout) {
       LOGLN(F("\n\t연결시간 초과!"));
       ret = false;
       break;

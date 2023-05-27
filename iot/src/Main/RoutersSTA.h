@@ -21,10 +21,16 @@ void setupSTARouters() {
     smartphoneIP = serverSTA.client().remoteIP();
     connectPhase = ConnectPhase::COMPLETE;
 
+    WiFi.softAPdisconnect(true);  //핫스팟끄기
+
     serverSTA.send(200, HTTP_MIME, "All connected!");
 
     LOGLN(F("성공적으로 앱과 연결됨!"));
     LOGF("\t스마트폰IP: %s\n\t외부네트워크IP: %s\n", smartphoneIP.toString().c_str(), WiFi.localIP().toString().c_str());
+  });
+
+  serverSTA.on("/testData", HTTP_GET, [](){
+    serverSTA.send(200, HTTP_MIME, "테스트 데이터 받기~");
   });
 }
 

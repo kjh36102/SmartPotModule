@@ -23,15 +23,13 @@ void setupAPRouters() {
       STA_PW = serverAP.arg("pw");
       connectPhase = ConnectPhase::STA_INFO;
 
-      if (connectStationAP(STA_SSID, STA_PW)) {
+      if (connectStationAP(STA_SSID, STA_PW, 25000)) {  //타임아웃은 앱보다 좀더 짧게해줘야 연결이 되었는데도 앱이 실패로 판단하는 것을 방지가능
         connectPhase = ConnectPhase::STA_CONNECTED;
         serverAP.send(200, HTTP_MIME, F("연결 성공"));
-        // WiFi.softAPdisconnect(true);
         serverSTA.begin();
       } else {
         serverAP.send(500, HTTP_MIME, F("연결 실패"));
-        connectPhase = ConnectPhase::SETUP;
-        return;
+        connectPhase = ConnectPhase::INITIAL;
       }
 
       if (connectPhase == ConnectPhase::STA_CONNECTED) {
@@ -39,10 +37,11 @@ void setupAPRouters() {
         connectPhase = ConnectPhase::UDP_BROADCAST;
 
         if (sendUDPMessageUntilACK(("SmartPotModule:" + WiFi.localIP().toString()).c_str(),
-                                   "SmartPotModule:ACK", getBroadcastIP(), STA_PORT)) {
-          sendAckNtime(5, getBroadcastIP(), STA_PORT);
+                                   "SmartPotModule:ACK", getBroadcastIP(), STA_PORT, 1000, 25000)) {  //타임아웃은 앱보다 조금 짧게
           connectPhase = ConnectPhase::UDP_ACK;
-          WiFi.softAPdisconnect(true);  //핫스팟끄기
+        }else{
+          LOGLN(F("UDP ACK응답 받기 시간초과"));
+          connectPhase = ConnectPhase::INITIAL;
         }
       }
     } else {

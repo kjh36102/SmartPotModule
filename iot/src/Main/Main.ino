@@ -35,7 +35,7 @@ void setup() {
   initPins();
 
   // createAndRunTask(tReadConnBtn, "TaskReadConnBtn", 3000);
-  createAndRunTask(tControlWifiLed, "TaskControlWifiLed", 1000);
+  createAndRunTask(tControlWifiLed, "TaskControlWifiLed", 2000);
   createAndRunTask(tMonitorExtPwr, "TaskMonitorExtPwr", 3000);
 
   setupAPRouters();
