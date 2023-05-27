@@ -1,3 +1,4 @@
+#include "WiFiType.h"
 // #include "IPAddress.h"
 #ifndef __NETWORK_SETUP_H__
 #define __NETWORK_SETUP_H__
@@ -6,6 +7,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include "UDPLibrary.h"
 
 //-------------------------------------------------------------
 #define LOGKEY "NetworkSetup.h"
@@ -43,7 +45,7 @@ String previousTryingSSID;
 String previousTryingPW;
 bool connectStationAP(String SSID, String PW, unsigned long timeout = 30000) {
 
-  if(SSID.equals(previousTryingSSID) && PW.equals(previousTryingPW)) return false;
+  if (SSID.equals(previousTryingSSID) && PW.equals(previousTryingPW)) return false;
 
   previousTryingSSID = SSID;
   previousTryingPW = PW;
@@ -68,7 +70,7 @@ bool connectStationAP(String SSID, String PW, unsigned long timeout = 30000) {
   if (ret) {
     previousTryingSSID = "";
     previousTryingPW = "";
-    
+
     LOGLN(F("\n\t연결됨!"));
     LOGF("\tSSID: %s\n\tPW: %s\n\t외부IP: %s\n", SSID.c_str(), PW.c_str(), WiFi.localIP().toString().c_str());
   }

@@ -37,12 +37,13 @@ void setup() {
   // createAndRunTask(tReadConnBtn, "TaskReadConnBtn", 3000);
   createAndRunTask(tControlWifiLed, "TaskControlWifiLed", 2000);
   createAndRunTask(tMonitorExtPwr, "TaskMonitorExtPwr", 3000);
+  // createAndRunTask(tBroadcastingUDP, "TaskBroadcastingUDP", 2000);
 
   setupAPRouters();
   setupSTARouters();
 
-  connectPhase = ConnectPhase::SETUP;  //실행시 바로 셋업모드로(버튼없으면 사용)
-  initNetwork();
+  // connectPhase = ConnectPhase::SETUP;  //실행시 바로 셋업모드로(버튼없으면 사용)
+  // initNetwork();
 
   appendShutdownProcess([]() {  //종료시 실행하는 함수 등록
     for (byte i = 0; i < 30; i++) {

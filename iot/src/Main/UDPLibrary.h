@@ -88,21 +88,21 @@ bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress ta
 nTime만큼 ACK를 전송하는 함수
 패킷손실에 대비해 여러번 전송
 */
-bool sendAckNtime(byte nTime, IPAddress targetIP, unsigned int targetPort, unsigned int interval = 200) {
-  WiFiUDP udp;
-  udp.begin(STA_PORT);
+// bool sendAckNtime(byte nTime, IPAddress targetIP, unsigned int targetPort, unsigned int interval = 200) {
+//   WiFiUDP udp;
+//   udp.begin(STA_PORT);
 
-  //udp 패킷 전송
-  for (byte i = 0; i < nTime; i++) {
-    udp.beginPacket(getBroadcastIP(), STA_PORT);
-    const char* msg = "SmartPotModule:ACK";
-    udp.write((const uint8_t*)msg, strlen(msg));
-    udp.endPacket();
-    delay(interval);
-  }
+//   //udp 패킷 전송
+//   for (byte i = 0; i < nTime; i++) {
+//     udp.beginPacket(getBroadcastIP(), STA_PORT);
+//     const char* msg = "SmartPotModule:ACK";
+//     udp.write((const uint8_t*)msg, strlen(msg));
+//     udp.endPacket();
+//     delay(interval);
+//   }
 
-  udp.stop();
-}
+//   udp.stop();
+// }
 
 
 //----------------------------------------

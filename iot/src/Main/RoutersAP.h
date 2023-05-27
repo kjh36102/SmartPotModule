@@ -23,10 +23,11 @@ void setupAPRouters() {
       STA_PW = serverAP.arg("pw");
       connectPhase = ConnectPhase::STA_INFO;
 
-      if (connectStationAP(STA_SSID, STA_PW, 20000)) {  //타임아웃은 앱보다 좀더 짧게해줘야 연결이 되었는데도 앱이 실패로 판단하는 것을 방지가능
+      if (connectStationAP(STA_SSID, STA_PW, 10000)) {  //타임아웃은 앱보다 좀더 짧게해줘야 연결이 되었는데도 앱이 실패로 판단하는 것을 방지가능
         connectPhase = ConnectPhase::STA_CONNECTED;
         serverAP.send(200, HTTP_MIME, F("연결 성공"));
         serverSTA.begin();
+
       } else {
         serverAP.send(500, HTTP_MIME, F("연결 실패"));
         connectPhase = ConnectPhase::SETUP;
@@ -38,11 +39,12 @@ void setupAPRouters() {
         connectPhase = ConnectPhase::UDP_BROADCAST;
 
         if (sendUDPMessageUntilACK(("SmartPotModule:" + WiFi.localIP().toString()).c_str(),
-                                   "SmartPotModule:ACK", getBroadcastIP(), STA_PORT, 500, 10000)) {  //udp는 조금 짧아도 됨
+                                   "SmartPotModule:ACK", getBroadcastIP(), STA_PORT, 500, 30000)) {  
           connectPhase = ConnectPhase::UDP_ACK;
         }else{
           LOGLN(F("UDP ACK응답 받기 시간초과"));
           connectPhase = ConnectPhase::SETUP;
+          initNetwork(true);
           return;
         }
       }
