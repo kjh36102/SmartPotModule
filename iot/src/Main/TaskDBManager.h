@@ -108,8 +108,11 @@ void tTestDBManager(void *taskParams) {
   while (true) {
     if (Serial.available()) {
       String msg = Serial.readStringUntil('\n');
-
-      if (msg.equals("close")) {
+      
+      if(msg.equals("setup")){
+        connectPhase = ConnectPhase::SETUP;
+        initNetwork(true);
+      }else if (msg.equals("close")) {
         closeDB();
       } else if (msg.equals("open")) {
         openDB();
