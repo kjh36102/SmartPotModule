@@ -38,7 +38,7 @@ void setupAPRouters() {
         connectPhase = ConnectPhase::UDP_BROADCAST;
 
         if (sendUDPMessageUntilACK(("SmartPotModule:" + WiFi.localIP().toString()).c_str(),
-                                   "SmartPotModule:ACK", getBroadcastIP(), STA_PORT, 1000, 25000)) {  //타임아웃은 앱보다 조금 짧게
+                                   "SmartPotModule:ACK", getBroadcastIP(), STA_PORT, 500, 10000)) {  //udp는 조금 짧아도 됨
           connectPhase = ConnectPhase::UDP_ACK;
         }else{
           LOGLN(F("UDP ACK응답 받기 시간초과"));

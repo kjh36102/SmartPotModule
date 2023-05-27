@@ -39,8 +39,14 @@ enum class ConnectPhase {
 ConnectPhase connectPhase = ConnectPhase::INITIAL;
 
 const char* HTTP_MIME = "text/html; charset=UTF-8";
-
+String previousTryingSSID;
+String previousTryingPW;
 bool connectStationAP(String SSID, String PW, unsigned long timeout = 30000) {
+
+  if(SSID.equals(previousTryingSSID) && PW.equals(previousTryingPW)) return false;
+
+  previousTryingSSID = SSID;
+  previousTryingPW = PW;
 
   //STA 연결 시도
   unsigned long staConnStartTime = millis();
@@ -60,6 +66,9 @@ bool connectStationAP(String SSID, String PW, unsigned long timeout = 30000) {
   }
 
   if (ret) {
+    previousTryingSSID = "";
+    previousTryingPW = "";
+    
     LOGLN(F("\n\t연결됨!"));
     LOGF("\tSSID: %s\n\tPW: %s\n\t외부IP: %s\n", SSID.c_str(), PW.c_str(), WiFi.localIP().toString().c_str());
   }
