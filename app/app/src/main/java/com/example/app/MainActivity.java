@@ -107,7 +107,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         popup.ssid = sharedPreferences.getString("ssid", "");
         popup.pw = sharedPreferences.getString("pw", "");
         popup.ip = sharedPreferences.getString("ip", "");
-        popup.url = sharedPreferences.getString("url", "");
+        //popup.url = sharedPreferences.getString("url", "");
+        setBlackFace();
+
+        new GetJsonDataTask().execute(popup.url);
+        /*
         WifiConnectionManager connManager = new WifiConnectionManager(this, popup.connText);
         if (!connManager.permission.hasAll())
             connManager.permission.requestAll();
@@ -159,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
                 setBlackFace();
             }
+            */
     }
      
     @Override
@@ -197,6 +202,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 resultHashMap.put("phos", jsonObject.getString("p"));
                 resultHashMap.put("pota", jsonObject.getString("k"));
                 resultHashMap.put("ec", jsonObject.getString("ec"));
+                //resultHashMap.put("ts", jsonObject.getString("ts"));
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -223,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String phos = mDataHashMap.get("phos");
             String pota = mDataHashMap.get("pota");
             String ec = mDataHashMap.get("ec");
+            String ts = mDataHashMap.get("ts");
             TextView tempText = findViewById(R.id.temp);
             TextView humidText = findViewById(R.id.humid);
             TextView lightText = findViewById(R.id.light);
@@ -240,6 +247,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             phosText.setText(phos);
             potaText.setText(pota);
             ecText.setText(ec);
+            //rTxt.setText(ts);
             Calendar calendar = Calendar.getInstance();
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
             String dateTime = dateFormat.format(calendar.getTime());
@@ -260,6 +268,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 JSONObject json = new JSONObject(scoreResponse);
                                 String scoreString = json.getString("총점");
                                 score = Float.parseFloat(scoreString);
+                                setFace();
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -269,11 +278,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }.start();
         }
     }
+    public void setBlackFace(){
+        setBlackImage(smileface, R.drawable.smileface1);
+        setBlackImage(noface, R.drawable.noface1);
+        setBlackImage(angryface, R.drawable.angryface1);
+    }
     public void setFace(){
         setBlackFace();
-
-        System.out.println(score);
-
         try{
             if(score >=80)
                 setColorImage(smileface, R.drawable.smileface);
@@ -285,17 +296,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             throw new RuntimeException(e);
         }
     }
-    public void setBlackFace(){
-        setBlackImage(smileface, R.drawable.smileface1);
-        setBlackImage(noface, R.drawable.noface1);
-        setBlackImage(angryface, R.drawable.angryface1);
-    }
+
     public void setBlackImage(ImageView imageView, int resourceId) {
         if (imageView != null) {
             Resources resources = getResources();
             Bitmap bitmap = BitmapFactory.decodeResource(resources, resourceId);
             BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
             imageView.setImageDrawable(drawable);
+            System.out.println(imageView);
         }
     }
 
