@@ -1,5 +1,6 @@
 package com.example.app;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -51,7 +52,7 @@ import java.util.Iterator;
  */
 public class Fragment1 extends Fragment{
     public static HashMap<String, String> mDataHashMap;
-    public static int score;
+    public static float score;
     public static ImageView smileface;
     public static ImageView noface ;
     public static ImageView angryface;
@@ -77,14 +78,17 @@ public class Fragment1 extends Fragment{
         rBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                new GetJsonDataTask().execute(MainActivity.URL);
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        setFace();
-                    }
-                }, 5000); // 3초 뒤에 setFace() 실행
+                if (popup.ip != null && !popup.ip.isEmpty()) {   //아두이노 IP를 알때만 사용가능
+
+                    new GetJsonDataTask().execute(popup.url);
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            setFace();
+                        }
+                    }, 5000); // 3초 뒤에 setFace() 실행
+                }
             }
         });
         water.setOnClickListener(new View.OnClickListener(){
@@ -131,13 +135,13 @@ public class Fragment1 extends Fragment{
                 inputStream.close();
                 httpURLConnection.disconnect();
                 JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                resultHashMap.put("temp", jsonObject.getString("temp"));
-                resultHashMap.put("humid", jsonObject.getString("humid"));
-                resultHashMap.put("light", jsonObject.getString("light"));
+                resultHashMap.put("temp", jsonObject.getString("tm"));
+                resultHashMap.put("humid", jsonObject.getString("hm"));
+                resultHashMap.put("light", jsonObject.getString("lt"));
                 resultHashMap.put("ph", jsonObject.getString("ph"));
-                resultHashMap.put("nitro", jsonObject.getString("nitro"));
-                resultHashMap.put("phos", jsonObject.getString("phos"));
-                resultHashMap.put("pota", jsonObject.getString("pota"));
+                resultHashMap.put("nitro", jsonObject.getString("n"));
+                resultHashMap.put("phos", jsonObject.getString("p"));
+                resultHashMap.put("pota", jsonObject.getString("k"));
                 resultHashMap.put("ec", jsonObject.getString("ec"));
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -201,7 +205,8 @@ public class Fragment1 extends Fragment{
                             try {
                                 JSONObject json = new JSONObject(scoreResponse);
                                 String scoreString = json.getString("총점");
-                                score = Integer.parseInt(scoreString);
+                                score = Float.parseFloat(scoreString);
+                                System.out.println(score);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -217,7 +222,6 @@ public class Fragment1 extends Fragment{
         setBlackImage(smileface, R.drawable.smileface1);
         setBlackImage(noface, R.drawable.noface1);
         setBlackImage(angryface, R.drawable.angryface1);
-
         try{
             if(score >=80)
                 setColorImage(smileface, R.drawable.smileface);
