@@ -27,7 +27,7 @@ void enableLoggings() {
   // enableLogging("MultitaskRTOS.h");
   enableLogging("TaskReadConnBtn.h");
   enableLogging("TaskDBManager.h");
-  enableLogging("TaskUpateSoilData.h");
+  // enableLogging("TaskUpateSoilData.h");
 }
 
 void setup() {
@@ -40,7 +40,7 @@ void setup() {
   createAndRunTask(tControlWifiLed, "TaskControlWifiLed");
   createAndRunTask(tMonitorExtPwr, "TaskMonitorExtPwr", 3000);
 
-  createAndRunTask(tListenUpdateSoilData,"TaskListenUpdateSoilData", 5000, 2);
+  // createAndRunTask(tListenUpdateSoilData,"TaskListenUpdateSoilData", 5000, 2);
 
   setupAPRouters();
   setupSTARouters();

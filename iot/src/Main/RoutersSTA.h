@@ -43,53 +43,66 @@ void setupSTARouters() {
   /**
   토양센서 값을 읽어서 쿼리가 있는값만 json으로 응답
   */
-  // serverSTA.on(
-  //   "/getSoilData", HTTP_GET, []() {
-  //     if (!hasValidArg(serverSTA, "col")) {
-  //       serverSTA.send(400, "application/json", F("{\"error\":\"missing col argument\"}"));
-  //       return;
-  //     }
+   serverSTA.on(
+     "/read", HTTP_GET, []() {
+      //  if (!hasValidArg(serverSTA, "col")) {
+      //    serverSTA.send(400, "application/json", F("{\"error\":\"missing col argument\"}"));
+      //    return;
+      //  }
 
-  //     String colArg = serverSTA.arg("col");
-  //     StaticJsonDocument<200> doc;
+      //  String colArg = serverSTA.arg("col");
+      //  StaticJsonDocument<200> doc;
 
-  //     int fromIndex = 0;
-  //     int toIndex = colArg.indexOf('_');
-  //     while (toIndex != -1) {
-  //       String key = colArg.substring(fromIndex, toIndex);
-  //       addToJsonDoc(key, doc);
-  //       fromIndex = toIndex + 1;
-  //       toIndex = colArg.indexOf('_', fromIndex);
-  //     }
+      //  int fromIndex = 0;
+      //  int toIndex = colArg.indexOf('_');
+      //  while (toIndex != -1) {
+      //    String key = colArg.substring(fromIndex, toIndex);
+      //    addToJsonDoc(key, doc);
+      //    fromIndex = toIndex + 1;
+      //    toIndex = colArg.indexOf('_', fromIndex);
+      //  }
 
-  //     // 마지막 키 추가
-  //     addToJsonDoc(colArg.substring(fromIndex), doc);
+       
 
-  //     String output;
-  //     serializeJson(doc, output);
+      // // 마지막 키 추가
+      //  addToJsonDoc(colArg.substring(fromIndex), doc);
 
-  //     serverSTA.send(200, "application/json", output);
-  //   });
+      //  String output;
+      //  serializeJson(doc, output);
+
+    executeSql("select * from soil_data");
+
+    Serial.print("waiting transaction");
+
+    do{
+      delay(100);
+      Serial.print(".");
+    }while(db_transaction);
+
+     serverSTA.send(200, "application/json", global_result);
+   });
 }
 
-// void addToJsonDoc(const String& key, StaticJsonDocument<200>& doc) {
-//   float* received = soilSensor.read();
+//  void addToJsonDoc(const String& key, StaticJsonDocument<200>& doc) {
+   
 
+
+//    float* received = soilSensor.read();
 //   if (key == "humid")
-//     doc["humid"] = String(received[0], 1);
-//   else if (key == "temp")
-//     doc["temp"] = String(received[1], 1);
-//   else if (key == "ec")
-//     doc["ec"] = received[2];
-//   else if (key == "ph")
-//     doc["ph"] = String(received[3], 1);
-//   else if (key == "nitro")
-//     doc["nitro"] = received[4];
-//   else if (key == "phos")
-//     doc["phos"] = received[5];
-//   else if (key == "pota")
-//     doc["pota"] = received[6];
-// }
+//      doc["humid"] = String(received[0], 1);
+//    else if (key == "temp")
+//      doc["temp"] = String(received[1], 1);
+//    else if (key == "ec")
+//      doc["ec"] = received[2];
+//    else if (key == "ph")
+//      doc["ph"] = String(received[3], 1);
+//    else if (key == "nitro")
+//      doc["nitro"] = received[4];
+//    else if (key == "phos")
+//      doc["phos"] = received[5];
+//    else if (key == "pota")
+//      doc["pota"] = received[6];
+//  }
 
 
 //-------------------------------------------------------------

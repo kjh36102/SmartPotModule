@@ -10,6 +10,7 @@
 #include <SPI.h>
 #include <FS.h>
 #include "SD.h"
+#include "ArduinoJson.h"
 
 #include "TaskMonitorExtPwr.h"
 
@@ -37,33 +38,30 @@ const char *data = "Query results:";
 //   LOGLN("");
 //   return 0;
 // }
-#define MAX_RESULT_SIZE 300
-#define MAX_COLUMN_SIZE 50
-char global_result[MAX_RESULT_SIZE];  // 전역 결과 문자열
+
+#define JSON_DOCUMENT_SIZE 1024
+char global_result[JSON_DOCUMENT_SIZE];  // 전역 결과 문자열
+
+bool db_transaction = false;
 
 
 static int callbackOnExecuteDB(void *data, int argc, char **argv, char **azColName) {
-
-  int i;
-  int global_result_pos = 0;  // 현재 결과의 위치
-
-  for (i = 0; i < argc; i++) {
-    // 데이터를 전역 결과에 추가
-    char column_data[MAX_COLUMN_SIZE];
-    sprintf(column_data, "%s", argv[i] ? argv[i] : "NULL");
-
-    // '|'와 ','로 구분
-    if (i != argc - 1)
-      strcat(column_data, "\t");
-    else
-      strcat(column_data, "\n");
-
-    // 결과를 전역 변수에 추가
-    strcpy(global_result + global_result_pos, column_data);
-    global_result_pos += strlen(column_data);
+  StaticJsonDocument<JSON_DOCUMENT_SIZE> doc;
+  for (int i = 0; i < argc; i++) {
+    if (argv[i]) {
+      doc[azColName[i]] = argv[i];
+    } else {
+      doc[azColName[i]] = "NULL";
+    }
   }
 
-  // global_result[global_result_pos] = '\0';
+  // JSON 형식으로 변환
+  char buffer[JSON_DOCUMENT_SIZE];
+  serializeJson(doc, buffer);
+
+  // 결과를 전역 변수에 추가
+  strcpy(global_result, buffer);
+  db_transaction = false;
   return 0;
 }
 
@@ -103,6 +101,8 @@ void closeDB() {
 
 int executeSqlHelper(const char *sql) {
   if (!stateDBOpen) return 0;
+
+  db_transaction = true;
 
   LOGF("SQL 실행: %s\n", sql);
 
