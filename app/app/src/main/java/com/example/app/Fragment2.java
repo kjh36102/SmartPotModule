@@ -281,7 +281,7 @@ public class Fragment2 extends Fragment {
         View view = null;
         view = inflater.inflate(R.layout.fragment_2, container, false);
 
-        new GetJsonDataTask().execute(MainActivity.URL);// 처음에 더미데이터 불러오기
+        new GetJsonDataTask().execute(popup.url);// 처음에 더미데이터 불러오기
         reset();//Value 초기화
         gpt_standard(view);
 
@@ -371,7 +371,7 @@ public class Fragment2 extends Fragment {
         btn_1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new GetJsonDataTask().execute(MainActivity.URL);//새 더미데이터 가져오기
+                new GetJsonDataTask().execute(popup.url);//새 더미데이터 가져오기
                 //String t1 = ""+value.get("temp");
                 textView1.setText("...로딩중...");
                 btn.setVisibility(View.GONE);
@@ -407,7 +407,7 @@ public class Fragment2 extends Fragment {
         mysrl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                new GetJsonDataTask().execute(MainActivity.URL);//새 더미데이터 가지오기
+                new GetJsonDataTask().execute(popup.url);//새 더미데이터 가지오기
                 textView1.setText("...로딩중...");
                 btn.setVisibility(View.GONE);
                 btn2.setVisibility(View.GONE);

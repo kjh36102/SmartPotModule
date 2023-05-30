@@ -66,10 +66,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ViewPager2 viewPager;
     TabPagerAdapter adapter;
     String[] tabName = new String[]{"대시보드", "상세분석", "식물관리"};
-    public static final String URL = "http://cofon.xyz:9090/read?col=temp_humid_light_ph_nitro_phos_pota_ec";
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
-    private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final int PERMISSION_REQUEST_CODE = 0;
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,49 +100,65 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }).attach();
         findViewById(R.id.wifi_button).setOnClickListener(this);
-        //JSON서버 연결
-        new GetJsonDataTask().execute(URL);
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setFace();
-            }
-        }, 3000); // 3초 뒤에 setFace() 실행
-
         //조명상태 불러오는 코드 추가해야함
-
 
         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         popup.plant = sharedPreferences.getString("plant", ""); // 두 번째 매개변수는 기본값으로 사용될 값입니다.
         popup.ssid = sharedPreferences.getString("ssid", "");
         popup.pw = sharedPreferences.getString("pw", "");
         popup.ip = sharedPreferences.getString("ip", "");
-
-        if(popup.ip != null && !popup.ip.isEmpty()){        //아두이노 접속 테스트
-            try {
-                // URL 생성
-                String urlString = "http://" + popup.ip + ":12345/?action=hello";
-                URL url = new URL(urlString);
-
-                // HTTP GET 요청 설정
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(10000); // 10초 동안 연결 시도
-
-                // 응답 코드 확인
-                int responseCode = connection.getResponseCode();
-                if(responseCode==200)
-                    Toast.makeText(getApplicationContext(), "서버 연결 성공", Toast.LENGTH_LONG).show(); //토스트메시지 표시
-                else
-                    Toast.makeText(getApplicationContext(), "서버 연결 실패", Toast.LENGTH_LONG).show(); //토스트메시지 표시
-                connection.disconnect();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        popup.url = sharedPreferences.getString("url", "");
+        WifiConnectionManager connManager = new WifiConnectionManager(this, popup.connText);
+        if (!connManager.permission.hasAll())
+            connManager.permission.requestAll();
+        if(!popup.ssid.equals("")&& !popup.pw.equals("") && !popup.ip.equals("") && !popup.url.equals("")){
+            new Thread(()->{
+                connManager.connectToExternal(popup.ssid,popup.pw, 30000);
+            }).start();
+            connManager.setOnExternalAvailable(() -> {
+                System.out.println("외부 와이파이 연결 성공");      //아두이노 접속 테스트
+                    new Thread(() -> {
+                        if (connManager.sendPing(5000, popup.ip)) {   //핑이 성공하면, rememberedAruduinoIP는 저장해둔 아이피주소
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(MainActivity.this, "서버 연결 성공", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            System.out.println(popup.ip + " " + popup.url);
+                            new GetJsonDataTask().execute(popup.url);
+                            new Thread(()->{
+                                try {
+                                    while(score != -1) {
+                                        Thread.sleep(100);
+                                    }
+                                    setFace();
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }).start();
+                        }
+                    }).start();
+            });
+            connManager.setOnExternalUnAvailable(() -> {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "제품 등록 바람", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                System.out.println("제품 등록 바람");
+            });
         }
-        else
-            Toast.makeText(getApplicationContext(), "서버 연결 필요", Toast.LENGTH_LONG).show(); //토스트메시지 표시
+            else {  //rememberedArduinoIP를 통해 연결이 안되었으므로
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "재등록 바람", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                setBlackFace();
+            }
     }
      
     @Override
@@ -174,13 +189,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 inputStream.close();
                 httpURLConnection.disconnect();
                 JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                resultHashMap.put("temp", jsonObject.getString("temp"));
-                resultHashMap.put("humid", jsonObject.getString("humid"));
-                resultHashMap.put("light", jsonObject.getString("light"));
+                resultHashMap.put("temp", jsonObject.getString("tm"));
+                resultHashMap.put("humid", jsonObject.getString("hm"));
+                resultHashMap.put("light", jsonObject.getString("lt"));
                 resultHashMap.put("ph", jsonObject.getString("ph"));
-                resultHashMap.put("nitro", jsonObject.getString("nitro"));
-                resultHashMap.put("phos", jsonObject.getString("phos"));
-                resultHashMap.put("pota", jsonObject.getString("pota"));
+                resultHashMap.put("nitro", jsonObject.getString("n"));
+                resultHashMap.put("phos", jsonObject.getString("p"));
+                resultHashMap.put("pota", jsonObject.getString("k"));
                 resultHashMap.put("ec", jsonObject.getString("ec"));
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -244,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             try {
                                 JSONObject json = new JSONObject(scoreResponse);
                                 String scoreString = json.getString("총점");
-                                score = Integer.parseInt(scoreString);
+                                score = Float.parseFloat(scoreString);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -255,22 +270,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
     public void setFace(){
-        setBlackImage(smileface, R.drawable.smileface1);
-        setBlackImage(noface, R.drawable.noface1);
-        setBlackImage(angryface, R.drawable.angryface1);
+        setBlackFace();
+
+        System.out.println(score);
 
         try{
             if(score >=80)
                 setColorImage(smileface, R.drawable.smileface);
             else if(score >=50)
                 setColorImage(noface, R.drawable.noface);
-            else
+            else if(score >1)
                 setColorImage(angryface, R.drawable.angryface);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-
+    public void setBlackFace(){
+        setBlackImage(smileface, R.drawable.smileface1);
+        setBlackImage(noface, R.drawable.noface1);
+        setBlackImage(angryface, R.drawable.angryface1);
+    }
     public void setBlackImage(ImageView imageView, int resourceId) {
         if (imageView != null) {
             Resources resources = getResources();
@@ -295,7 +314,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String[] permissions = {
                     Manifest.permission.INTERNET,
                     Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.CHANGE_WIFI_STATE
+                    Manifest.permission.CHANGE_WIFI_STATE,
+                    Manifest.permission.ACCESS_FINE_LOCATION
             };
 
             boolean allPermissionsGranted = true;
