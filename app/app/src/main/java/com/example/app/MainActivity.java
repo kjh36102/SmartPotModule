@@ -2,6 +2,7 @@ package com.example.app;
 
 
 
+
 import static com.example.app.Fragment1.angryface;
 import static com.example.app.Fragment1.noface;
 import static com.example.app.Fragment1.score;
@@ -65,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TabLayout tabLayout;
     ViewPager2 viewPager;
     TabPagerAdapter adapter;
+
+
     String[] tabName = new String[]{"대시보드", "상세분석", "식물관리"};
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
@@ -108,7 +111,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         popup.pw = sharedPreferences.getString("pw", "");
         popup.ip = sharedPreferences.getString("ip", "");
         //popup.url = sharedPreferences.getString("url", "");
-        setBlackFace();
 
         new GetJsonDataTask().execute(popup.url);
         /*

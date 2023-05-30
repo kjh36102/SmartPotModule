@@ -56,6 +56,7 @@ public class Fragment1 extends Fragment{
     public static ImageView smileface;
     public static ImageView noface ;
     public static ImageView angryface;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -63,7 +64,7 @@ public class Fragment1 extends Fragment{
         smileface=view.findViewById(R.id.face1);
         noface = view.findViewById(R.id.face2);
         angryface =view.findViewById(R.id.face3);
-        setFace();
+        setBlack();
         return view;
     }
     @Override
@@ -216,11 +217,14 @@ public class Fragment1 extends Fragment{
 
         }
     }
-
-    public void setFace(){
+    public void setBlack(){
         setBlackImage(smileface, R.drawable.smileface1);
         setBlackImage(noface, R.drawable.noface1);
         setBlackImage(angryface, R.drawable.angryface1);
+    }
+
+    public void setFace(){
+        setBlack();
         try{
             if(score >=80)
                 setColorImage(smileface, R.drawable.smileface);
