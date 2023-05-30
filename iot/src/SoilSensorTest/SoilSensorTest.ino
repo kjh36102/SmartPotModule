@@ -2,12 +2,14 @@
 #include <ArduinoJson.h>  //json 라이브러리
 
 //토양센서 핀 정의
-#define SoilSensor_DERE 12
-#define SoilSensor_RO 27
-#define SoilSensor_DI 13
+#define SoilSensor_DERE 13
+#define SoilSensor_RO 32
+#define SoilSensor_DI 33
 
 //토양센서 객체 생성
 SoilSensor soilSensor(SoilSensor_DERE, SoilSensor_RO, SoilSensor_DI);
+// SoilSensor soilSensor(SoilSensor_DERE, SoilSensor_RO, SoilSensor_DI, Serial1); // or Serial1
+
 
 void setup() {
   Serial.begin(9600);

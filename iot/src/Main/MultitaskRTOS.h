@@ -24,7 +24,7 @@ void myTask(void* taskParams) {
 }
 createAndRunTask(myTask, "MyTask"); //태스크 등록 및 실행
 */
-void createAndRunTask(TaskFunction_t pvTaskCode, const char* const pcName, uint16_t stackDepth = 2000, void* taskParams = NULL, UBaseType_t priority = 1) {
+void createAndRunTask(TaskFunction_t pvTaskCode, const char* const pcName, uint16_t stackDepth = 2000, UBaseType_t priority = 1, void* taskParams = NULL) {
     TaskHandle_t xHandle = NULL;
     BaseType_t xReturned;
 

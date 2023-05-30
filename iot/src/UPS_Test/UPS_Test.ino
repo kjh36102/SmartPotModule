@@ -4,6 +4,8 @@
 
 
 void setup() {
+  Serial.begin(9600);
+
   // put your setup code here, to run once:
   pinMode(INTERNAL_LED, OUTPUT);
   pinMode(CUT_BATTERY, OUTPUT);
@@ -11,7 +13,16 @@ void setup() {
 
   digitalWrite(INTERNAL_LED, 0);
   digitalWrite(CUT_BATTERY, 0);
-  delay(3000);
+  // delay(3000);
+  
+  // for(int i = 0; i < 3; i++){
+  //   digitalWrite(CUT_BATTERY, 1);
+  //   delay(1000);
+  //   digitalWrite(CUT_BATTERY, 0);
+  //   delay(1000);
+  // }
+  
+  
 }
 
 
@@ -37,7 +48,13 @@ void blinkOnShutdown(){
 int i = 0;
 void loop() {
 
-  while(!digitalRead(EXTPOWER_READ)) {
+  int extPwr = 0;
+  while(true) {
+    extPwr = digitalRead(EXTPOWER_READ);
+    Serial.println("extPwr: " + String(extPwr));
+
+    if(!extPwr) break;
+
     digitalWrite(CUT_BATTERY, 0);
 
 
@@ -45,8 +62,11 @@ void loop() {
 
     i += 1;
     if (i >= 3) i = 0;
+
+    delay(100);
   }
 
   blinkOnShutdown();
   digitalWrite(CUT_BATTERY , 1);
+  delay(100);
 }

@@ -8,7 +8,7 @@
 #include <queue>
 #include <functional>
 
-#define PIN_EXTPWR_OFF_R 14
+#define PIN_EXTPWR_ON_R 14
 #define PIN_SHUTDOWN_O 12
 
 // 함수를 저장할 큐
@@ -27,7 +27,7 @@ void appendShutdownProcess(std::function<void()> func) {
 }
 
 void initTaskMonitorExtPwr() {
-  pinMode(PIN_EXTPWR_OFF_R, INPUT);
+  pinMode(PIN_EXTPWR_ON_R, INPUT);
   pinMode(PIN_SHUTDOWN_O, OUTPUT);
 
   digitalWrite(PIN_SHUTDOWN_O, LOW);
@@ -37,7 +37,7 @@ void tMonitorExtPwr(void* taskParams) {
   initTaskMonitorExtPwr();
   for (;;) {
 
-    if (digitalRead(PIN_EXTPWR_OFF_R)) {
+    if (!digitalRead(PIN_EXTPWR_ON_R)) {
       LOG(F("외부전원 차단 감지됨! 실행할 함수 수: "));
       LOGLN(shutdownFuncQueue.size());
       while (!shutdownFuncQueue.empty()) {
@@ -48,7 +48,7 @@ void tMonitorExtPwr(void* taskParams) {
       digitalWrite(PIN_SHUTDOWN_O, HIGH);
     }
 
-    vTaskDelay(1000);
+    vTaskDelay(2500);
   }
 }
 

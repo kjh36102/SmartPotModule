@@ -9,6 +9,7 @@
 #include "RoutersAP.h"
 #include "RoutersSTA.h"
 #include "TaskReadConnBtn.h"
+#include "TaskUpdateSoilData.h"
 
 
 //-------------------------------------------------------------
@@ -26,6 +27,7 @@ void enableLoggings() {
   // enableLogging("MultitaskRTOS.h");
   enableLogging("TaskReadConnBtn.h");
   enableLogging("TaskDBManager.h");
+  enableLogging("TaskUpateSoilData.h");
 }
 
 void setup() {
@@ -35,29 +37,20 @@ void setup() {
   initPins();
 
   // createAndRunTask(tReadConnBtn, "TaskReadConnBtn", 3000);
-  createAndRunTask(tControlWifiLed, "TaskControlWifiLed", 2000);
+  createAndRunTask(tControlWifiLed, "TaskControlWifiLed");
   createAndRunTask(tMonitorExtPwr, "TaskMonitorExtPwr", 3000);
-  // createAndRunTask(tBroadcastingUDP, "TaskBroadcastingUDP", 2000);
+
+  createAndRunTask(tListenUpdateSoilData,"TaskListenUpdateSoilData", 5000, 2);
 
   setupAPRouters();
   setupSTARouters();
 
-  // connectPhase = ConnectPhase::SETUP;  //실행시 바로 셋업모드로(버튼없으면 사용)
-  // initNetwork();
 
-  appendShutdownProcess([]() {  //종료시 실행하는 함수 등록
-    for (byte i = 0; i < 30; i++) {
-      digitalWrite(PIN_CONN_LED, 1);
-      delay(50);
-      digitalWrite(PIN_CONN_LED, 0);
-      delay(50);
-    }
-  });
-
-  createAndRunTask(tTestDBManager, "TestDBManager", 10000);
+  createAndRunTask(tTestDBManager, "TestDBManager", 30000);
 }
 
 void loop() {
   serverSTA.handleClient();
   serverAP.handleClient();
+
 }
