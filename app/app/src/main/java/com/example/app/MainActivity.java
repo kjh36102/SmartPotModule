@@ -84,7 +84,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         //getSupportActionBar().setTitle("SmartPotModule");
-
         //xml 연결
         tabLayout = findViewById(R.id.tabs);
         viewPager = findViewById(R.id.pager);
