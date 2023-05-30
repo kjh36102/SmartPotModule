@@ -78,17 +78,11 @@ public class Fragment1 extends Fragment{
         rBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                if (popup.ip != null && !popup.ip.isEmpty()) {   //아두이노 IP를 알때만 사용가능
+                //if (popup.url != null && !popup.url.isEmpty()) {   //아두이노 IP를 알때만 사용가능
 
                     new GetJsonDataTask().execute(popup.url);
-                    Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            setFace();
-                        }
-                    }, 5000); // 3초 뒤에 setFace() 실행
-                }
+
+                //}
             }
         });
         water.setOnClickListener(new View.OnClickListener(){
@@ -143,6 +137,8 @@ public class Fragment1 extends Fragment{
                 resultHashMap.put("phos", jsonObject.getString("p"));
                 resultHashMap.put("pota", jsonObject.getString("k"));
                 resultHashMap.put("ec", jsonObject.getString("ec"));
+                //resultHashMap.put("ts", jsonObject.getString("ts"));
+
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -169,6 +165,7 @@ public class Fragment1 extends Fragment{
             String phos = mDataHashMap.get("phos");
             String pota = mDataHashMap.get("pota");
             String ec = mDataHashMap.get("ec");
+            String ts = mDataHashMap.get("ts");
             TextView tempText = getView().findViewById(R.id.temp);
             TextView humidText = getView().findViewById(R.id.humid);
             TextView lightText = getView().findViewById(R.id.light);
@@ -186,6 +183,7 @@ public class Fragment1 extends Fragment{
             phosText.setText(phos);
             potaText.setText(pota);
             ecText.setText(ec);
+            //rTxt.setText(ts);
             Calendar calendar = Calendar.getInstance();
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
             String dateTime = dateFormat.format(calendar.getTime());
@@ -206,6 +204,7 @@ public class Fragment1 extends Fragment{
                                 JSONObject json = new JSONObject(scoreResponse);
                                 String scoreString = json.getString("총점");
                                 score = Float.parseFloat(scoreString);
+                                setFace();
                                 System.out.println(score);
                             } catch (Exception e) {
                                 e.printStackTrace();

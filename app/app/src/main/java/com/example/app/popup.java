@@ -45,7 +45,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         public static String ssid;
         public static String pw;
         public static String ip;
-        public static String url;
+        public static String url = "http://cofon.xyz:9090/read";
         public static String plant;
         public static TextView connText;
         private Context context;
