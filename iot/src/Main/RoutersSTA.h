@@ -40,9 +40,9 @@ void setupSTARouters() {
     serverSTA.send(200, HTTP_MIME, "테스트 데이터 받기~");
   });
 
-  /**
-  토양센서 값을 읽어서 쿼리가 있는값만 json으로 응답
-  */
+
+/*
+
    serverSTA.on(
      "/read", HTTP_GET, []() {
       //  if (!hasValidArg(serverSTA, "col")) {
@@ -81,6 +81,8 @@ void setupSTARouters() {
 
      serverSTA.send(200, "application/json", global_result);
    });
+
+   */
 }
 
 //  void addToJsonDoc(const String& key, StaticJsonDocument<200>& doc) {

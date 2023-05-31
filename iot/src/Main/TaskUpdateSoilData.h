@@ -23,24 +23,24 @@ char sql_buffer[150] = {
 
 void tListenUpdateSoilData(void* taskParams) {
 
-  for (;;) {
-    float* received = soilSensor.read();
+  // for (;;) {
+  //   float* received = soilSensor.read();
 
-    sprintf(sql_buffer, "UPDATE soil_data SET hm=%.1f, tm=%.1f, ec=%.0f, ph=%.1f, n=%.0f, p=%.0f, k=%.0f, lt=0",
-            received[0],  //hm
-            received[1],  //tm
-            received[2],  //ec
-            received[3],  //ph
-            received[4],  //n
-            received[5],  //p
-            received[6]   //k
-            //여기에 광량 추가해야함
-    );
+  //   sprintf(sql_buffer, "UPDATE soil_data SET hm=%.1f, tm=%.1f, ec=%.0f, ph=%.1f, n=%.0f, p=%.0f, k=%.0f, lt=0",
+  //           received[0],  //hm
+  //           received[1],  //tm
+  //           received[2],  //ec
+  //           received[3],  //ph
+  //           received[4],  //n
+  //           received[5],  //p
+  //           received[6]   //k
+  //           //여기에 광량 추가해야함
+  //   );
 
-    if (stateDBPrepared) executeSql(sql_buffer);
+  //   if (stateDBPrepared) executeSql(sql_buffer);
 
-    vTaskDelay(5000);  //매 5초마다 실행
-  }
+  //   vTaskDelay(5000);  //매 5초마다 실행
+  // }
 }
 
 
