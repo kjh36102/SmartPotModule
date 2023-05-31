@@ -17,54 +17,66 @@
 #include "Logger.h"
 //-------------------------------------------------------------
 
+#define DB_RESULT_BUFFER_SIZE 1024
+
 class DB_Manager {
 private:
   sqlite3* DB;
   char* DBErrMsg = 0;
-  int bufferSize;
-  const char* dbName;   // 사용 중인 데이터베이스 이름을 저장
-  char* global_result;  // 전역 결과 문자열
-  bool stateTransDB = false;
+  char global_result[DB_RESULT_BUFFER_SIZE];  // 전역 결과 문자열
   bool stateOpenDB = false;
-  static bool sdInitialized;  // SD 카드 초기화 상태
+  bool sdInitialized = false;  // SD 카드 초기화 상태
+
+  static DB_Manager* instance;  // 싱글톤 인스턴스
 
   static int callbackOnExecuteDB(void* instance, int argc, char** argv, char** azColName) {
     DB_Manager* self = reinterpret_cast<DB_Manager*>(instance);
 
-    char* result = new char[self->bufferSize];
-    result[0] = '\0';  // Initialize result string
+    // 만약 처음으로 결과를 추가한다면 global_result를 초기화하고, "["로 시작
+    if (self->global_result[0] == '\0') {
+      strcat(self->global_result, "[\n");
+    } else {
+      // 이전 행이 있으면, 콤마를 추가하고 줄을 바꿈
+      strcat(self->global_result, ",\n");
+    }
+
+    // 각 행의 결과를 JSON 형식으로 추가
+    strcat(self->global_result, "  {");
 
     for (int i = 0; i < argc; i++) {
-      strcat(result, azColName[i]);
-      strcat(result, ": ");
+      strcat(self->global_result, "\"");
+      strcat(self->global_result, azColName[i]);
+      strcat(self->global_result, "\": ");
+      strcat(self->global_result, "\"");
       if (argv[i]) {
-        strcat(result, argv[i]);
+        strcat(self->global_result, argv[i]);
       } else {
-        strcat(result, "NULL");
+        strcat(self->global_result, "NULL");
       }
+      strcat(self->global_result, "\"");
+
+      // 마지막이 아닌 경우 콤마를 추가
       if (i < argc - 1) {
-        strcat(result, ", ");
+        strcat(self->global_result, ", ");
       }
     }
 
-    // 결과를 전역 변수에 추가
-    strcpy(self->global_result, result);
+    // 각 행의 JSON 객체 닫기
+    strcat(self->global_result, "}");
 
-    // result 문자열 메모리 해제
-    delete[] result;
-
-    self->stateTransDB = false;
     return 0;
   }
+
+
 
   int executeSqlHelper(const char* sql) {
     if (!stateOpenDB) {
       LOGLN("DB가 열려있지 않아 SQL문 실행 불가능");
-      return 0;
+      return SQLITE_ERROR;
     }
 
-    waitTransaction();  //이미 트랜잭션 중이라면 대기
-    stateTransDB = true;
+    // global_result변수의 첫문자를 null로 초기화
+    global_result[0] = '\0';
 
     LOGF("SQL 실행: %s\n", sql);
 
@@ -83,84 +95,86 @@ private:
     return rc;
   }
 
-  bool waitTransaction() {
-    LOG("Waiting Transaction");
-    do {
-      delay(10);
-      LOG(".");
-    } while (stateTransDB);
-    LOG("..Done!");
+  // 생성자는 private로 설정
+  DB_Manager() {
   }
 
 public:
-  DB_Manager(int bufferSize)
-    : bufferSize(bufferSize) {
-    // 동적 메모리 할당
-    global_result = new char[bufferSize];
 
-    //SD카드 초기화
-    if (!DB_Manager::sdInitialized) {
+  // 다른 복사 생성자와 할당 연산자를 삭제
+  DB_Manager(const DB_Manager&) = delete;
+  DB_Manager& operator=(const DB_Manager&) = delete;
+
+  // getInstance 메서드를 통해 싱글톤 인스턴스를 가져오거나 생성
+  static DB_Manager& getInstance() {
+    if (instance == nullptr) {
+      instance = new DB_Manager();
+    }
+    return *instance;
+  }
+
+  bool open(String dbName) {
+    if (!sdInitialized) {
       if (!SD.begin()) {
         LOGLN("SD 카드 초기화 실패");
       } else {
         LOGLN("SD 카드 초기화 성공");
-        DB_Manager::sdInitialized = true;
+        sdInitialized = true;
       }
     }
-  }
 
-  ~DB_Manager() {
-    // 동적 메모리 해제
-    delete[] global_result;
-  }
 
-  DB_Manager(const DB_Manager&) = delete;
-  DB_Manager& operator=(const DB_Manager&) = delete;
-
-  bool open(String dbName) {
     if (stateOpenDB) {
-      LOGLN("DB가 이미 열려있음");
-      return false;
-    }
-
-    this->dbName = dbName.c_str();
-
-    int rc = sqlite3_open(("/sd/" + dbName + ".db").c_str(), &DB);
-
-    if (rc) {
-      LOGF("DB '%s' 열기 실패: ", this->dbName);
-      LOGLN(sqlite3_errmsg(DB));
-      return false;
+      LOGLN("DB열기 실패: DB가 이미 열려있음");
     } else {
-      stateOpenDB = true;
-      LOGLN("DB 열기 성공!");
-      return true;
+
+      int rc = sqlite3_open(("/sd/" + dbName + ".db").c_str(), &DB);
+
+      if (rc) {
+        LOG("DB열기 실패: ");
+        LOGLN(sqlite3_errmsg(DB));
+      } else {
+        stateOpenDB = true;
+        LOGLN("DB 열기 성공!");
+        return true;
+      }
     }
 
-    return rc;
+    return false;
   }
 
   bool close() {
     if (!stateOpenDB) {
-      LOGLN("DB가 열려있지 않아 닫을 수 없음");
-      return false;
-    }
-
-    int rc = sqlite3_close(DB);
-
-    if (rc) {
-      LOGF("DB '%s' 닫기 실패: ", this->dbName);
-      LOGLN(sqlite3_errmsg(DB));
-      return false;
+      LOGLN("DB닫기 실패: DB가 열려있지 않아 닫을 수 없음");
     } else {
-      stateOpenDB = false;
-      LOGLN("DB 닫기 성공!");
-      return true;
+      int rc = sqlite3_close(DB);
+
+      if (rc) {
+        LOG("DB닫기 실패: ");
+        LOGLN(sqlite3_errmsg(DB));
+      } else {
+        stateOpenDB = false;
+        LOGLN("DB 닫기 성공!");
+        
+        if(sdInitialized){
+          SD.end();  //sd카드 연결해제
+          sdInitialized = false;
+          LOGLN("SD 카드 연결 해제됨");
+
+          return true;
+        }
+      }
     }
+
+    return false;
+  }
+
+  bool isOpened() {
+    return stateOpenDB;
   }
 
   char* getResult() {
-    waitTransaction();
+    strcat(global_result, "\n]");
     return global_result;
   }
 
@@ -174,9 +188,7 @@ public:
   }
 };
 
-bool DB_Manager::sdInitialized = false;
-
-
+DB_Manager* DB_Manager::instance = nullptr;
 
 //-------------------------------------------------------------
 #endif  //__DB_MANAGER_H__

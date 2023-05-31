@@ -42,6 +42,7 @@ public:
           shutdownFuncQueue.front()();
           shutdownFuncQueue.pop();
         }
+        vTaskDelay(1000);
         digitalWrite(PIN_SHUTDOWN_O, HIGH);
       }
       vTaskDelay(2500);
