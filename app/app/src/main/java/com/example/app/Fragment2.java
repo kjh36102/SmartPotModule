@@ -558,7 +558,7 @@ public class Fragment2 extends Fragment {
                 public void onClick(View view) {
                     btn3.setVisibility(View.VISIBLE);
                     btn4.setVisibility(View.GONE);
-                    textView2.setText(tTips);
+                    textView2.setText(shortTips);
 
                 }
 
