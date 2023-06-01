@@ -69,8 +69,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
     private static final int PERMISSION_REQUEST_CODE = 0;
-    public static SharedPreferences sharedPreferences_fragment2;
-
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,8 +76,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         // 앱 권한 동의 요청
         requestPermissions();
-
-        sharedPreferences_fragment2 = getSharedPreferences("myPreferences", Context.MODE_PRIVATE);
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);           // actionbar에서 toolbar로 변경
         setSupportActionBar(toolbar);
@@ -256,16 +252,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
             String dateTime = dateFormat.format(calendar.getTime());
             rTxt.setText(dateTime);
-
-            Fragment2.temp = temp;
-            Fragment2.humid = humid;
-            Fragment2.light = light;
-            Fragment2.nitro = nitro;
-            Fragment2.phos = phos;
-            Fragment2.pota = pota;
-            Fragment2.ec = ec;
-            Fragment2.ph = ph;
-
 
             Fragment3.humid = humid;
             Fragment3.light = light;
