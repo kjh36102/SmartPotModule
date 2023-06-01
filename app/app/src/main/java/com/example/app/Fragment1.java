@@ -189,8 +189,20 @@ public class Fragment1 extends Fragment{
             String dateTime = dateFormat.format(calendar.getTime());
             rTxt.setText(dateTime);
 
+            Fragment2.temp = temp;
+            Fragment2.humid = humid;
+            Fragment2.light = light;
+            Fragment2.nitro = nitro;
+            Fragment2.phos = phos;
+            Fragment2.pota = pota;
+            Fragment2.ec = ec;
+            Fragment2.ph = ph;
+
+
             Fragment3.humid = humid;
             Fragment3.light = light;
+
+
 
             ChatGPT chatGPT = new ChatGPT();
             new Thread(){
