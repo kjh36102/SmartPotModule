@@ -8,614 +8,202 @@
 
     <!--여기서부터 작업-->
     <!-- TODO: Update blank fragment layout -->
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
-        android:id="@+id/content_srl"
+
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_height="match_parent">
 
-        <ScrollView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
+                android:backgroundTint="#F6F5F5"
+
                 android:orientation="vertical">
 
-                <LinearLayout
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="10dp"
+                    android:text="해바라기"
+                    android:textSize="24sp" />
+
+
+                <!-- <Button
+                     android:id="@+id/button3"
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:text="Button" />
+
+                 <TextView
+                     android:id="@+id/textView3"
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:text="TextView" />
+
+                 <TextView
+                     android:id="@+id/textView6"
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:text="TextView" />
+
+                 <TextView
+                     android:id="@+id/textView7"
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:text="TextView" />
+
+-->
+
+
+                <TextView
+
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:backgroundTint="#F6F5F5"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="팁" />
+
+                <View
+                    android:layout_width="100dp"
+                    android:layout_height="2px"
+                    android:layout_gravity="center"
+                    android:layout_margin="2dp"
+                    android:background="#757474" />
+
+                <TextView
+                    android:id="@+id/Tips"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="10dp"
+                    android:text="..." />
+
+
+                <Button
+                    android:id="@+id/more"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+
+                    android:backgroundTint="#FFFCFC"
+                    android:text="더보기"
+                    android:textColor="#000000" />
+
+                <Button
+                    android:id="@+id/close"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+
+                    android:layout_marginBottom="10dp"
+                    android:backgroundTint="#FFFCFC"
+                    android:text="닫기"
+                    android:textColor="#000000" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginTop="30dp"
+
+                    android:text="피드백" />
+
+                <View
+                    android:layout_width="100dp"
+                    android:layout_height="2px"
+                    android:layout_gravity="center"
+                    android:layout_margin="2dp"
+                    android:background="#757474" />
+
+                <TextView
+                    android:id="@+id/explan_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:text="..." />
+
+                <Button
+                    android:id="@+id/more_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+
+                    android:backgroundTint="#FFFCFC"
+                    android:text="더보기"
+                    android:textColor="#000000" />
+
+                <Button
+                    android:id="@+id/close_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+
+                    android:backgroundTint="#FFFCFC"
+                    android:text="닫기"
+                    android:textColor="#000000" />
+
+
+                <TextView
+                    android:id="@+id/rTxt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:gravity="right"
+                    android:text="마지막업데이트" />
+
+
+                <ImageButton
+                    android:id="@+id/update"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:adjustViewBounds="true"
+                    android:backgroundTint="#FFFCFC"
+                    android:src="@drawable/update_xml" />
+
+
+                <Button
+                    android:id="@+id/t_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <TextView
+                    android:id="@+id/trash"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:gravity="right"
+                    android:text="abc" />
+
+                <TextView
+                    android:id="@+id/trash2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:gravity="right"
+                    android:text="abc" />
+
+                <TextView
+                    android:id="@+id/trash3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:gravity="right"
+                    android:text="abc" />
 
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/textView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:text="해바라기"
-                        android:layout_margin="10dp"
-                        android:textSize="24sp" />
-
-                    <TextView
-                        android:id="@+id/explan_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_margin="10dp"
-                        android:text="..." />
-
-
-                    <Button
-                        android:id="@+id/button"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-
-                        android:backgroundTint="#FFFCFC"
-                        android:text="더보기"
-                        android:textColor="#000000" />
-
-                    <Button
-                        android:id="@+id/button2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-
-                        android:backgroundTint="#FFFCFC"
-                        android:text="닫기"
-                        android:textColor="#000000" />
-
-
-
-                    <!-- <Button
-                         android:id="@+id/button3"
-                         android:layout_width="match_parent"
-                         android:layout_height="wrap_content"
-                         android:text="Button" />
-
-                     <TextView
-                         android:id="@+id/textView3"
-                         android:layout_width="match_parent"
-                         android:layout_height="wrap_content"
-                         android:text="TextView" />
-
-                     <TextView
-                         android:id="@+id/textView6"
-                         android:layout_width="match_parent"
-                         android:layout_height="wrap_content"
-                         android:text="TextView" />
-
-                     <TextView
-                         android:id="@+id/textView7"
-                         android:layout_width="match_parent"
-                         android:layout_height="wrap_content"
-                         android:text="TextView" />
-
- -->
-                    <com.google.android.material.tabs.TabLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:tabTextColor="@color/black"
-                        app:tabIndicatorColor="#474747"
-                        app:tabIndicatorHeight="4dp"
-                        android:id="@+id/tab_mode"
-                        >
-
-                        <com.google.android.material.tabs.TabItem
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="그래프" />
-
-                        <com.google.android.material.tabs.TabItem
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="표"/>
-
-                    </com.google.android.material.tabs.TabLayout>
-
-
-
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:id="@+id/graph_layout_1"
-                        >
-
-
-
-                        <com.github.mikephil.charting.charts.BarChart
-                            android:id="@+id/chart_temp"
-                            android:layout_width="110dp"
-                            android:layout_height="250dp"
-
-
-                            android:layout_marginTop="30dp"
-                            android:layout_gravity="center_horizontal"/>
-                        <!--app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"-->
-
-                        <com.github.mikephil.charting.charts.BarChart
-                            android:id="@+id/chart_humid"
-                            android:layout_width="110dp"
-                            android:layout_height="250dp"
-                            android:layout_marginTop="30dp"
-                            android:layout_gravity="center_horizontal"/>
-                        <!--app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"-->
-
-                        <!--app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"-->
-                        <com.github.mikephil.charting.charts.BarChart
-                            android:id="@+id/chart_ph"
-                            android:layout_width="110dp"
-                            android:layout_height="250dp"
-                            android:layout_marginTop="30dp"
-
-                            android:layout_gravity="center_horizontal"/>
-                        <!--app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"-->
-
-
-
-
-                    </LinearLayout>
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:id="@+id/graph_layout_2"
-                        >
-                        <com.github.mikephil.charting.charts.BarChart
-                            android:id="@+id/chart_nitro"
-                            android:layout_width="110dp"
-                            android:layout_height="250dp"
-
-                            android:layout_marginTop="30dp"
-                            android:layout_gravity="center_horizontal"/>
-                        <com.github.mikephil.charting.charts.BarChart
-                            android:id="@+id/chart_phos"
-                            android:layout_width="110dp"
-                            android:layout_height="250dp"
-
-                            android:layout_marginTop="10dp"
-                            android:layout_gravity="center_horizontal"/>
-
-                        <com.github.mikephil.charting.charts.BarChart
-                            android:id="@+id/chart_pota"
-                            android:layout_width="110dp"
-                            android:layout_height="250dp"
-
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginTop="10dp" />
-
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/graph_layout_3"
-                        android:gravity="center">
-
-                        <com.github.mikephil.charting.charts.BarChart
-
-                            android:id="@+id/chart_light"
-                            android:layout_width="150dp"
-                            android:layout_height="250dp"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginTop="10dp"
-
-                            />
-                        <com.github.mikephil.charting.charts.BarChart
-                            android:id="@+id/chart_ec"
-                            android:layout_width="150dp"
-                            android:layout_height="250dp"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginTop="10dp"
-                            />
-                    </LinearLayout>
-
-
-                    <TableLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="10dp"
-                        android:id="@+id/table_layout1"
-
-                        android:stretchColumns="*">
-
-                        <TableRow
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/table_inside">
-
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text=""
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="온도"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="습도"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="조도"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="PH"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-
-                        </TableRow>
-
-                        <TableRow
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="표준"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="20-25"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="60-70"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="~10000"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="6.0-7.5"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-
-                        </TableRow>
-
-                        <TableRow
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="현재"
-                                android:textColor="#000000"
-                                android:textSize="18sp"
-                                android:background="@drawable/table_inside_gray" />
-
-                            <TextView
-                                android:id="@+id/temp"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="23"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:id="@+id/humid"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="50"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:id="@+id/light"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="9000"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:id="@+id/ph"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="6.0"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-
-                        </TableRow>
-
-
-                    </TableLayout>
-
-                    <TableLayout
-                        android:id="@+id/table_layout2"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginRight="10dp"
-                        android:layout_marginBottom="10dp"
-                        android:stretchColumns="*">
-
-                        <TableRow
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/table_inside_gray">
-
-                            <TextView
-
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text=""
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="N"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="P"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="K"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="EC"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-
-                        </TableRow>
-
-                        <TableRow
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="표준"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="100-150"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="50-100"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="100-150"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="0.5-1.5"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-
-                        </TableRow>
-
-                        <TableRow
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent">
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:background="@drawable/table_inside_gray"
-                                android:gravity="center"
-                                android:text="현재"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:id="@+id/nitro"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="105.7"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:id="@+id/phos"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="56"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:id="@+id/pota"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="112"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-                            <TextView
-                                android:id="@+id/ec"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="1.0"
-                                android:textColor="#000000"
-                                android:textSize="18sp" />
-
-
-                        </TableRow>
-
-
-                    </TableLayout>
-
-                    <TextView
-                        android:id="@+id/rTxt"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right"
-                        android:gravity="right"
-                        android:text="마지막업데이트" />
-
-                    <Button
-                        android:id="@+id/update"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right"
-
-                        android:backgroundTint="#FFFCFC"
-                        android:text="업데이트"
-                        android:textColor="#000000" />
-
-
-
-                    <Button
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:id="@+id/t_button"
-                        />
-                    <TextView
-                        android:id="@+id/trash"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right"
-                        android:gravity="right"
-                        android:text="abc" />
-                    <TextView
-                        android:id="@+id/trash2"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right"
-                        android:gravity="right"
-                        android:text="abc" />
-                    <TextView
-                        android:id="@+id/trash3"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right"
-                        android:gravity="right"
-                        android:text="abc" />
-
-                </LinearLayout>
             </LinearLayout>
-        </ScrollView>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        </LinearLayout>
+    </ScrollView>
+
 
     <!--여기까지만 작업-->
 </FrameLayout>

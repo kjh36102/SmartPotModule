@@ -43,6 +43,14 @@ import java.util.Iterator;
  */
 public class Fragment1 extends Fragment{
     public static HashMap<String, String> mDataHashMap;
+<<<<<<< Updated upstream
+=======
+    public static float score;
+    public static ImageView smileface;
+    public static ImageView noface ;
+    public static ImageView angryface;
+
+>>>>>>> Stashed changes
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment

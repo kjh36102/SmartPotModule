@@ -17,12 +17,17 @@ public class ChatGPT {
     String key;
     public ChatGPT(){
         try {
+<<<<<<< Updated upstream
             url = new URL("https://api.openai.com/v1/completions");
             input = new JSONObject();
             input.put("model", "text-davinci-003");
             input.put("prompt", "");
             input.put("max_tokens", 2048);
             this.key = "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";
+=======
+            this.url = new URL("https://api.openai.com/v1/chat/completions");
+            this.key = "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";
+>>>>>>> Stashed changes
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -34,6 +39,17 @@ public class ChatGPT {
     public String recommand(String name){
         this.input.put("prompt", "식물 "+name+"의 추천 토양 온도(섭씨), 추천 토양 습도(%), 추천 N(mg/kg), 추천 P(mg/kg), 추천 K(mg/kg), 추천 토양산화도(ph), 추천 토양전기전도도(us/cm), 추천 광량(lux)의 각 수치를 범위로 만들어서 아래처럼 json을 만들어줘\n" +
                 "{\"추천_토양온도\": {\"최소값\": xx,\"최대값\": xx,\"단위\": \"℃\"}, \"추천_토양습도\": {...}, \"추천_N\": {...}, \"추천_P\": {...}, \"추천_K\": {...}, \"추천_토양산화도\": {...}, \"추천_토양전기전도도\": {...},  \"추천_광량\": {...}}");
+<<<<<<< Updated upstream
+=======
+
+        return process();
+    }
+    public String tips(String name){
+        //this.input.put("prompt", "식물 "+name+"을 잘 키울 수 있는 팁을 알려줘");
+        String prompt = "식물 "+name+"을 잘 키울 수 있는 팁을 알려줘";
+        promptSet(prompt);
+//        this.input.put("prompt", "식물 "+name+"을 온도, 습도, npk, 토양 전도도, 광량을 이용하여 잘 키울 수 있는 팁을 알려줘");
+>>>>>>> Stashed changes
         return process();
     }
     public String process(){

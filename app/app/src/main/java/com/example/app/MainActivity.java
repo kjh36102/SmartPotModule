@@ -44,12 +44,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String URL = "http://cofon.xyz:9090/read?col=temp_humid_light_ph_nitro_phos_pota_ec";
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
+<<<<<<< Updated upstream
 
+=======
+    private static final int PERMISSION_REQUEST_CODE = 0;
+
+    public static SharedPreferences sharedPreferences_fragment2;
+>>>>>>> Stashed changes
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        sharedPreferences_fragment2 = getSharedPreferences("myPreferences", Context.MODE_PRIVATE);
+
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);           // actionbar에서 toolbar로 변경
         setSupportActionBar(toolbar);
