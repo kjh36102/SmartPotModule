@@ -5,9 +5,12 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.json.JSONException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 public class ChatGPT {
     JSONObject userMessage;
     JSONArray messagesArray;
@@ -18,7 +21,7 @@ public class ChatGPT {
     public ChatGPT(){
         try {
             this.url = new URL("https://api.openai.com/v1/chat/completions");
-            this.key = "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";
+            this.key = "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";
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -38,28 +41,36 @@ public class ChatGPT {
     public JSONObject score(String name, double temperature, double humidity, double nitrogen, double phosphorus, double potassium, double ph, double ec, double lux){
 //        this.input.put("prompt", "식물 "+name+"의 토양 온도는 "+temperature+"℃, 토양 습도는 "+humidity+"%, 질소가 "+nitrogen+"mg/kg, 인이 "+phosphorus+"mg/kg, 칼륨이 "+potassium+" mg/kg, 토양 ph가 "+ph+" 전기 전도도는 "+ec+"μS/cm, 광량은 "+lux+"lux이다. 이 식물의 상태를 보고 아래 json 데이터 형태로 총 100점 만점에 점수를 매겨줘.\n" +
 //                "{\"총점\":\"...\"}");
-        String prompt = "식물 "+name+"의 토양 온도는 "+temperature+"℃, 토양 습도는 "+humidity+"%, 질소가 "+nitrogen+"mg/kg, 인이 "+phosphorus+"mg/kg, 칼륨이 "+potassium+" mg/kg, 토양 ph가 "+ph+" 전기 전도도는 "+ec+"μS/cm, 광량은 "+lux+"lux이다. 이 식물의 상태를 보고 아래 json 데이터 형태로 총 100점 만점에 점수를 매겨줘. 부연설명 빼고 json데이터만 주면 돼.\n" +
+        String prompt = "식물 "+name+"의 토양 온도(℃):"+temperature+", 수분부피/토양부피(%): "+humidity+", N(mg/kg):"+nitrogen+", P(mg/kg): "+phosphorus+", K(mg/kg):"+potassium+", 토양ph:"+ph+", 전기 전도도(μS/cm):"+ec+", 광량(lux):"+lux+"인데 이 식물의 상태를 보고 아래 json 데이터 형태로 총 100점 만점에 점수를 매겨줘. 부연설명 빼고 json데이터만 주면 돼.\n" +
                 "{\"총점\":...}";
+        String response = "";
         promptSet(prompt);
         try{
-            String response = process();
-            System.out.println(response);
+            response = process();
+//            System.out.println(response);
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(response);
             JSONObject scoreResponse = (JSONObject) obj;
             System.out.println(scoreResponse);
             return scoreResponse;
+        }catch (ParseException e){
+            e.printStackTrace();
+            System.out.println(response);
+            System.out.println("json형태로 안줘서 에러");
         }catch (Exception e){
             e.printStackTrace();
-            System.out.println("다시 시도해주세요.");
+            System.out.println("다시 시도해주세요");
         }
         System.out.println("error");
         return new JSONObject();
     }
     public String feedback(String name, double temperature, double humidity, double nitrogen, double phosphorus, double potassium, double ph, double ec, double lux) {
-        String prompt = "식물 "+name+"의 토양 온도는 "+temperature+"℃, 토양 습도는 "+humidity+"%, 질소가 "+nitrogen+"mg/kg, 인이 "+phosphorus+"mg/kg, 칼륨이 "+potassium+" mg/kg, 토양 ph가 "+ph+" 전기 전도도는 "+ec+"μS/cm, 광량은 "+lux+"lux이다. 문제가 있는 것을 분석해주고, 개선방안을 제안해줘.";
+        String prompt = "식물 "+name+"의 토양 온도(℃):"+temperature+", 수분부피/토양부피(%): "+humidity+", N(mg/kg):"+nitrogen+", P(mg/kg): "+phosphorus+", K(mg/kg):"+potassium+", 토양ph:"+ph+", 전기 전도도(μS/cm):"+ec+", 광량(lux):"+lux+"인데 문제가 있는 것만 100자 이내로 요약 분석 및 개선방안을 제안, 100점만점으로 총점, 결과는 json으로 \n" +
+                "{\"요약\":\"\",\"분석\":\"\",\"점수\":\"\"} 형태로 만들어줘.";
         promptSet(prompt);
-        return process();
+        String text = process();
+        System.out.println(text);
+        return text;
     }
     public String recommand(String name){
         this.input.put("prompt", "식물 "+name+"의 추천 토양 온도(℃), 추천 토양 습도(%), 추천 N(mg/kg), 추천 P(mg/kg), 추천 K(mg/kg), 추천 토양산화도(ph), 추천 토양전기전도도(μS/cm), 추천 광량(lux)의 각 수치를 범위로 만들어서 아래처럼 json을 만들어줘\n" +
@@ -71,8 +82,9 @@ public class ChatGPT {
         this.input.put("prompt", "식물 "+name+"을 잘 키울 수 있는 팁을 알려줘");
         String prompt = "식물 "+name+"을 잘 키울 수 있는 팁을 알려줘";
         promptSet(prompt);
-//        this.input.put("prompt", "식물 "+name+"을 온도, 습도, npk, 토양 전도도, 광량을 이용하여 잘 키울 수 있는 팁을 알려줘");
-        return process();
+        String text = process();
+        System.out.println(text);
+        return text;
     }
     public String process(){
         try {
