@@ -18,7 +18,7 @@ public class ChatGPT {
     public ChatGPT(){
         try {
             this.url = new URL("https://api.openai.com/v1/chat/completions");
-            this.key = "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";
+            this.key = "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";
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -68,7 +68,7 @@ public class ChatGPT {
         return process();
     }
     public String tips(String name){
-        this.input.put("prompt", "식물 "+name+"을 잘 키울 수 있는 팁을 알려줘");
+        //this.input.put("prompt", "식물 "+name+"을 잘 키울 수 있는 팁을 알려줘");
         String prompt = "식물 "+name+"을 잘 키울 수 있는 팁을 알려줘";
         promptSet(prompt);
 //        this.input.put("prompt", "식물 "+name+"을 온도, 습도, npk, 토양 전도도, 광량을 이용하여 잘 키울 수 있는 팁을 알려줘");

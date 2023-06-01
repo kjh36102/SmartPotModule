@@ -80,7 +80,7 @@ public class Fragment1 extends Fragment{
             public void onClick(View v) {
                 //if (popup.url != null && !popup.url.isEmpty()) {   //아두이노 IP를 알때만 사용가능
 
-                    new GetJsonDataTask().execute(popup.url);
+                new GetJsonDataTask().execute(popup.url);
 
                 //}
             }
@@ -189,8 +189,13 @@ public class Fragment1 extends Fragment{
             String dateTime = dateFormat.format(calendar.getTime());
             rTxt.setText(dateTime);
 
+
+
+
             Fragment3.humid = humid;
             Fragment3.light = light;
+
+
 
             ChatGPT chatGPT = new ChatGPT();
             new Thread(){
