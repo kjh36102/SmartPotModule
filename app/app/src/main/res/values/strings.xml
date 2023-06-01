@@ -9,5 +9,5 @@
     <string name="close">닫기</string>
     <string name="enroll_item">제품등록하기</string>
     <string name="register">제품등록</string>
-    <string name="register_hint"> 1. 제품에서 페어링모드 버튼을 누른다. \n 2. 핸드폰에서 제품의 핫스팟에 연결한다. \n 3. 제품에 상시 연결할 와이파이의 SSID, \n 비밀 번호, 포트번호를 입력한다. \n 4. 제품등록 버튼을 누른다. \n 5. 핸드폰을 상시 연결할 와이파이에 연결한다. \n 6. 제품의 MAC, IP주소가 조회되면 등록성공</string>
+    <string name="register_hint"> 1. 제품에서 페어링모드 버튼을 누른다. \n 2. 핸드폰에서 제품의 핫스팟에 연결한다. \n 3. 상시 연결할 와이파이 정보를 입력한다. \n 4. 제품등록 버튼을 누른다. \n 5. 연결상태에 접속성공이 뜨면 최종접속성공. \n 6. 실패 시 위 과정을 다시 진행한다. </string>
 </resources>

@@ -19,24 +19,21 @@
             android:layout_marginTop="15dp">
 
             <ImageView
-                android:id="@+id/imageView1"
+                android:id="@+id/face1"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/smileface" />
+                android:layout_height="wrap_content"/>
 
             <ImageView
-                android:id="@+id/imageView2"
+                android:id="@+id/face2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
-                android:src="@drawable/noface" />
+                android:layout_marginLeft="20dp" />
 
             <ImageView
-                android:id="@+id/imageView3"
+                android:id="@+id/face3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
-                android:src="@drawable/angryface" />
+                android:layout_marginLeft="20dp" />
         </TableRow>
         <TableLayout
             android:layout_width="wrap_content"
@@ -204,6 +201,7 @@
             android:textSize="18dp"/>
 
     </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="100dp"
