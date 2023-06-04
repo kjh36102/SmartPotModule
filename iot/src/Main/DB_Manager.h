@@ -155,8 +155,8 @@ public:
       } else {
         stateOpenDB = false;
         LOGLN("DB 닫기 성공!");
-        
-        if(sdInitialized){
+
+        if (sdInitialized) {
           SD.end();  //sd카드 연결해제
           sdInitialized = false;
           LOGLN("SD 카드 연결 해제됨");
@@ -185,6 +185,142 @@ public:
   int execute(const __FlashStringHelper* sql) {
     const char* sqlPtr = reinterpret_cast<const char*>(sql);
     return executeSqlHelper(sqlPtr);
+  }
+
+  // int getTableRecordCount(const char* tableName) {
+  //   if (!stateOpenDB) {
+  //     LOGLN("DB가 열려있지 않아 레코드 개수 조회 불가능");
+  //     return -2;
+  //   }
+
+  //   char query[100];
+  //   sprintf(query, "SELECT COUNT(*) FROM %s", tableName);
+
+  //   int rc = execute(query);
+
+  //   if (rc == SQLITE_OK) {
+  //     char* results = getResult();
+
+  //     DynamicJsonDocument doc(DB_RESULT_BUFFER_SIZE);
+  //     deserializeJson(doc, results);
+
+  //     LOG("PIN: ");
+  //     LOGLN(results);
+
+  //     return doc[0][0];
+  //   } else {
+  //     return -1;
+  //   }
+  // }
+
+  int isTableRecordExists(const char* tableName) {
+    if (!stateOpenDB) {
+      LOGLN("DB가 열려있지 않아 레코드 개수 조회 불가능");
+      return -2;
+    }
+
+    char query[100];
+    sprintf(query, "SELECT EXISTS(SELECT 1 FROM %s WHERE id = 0) AS record_exists", tableName);
+
+    int rc = execute(query);
+
+    if (rc == SQLITE_OK) {
+      char* results = getResult();
+
+      DynamicJsonDocument doc(DB_RESULT_BUFFER_SIZE);
+      deserializeJson(doc, results);
+
+      int recordExists = doc[0]["record_exists"];
+      return recordExists;
+    } else {
+      return -1;
+    }
+  }
+
+
+
+  void prepareTable(const char* tableName, const __FlashStringHelper* tableSql, const __FlashStringHelper* dataSql, bool dataEssential = true) {
+    int count;
+    count = isTableRecordExists(tableName);
+
+    if (count == -2) {
+      LOGLN("DB가 열려있지 않아 테이블 초기화 불가능");
+      return;
+    } else if (count > 0) {
+      LOGF("테이블 %s 이미 초기화됨\n", tableName);
+      return;
+    }
+
+    if (count == -1) {  // 테이블이 없는 경우 테이블 생성 후 데이터생성
+      execute(reinterpret_cast<const char*>(tableSql));
+      if (dataEssential) execute(reinterpret_cast<const char*>(dataSql));
+    } else if (count == 0) {  //테이블이 있는경우는 데이터만 생성
+      if (dataEssential) execute(reinterpret_cast<const char*>(dataSql));
+    }
+
+    LOGF("테이블 %s 초기화 완료\n", tableName);
+  }
+
+
+  void prepareTable(const char* tableName, const char* tableSql, const char* dataSql, bool dataEssential = true) {
+    int count;
+    count = isTableRecordExists(tableName);
+
+    if (count == -2) {
+      LOGLN("DB가 열려있지 않아 테이블 초기화 불가능");
+      return;
+    } else if (count > 0) {
+      LOGF("테이블 %s 이미 초기화됨\n", tableName);
+      return;
+    }
+
+    if (count == -1) {  // 테이블이 없는 경우 테이블 생성 후 데이터생성
+      execute(tableSql);
+      if (dataEssential) execute(dataSql);
+    } else if (count == 0) {  //테이블이 있는경우는 데이터만 생성
+      if (dataEssential) execute(dataSql);
+    }
+
+    LOGF("테이블 %s 초기화 완료\n", tableName);
+  }
+
+  int dropAllTables() {
+    if (!stateOpenDB) {
+      LOGLN("DB가 열려있지 않아 테이블 삭제 불가능");
+      return -1;
+    }
+
+    const char* sql = "SELECT 'DROP TABLE ' || name || ';' FROM sqlite_master WHERE type='table';";
+
+    char** dropStatements;
+    int rowCount, colCount;
+    char* errMsg = nullptr;
+
+    int rc = sqlite3_get_table(DB, sql, &dropStatements, &rowCount, &colCount, &errMsg);
+
+    if (rc != SQLITE_OK) {
+      LOGF("테이블 조회 실패: %s\n", errMsg);
+      sqlite3_free(errMsg);
+      return rc;
+    }
+
+    // 첫 번째 행은 칼럼 이름이므로 스킵
+    int dropIndex = colCount;
+
+    // 각 DROP TABLE 문을 실행하여 테이블을 삭제
+    for (int i = 0; i < rowCount; ++i) {
+      const char* dropStatement = dropStatements[dropIndex++];
+      rc = execute(dropStatement);
+      if (rc != SQLITE_OK) {
+        LOGF("테이블 삭제 실패: %s\n", dropStatement);
+      } else {
+        LOGF("테이블 삭제 성공: %s\n", dropStatement);
+      }
+    }
+
+    sqlite3_free_table(dropStatements);
+
+    return SQLITE_OK;
   }
 };
 
