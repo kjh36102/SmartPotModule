@@ -73,8 +73,13 @@ public class Fragment2 extends Fragment {
     private static final String NAME_KEY = "name_key";
     private static final String TIPS = "tips";
     private static final String FEEDBACK = "feedbacks";
-    private static final String PREFERENCE_NAME = "MyPreference";
-    String explan,tips;
+    private static final String SHORT_EXPLAN = "shortExplan";
+    private static final String IMPROVEMENT = "improve";
+
+
+
+
+    String explan,tips,improve;
     String shortExplan,shortTips; // 짧은 설명
     String textExplan = explan;  //현재 화면에 나와야할 설명
     String tTips =  tips;
@@ -148,13 +153,14 @@ public class Fragment2 extends Fragment {
 
     public void getShortExplan(Button btn){
         tTips = tips;
-        if(explan.length()>95){
-            shortExplan = explan.substring(0,92)+"..."; // 설명으 세줄로 자르고 뒤에 ...으로 설명을 덧붙임
+
+        if(explan.length()>1){
+
             btn.setVisibility(View.VISIBLE);//더보기 버튼 등장
-            textExplan = shortExplan;//현재 설명에 짧은 설명으로 적용
+            textExplan = MainActivity.sharedPreferences_fragment2.getString(SHORT_EXPLAN,"");//현재 설명에 짧은 설명으로 적용
         }
         else{
-            shortExplan = null;
+
             btn.setVisibility(View.GONE);//더보기 버튼 삭제
         }//설명이 짧을 경우 짧은 설명은 NULL
 
@@ -353,69 +359,19 @@ public class Fragment2 extends Fragment {
             if (null_judge() == true) {
 
                 textView1.setText("오류입니다 새로고침을 눌러주세요");
-
+                btn.setVisibility(View.GONE);
 
 
             }
-
             else {
-                Thread thread = new Thread() {
-                    public void run() {
-
-                        explan = chatGPT.feedback(name, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ph), Double.parseDouble(ec), Double.parseDouble(light));
-
-                        Handler handler = new Handler(Looper.getMainLooper());
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
-                                editor.putString(FEEDBACK, explan);
-                                editor.apply();
 
 
-                                btn2.setVisibility(View.GONE);//닫기 버튼 비활성화
+                gpt_feedback(getView(),textView1, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(light), Double.parseDouble(ph), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ec));
 
-                                getShortExplan(btn);// 설명 길이 판단및 짧은 설명 제작
-                                textView1.setText(textExplan);// 최종 현재 설명 적용
-
-                                if (btn.getVisibility() == View.VISIBLE) {
-                                    btn.setOnClickListener(new View.OnClickListener() {
-                                        public void onClick(View view) {
-                                            btn2.setVisibility(View.VISIBLE);
-                                            btn.setVisibility(View.GONE);
-                                            textView1.setText(explan);
-
-                                        }
-
-                                    });
-                                }//더보기 버튼이 있고, 클릭이 되면 닫기 버튼 활성화및 더보기 버튼 비활성화
-
-
-                                btn2.setOnClickListener(new View.OnClickListener() {
-                                    public void onClick(View view) {
-                                        btn.setVisibility(View.VISIBLE);
-                                        btn2.setVisibility(View.GONE);
-                                        textView1.setText(shortExplan);
-
-                                    }
-
-                                });//닫기 버튼을 누르면 더보기 버튼 활성화 및 닫기 버튼 비활성화
-                            }
-                        });
-                    }
-                };
-                thread.start();
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
 
             }
 
 
-            Fragment3.humid = humid;
-            Fragment3.light = light;
 
 
         }
@@ -455,13 +411,13 @@ public class Fragment2 extends Fragment {
         TextView trash3 = view.findViewById(R.id.trash3);
         Button button = view.findViewById(R.id.t_button);
 
-        trash1.setVisibility(View.GONE);
-        trash2.setVisibility(View.GONE);
+        trash1.setVisibility(View.VISIBLE);
+        trash2.setVisibility(View.VISIBLE);
         trash3.setVisibility(View.GONE);
         button.setVisibility(View.GONE);
 
         ChatGPT chatGPT = new ChatGPT();
-
+        //new GetJsonDataTask().execute(popup.url);
 
 
         if(!MainActivity.sharedPreferences_fragment2.contains(FEEDBACK)){
@@ -478,8 +434,10 @@ public class Fragment2 extends Fragment {
         else{
             rTxt.setText(MainActivity.sharedPreferences_fragment2.getString("datetime",""));
             explan = MainActivity.sharedPreferences_fragment2.getString(FEEDBACK,"");
-            getShortExplan(btn);
-            textView1.setText(textExplan);// 최종 현재 설명 적용
+            shortExplan = MainActivity.sharedPreferences_fragment2.getString(SHORT_EXPLAN,"");
+            btn.setVisibility(View.VISIBLE);
+
+            textView1.setText(shortExplan);// 최종 현재 설명 적용
             if (btn.getVisibility() == View.VISIBLE) {
                 btn.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View view) {
@@ -612,8 +570,8 @@ public class Fragment2 extends Fragment {
                         editor.apply();
 
                         btn2.setVisibility(View.GONE);//닫기 버튼 비활성화
-
-                        getShortTips(btn);// 설명 길이 판단및 짧은 설명 제작
+                        btn.setVisibility(View.VISIBLE);
+                        getShortTips(btn);
                         textView1.setText(tTips);// 최종 현재 설명 적용
 
                         if (btn.getVisibility() == View.VISIBLE) {
@@ -654,35 +612,57 @@ public class Fragment2 extends Fragment {
         ChatGPT chatgpt_1 = new ChatGPT();
         Button btn = (Button) view.findViewById(R.id.more_2);//더보기 버튼
         Button btn2 = (Button) view.findViewById(R.id.close_2);//닫기 버튼
+        TextView trash1 = (TextView)view.findViewById(R.id.trash);
+        TextView trash2 = (TextView)view.findViewById(R.id.trash2);
         ImageButton update_btn = (ImageButton) view.findViewById(R.id.update);
+
+        btn.setVisibility(View.VISIBLE);
 
 
 
         Thread thread = new Thread() {
             public void run() {
-                update_btn.setVisibility(View.GONE);
-                explan = chatgpt_1.feedback(name, temp, humid, nitro, phos, pota, ph, ec, light);
+
+                String feedback_j = chatgpt_1.feedback(name, temp, humid, nitro, phos, pota, ph, ec, light);
 
                 Handler handler = new Handler(Looper.getMainLooper());
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
+
+                        try {
+                            JSONObject jsonObject = new JSONObject(feedback_j);
+                            explan = jsonObject.getString("분석");
+                            shortExplan = jsonObject.getString("요약");
+                            improve = jsonObject.getString("개선방안");
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        textExplan = "분석: "+explan+"\n\n개선방안: "+improve;
+                        shortExplan = "요약: "+shortExplan;
+
                         SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
-                        editor.putString(FEEDBACK, explan);
+                        editor.putString(FEEDBACK, textExplan);
+                        editor.putString(SHORT_EXPLAN, shortExplan);
+
+
+
+
                         editor.apply();
 
 
                         btn2.setVisibility(View.GONE);//닫기 버튼 비활성화
 
-                        getShortExplan(btn);// 설명 길이 판단및 짧은 설명 제작
-                        textView1.setText(textExplan);// 최종 현재 설명 적용
+
+                        textView1.setText(shortExplan);// 최종 현재 설명 적용
 
                         if (btn.getVisibility() == View.VISIBLE) {
                             btn.setOnClickListener(new View.OnClickListener() {
                                 public void onClick(View view) {
                                     btn2.setVisibility(View.VISIBLE);
                                     btn.setVisibility(View.GONE);
-                                    textView1.setText(explan);
+                                    textView1.setText(textExplan);
 
                                 }
 
@@ -706,12 +686,14 @@ public class Fragment2 extends Fragment {
         };
 
         thread.start();
+
         thread.join();
-        update_btn.setVisibility(View.VISIBLE);
+
+
 
 
     }//chat gpt 적용하여 피드백 가져오기
-    //그래프 레이아웃을 가져와 해시맵에 저장
+
 
 
 
