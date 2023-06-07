@@ -29,6 +29,8 @@ public:
     setDutyCycle(0);
   }
 
+  PWMController(){}
+
   int getChannel() {
     return channel;
   }
@@ -56,7 +58,7 @@ public:
     //   return;  // 주어진 듀티 사이클이 유효 범위를 벗어나면 무시합니다.
     // }
     this->dutyCycle = dutyCycle;
-    ledcWrite(this->channel, this->dutyCycle);
+    // ledcWrite(this->channel, this->dutyCycle);
     LOGF("PWM 채널 %d 듀티사이클 설정 %d\n", this->channel, this->dutyCycle);
   }
 

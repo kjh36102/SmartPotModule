@@ -6,6 +6,7 @@
 //RTOS 라이브러리 가져오기
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 
 #define PRINT_STACK_USAGE false
 #define printStack if(PRINT_STACK_USAGE) printStack

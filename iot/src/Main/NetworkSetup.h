@@ -8,6 +8,8 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include "UDPLibrary.h"
+#include "NextOperationHandler.h"
+#include "SoilUpdater.h"
 
 //-------------------------------------------------------------
 #define LOGKEY "NetworkSetup.h"
@@ -40,7 +42,7 @@ enum class ConnectPhase {
 
 ConnectPhase connectPhase = ConnectPhase::INITIAL;
 
-const char* HTTP_MIME = "text/html; charset=UTF-8";
+const char* HTTP_MIME = "text/plain; charset=utf-8";
 String previousTryingSSID;
 String previousTryingPW;
 bool connectStationAP(String SSID, String PW, unsigned long timeout = 30000) {
@@ -81,6 +83,9 @@ bool connectStationAP(String SSID, String PW, unsigned long timeout = 30000) {
 }
 
 void initNetwork(bool clearAll = false) {
+
+  NextOperationHandler::stopTasks();
+  SoilUpdater::getInstance().off();
 
   if (clearAll) {
     STA_SSID = "";
@@ -156,6 +161,8 @@ bool hasValidArg(WebServer& server, const char* argName, bool notNull = true) {
   }
   return false;
 }
+
+
 
 //-------------------------------------------------------------
 #endif  //__NETWORK_SETUP_H__

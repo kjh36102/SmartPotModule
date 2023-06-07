@@ -36,6 +36,10 @@ public:
   void run() {
     init();
     for (;;) {
+
+      //디버깅용 메모리용량확인
+      LOGF("\t\t\t\tFreeHeapMemory: %u\n", esp_get_free_heap_size());
+
       if (!digitalRead(PIN_EXTPWR_ON_R)) {
         LOGF("외부전원 차단 감지됨! 실행할 함수 수: %d\n", shutdownFuncQueue.size());
         while (!shutdownFuncQueue.empty()) {

@@ -32,42 +32,44 @@ private:
   static int callbackOnExecuteDB(void* instance, int argc, char** argv, char** azColName) {
     DB_Manager* self = reinterpret_cast<DB_Manager*>(instance);
 
+    size_t remainingBufferSize = DB_RESULT_BUFFER_SIZE;
+
     // 만약 처음으로 결과를 추가한다면 global_result를 초기화하고, "["로 시작
     if (self->global_result[0] == '\0') {
-      strcat(self->global_result, "[\n");
+      strncat(self->global_result, "[\n", remainingBufferSize);
+      remainingBufferSize -= strlen("[\n") + 1;  // considering null termination
     } else {
       // 이전 행이 있으면, 콤마를 추가하고 줄을 바꿈
-      strcat(self->global_result, ",\n");
+      strncat(self->global_result, ",\n", remainingBufferSize);
+      remainingBufferSize -= strlen(",\n") + 1;  // considering null termination
     }
 
     // 각 행의 결과를 JSON 형식으로 추가
-    strcat(self->global_result, "  {");
+    strncat(self->global_result, "  {", remainingBufferSize);
+    remainingBufferSize -= strlen("  {") + 1;  // considering null termination
 
     for (int i = 0; i < argc; i++) {
-      strcat(self->global_result, "\"");
-      strcat(self->global_result, azColName[i]);
-      strcat(self->global_result, "\": ");
-      strcat(self->global_result, "\"");
-      if (argv[i]) {
-        strcat(self->global_result, argv[i]);
-      } else {
-        strcat(self->global_result, "NULL");
-      }
-      strcat(self->global_result, "\"");
+      const char* colName = azColName[i];
+      const char* data = argv[i] ? argv[i] : "NULL";
+
+      char buf[512];  // This size should be sufficient for each column's data
+      snprintf(buf, sizeof(buf), "\"%s\": \"%s\"", colName, data);
+      strncat(self->global_result, buf, remainingBufferSize);
+      remainingBufferSize -= strlen(buf) + 1;  // considering null termination
 
       // 마지막이 아닌 경우 콤마를 추가
       if (i < argc - 1) {
-        strcat(self->global_result, ", ");
+        strncat(self->global_result, ", ", remainingBufferSize);
+        remainingBufferSize -= strlen(", ") + 1;  // considering null termination
       }
     }
 
     // 각 행의 JSON 객체 닫기
-    strcat(self->global_result, "}");
+    strncat(self->global_result, "}", remainingBufferSize);
+    remainingBufferSize -= strlen("}") + 1;  // considering null termination
 
     return 0;
   }
-
-
 
   int executeSqlHelper(const char* sql) {
     if (!stateOpenDB) {
@@ -75,7 +77,7 @@ private:
       return SQLITE_ERROR;
     }
 
-    // global_result변수의 첫문자를 null로 초기화
+    // global_result 변수의 첫 문자를 null로 초기화
     global_result[0] = '\0';
 
     LOGF("SQL 실행: %s\n", sql);
@@ -85,15 +87,29 @@ private:
     int rc = sqlite3_exec(DB, sql, callbackOnExecuteDB, this, &DBErrMsg);
 
     if (rc != SQLITE_OK) {
-      LOGF("SQL 오류: %s\n", DBErrMsg);
-    } else {
-      LOGLN("SQL 실행됨");
+      if (rc == SQLITE_IOERR) {
+        // 디스크 I/O 오류 발생 시 DB를 닫고 다시 열기
+        close();
+        open("data");
+
+        // 다시 실행
+        rc = sqlite3_exec(DB, sql, callbackOnExecuteDB, this, &DBErrMsg);
+      }
+
+      if (rc != SQLITE_OK) {
+        LOGF("SQL 오류: %s\n", DBErrMsg);
+      } else {
+        LOGLN("SQL 실행됨");
+      }
     }
+
+    sqlite3_free(DBErrMsg);
 
     Serial.print(F("\t소요 시간(ms):"));
     Serial.println(millis() - start);
     return rc;
   }
+
 
   // 생성자는 private로 설정
   DB_Manager() {
@@ -187,40 +203,15 @@ public:
     return executeSqlHelper(sqlPtr);
   }
 
-  // int getTableRecordCount(const char* tableName) {
-  //   if (!stateOpenDB) {
-  //     LOGLN("DB가 열려있지 않아 레코드 개수 조회 불가능");
-  //     return -2;
-  //   }
 
-  //   char query[100];
-  //   sprintf(query, "SELECT COUNT(*) FROM %s", tableName);
-
-  //   int rc = execute(query);
-
-  //   if (rc == SQLITE_OK) {
-  //     char* results = getResult();
-
-  //     DynamicJsonDocument doc(DB_RESULT_BUFFER_SIZE);
-  //     deserializeJson(doc, results);
-
-  //     LOG("PIN: ");
-  //     LOGLN(results);
-
-  //     return doc[0][0];
-  //   } else {
-  //     return -1;
-  //   }
-  // }
-
-  int isTableRecordExists(const char* tableName) {
+  int getTableRecordCount(const char* tableName) {
     if (!stateOpenDB) {
       LOGLN("DB가 열려있지 않아 레코드 개수 조회 불가능");
       return -2;
     }
 
     char query[100];
-    sprintf(query, "SELECT EXISTS(SELECT 1 FROM %s WHERE id = 0) AS record_exists", tableName);
+    sprintf(query, "SELECT COUNT(*) FROM %s", tableName);
 
     int rc = execute(query);
 
@@ -228,20 +219,29 @@ public:
       char* results = getResult();
 
       DynamicJsonDocument doc(DB_RESULT_BUFFER_SIZE);
-      deserializeJson(doc, results);
+      DeserializationError err = deserializeJson(doc, results);
 
-      int recordExists = doc[0]["record_exists"];
-      return recordExists;
+      // 추가: 오류 체크
+      if (err) {
+        Serial.print(F("deserializeJson() failed with code "));
+        Serial.println(err.c_str());
+        doc.clear();  // 실패했더라도 사용한 메모리는 해제
+        return -3;
+      }
+
+      const char* countStr = doc[0]["COUNT(*)"];  // count(*) 값을 가져옴
+      int recordCount = atoi(countStr);           // 문자열을 정수로 변환
+
+      doc.clear();  // 파싱이 끝나면 사용한 메모리를 해제
+      return recordCount;
     } else {
       return -1;
     }
   }
 
-
-
   void prepareTable(const char* tableName, const __FlashStringHelper* tableSql, const __FlashStringHelper* dataSql, bool dataEssential = true) {
     int count;
-    count = isTableRecordExists(tableName);
+    count = getTableRecordCount(tableName);
 
     if (count == -2) {
       LOGLN("DB가 열려있지 않아 테이블 초기화 불가능");
@@ -262,63 +262,47 @@ public:
   }
 
 
-  void prepareTable(const char* tableName, const char* tableSql, const char* dataSql, bool dataEssential = true) {
-    int count;
-    count = isTableRecordExists(tableName);
-
-    if (count == -2) {
-      LOGLN("DB가 열려있지 않아 테이블 초기화 불가능");
-      return;
-    } else if (count > 0) {
-      LOGF("테이블 %s 이미 초기화됨\n", tableName);
-      return;
-    }
-
-    if (count == -1) {  // 테이블이 없는 경우 테이블 생성 후 데이터생성
-      execute(tableSql);
-      if (dataEssential) execute(dataSql);
-    } else if (count == 0) {  //테이블이 있는경우는 데이터만 생성
-      if (dataEssential) execute(dataSql);
-    }
-
-    LOGF("테이블 %s 초기화 완료\n", tableName);
-  }
-
   int dropAllTables() {
     if (!stateOpenDB) {
       LOGLN("DB가 열려있지 않아 테이블 삭제 불가능");
       return -1;
     }
 
-    const char* sql = "SELECT 'DROP TABLE ' || name || ';' FROM sqlite_master WHERE type='table';";
+    const char* selectSql = "SELECT name FROM sqlite_master WHERE type='table';";
 
-    char** dropStatements;
-    int rowCount, colCount;
-    char* errMsg = nullptr;
-
-    int rc = sqlite3_get_table(DB, sql, &dropStatements, &rowCount, &colCount, &errMsg);
+    int rc = execute(selectSql);
 
     if (rc != SQLITE_OK) {
-      LOGF("테이블 조회 실패: %s\n", errMsg);
-      sqlite3_free(errMsg);
+      LOGF("테이블 조회 실패\n");
       return rc;
     }
 
-    // 첫 번째 행은 칼럼 이름이므로 스킵
-    int dropIndex = colCount;
+    // select문의 결과 얻기
+    char* results = getResult();
 
-    // 각 DROP TABLE 문을 실행하여 테이블을 삭제
-    for (int i = 0; i < rowCount; ++i) {
-      const char* dropStatement = dropStatements[dropIndex++];
-      rc = execute(dropStatement);
-      if (rc != SQLITE_OK) {
-        LOGF("테이블 삭제 실패: %s\n", dropStatement);
-      } else {
-        LOGF("테이블 삭제 성공: %s\n", dropStatement);
-      }
+    // 결과 파싱
+    DynamicJsonDocument doc(DB_RESULT_BUFFER_SIZE);
+    DeserializationError err = deserializeJson(doc, results);
+
+    if (err) {
+      Serial.print(F("deserializeJson() failed with code "));
+      Serial.println(err.c_str());
+      return -3;
     }
 
-    sqlite3_free_table(dropStatements);
+    // 각 테이블에 대해 DROP TABLE 문 실행
+    for (JsonVariant value : doc.as<JsonArray>()) {
+      const char* tableName = value["name"];
+      char dropSql[100];
+      sprintf(dropSql, "DROP TABLE %s;", tableName);
+
+      rc = execute(dropSql);
+      if (rc != SQLITE_OK) {
+        LOGF("테이블 삭제 실패: %s\n", tableName);
+      } else {
+        LOGF("테이블 삭제 성공: %s\n", tableName);
+      }
+    }
 
     return SQLITE_OK;
   }

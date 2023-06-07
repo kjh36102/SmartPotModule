@@ -1,3 +1,4 @@
+#include "stdio.h"
 #ifndef __ROUTERS_AP_H__
 #define __ROUTERS_AP_H__
 
@@ -5,6 +6,8 @@
 #include <Arduino.h>
 #include "NetworkSetup.h"
 #include "UDPLibrary.h"
+#include "TimeUpdater.h"
+#include "SoilUpdater.h"
 
 //-------------------------------------------------------------
 #define LOGKEY "RoutersAP.h"
@@ -14,7 +17,7 @@
 void setupAPRouters() {
   serverAP.on("/regExtWifi", HTTP_GET, []() {
     if (connectPhase != ConnectPhase::SETUP) {
-      serverAP.send(500, HTTP_MIME, F("현재 등록모드가 아님"));
+      serverAP.send(200, HTTP_MIME, "err|1|Device is not in setup mode.");
       return;
     }
 
@@ -24,13 +27,12 @@ void setupAPRouters() {
       connectPhase = ConnectPhase::STA_INFO;
 
       if (connectStationAP(STA_SSID, STA_PW, 10000)) {  //타임아웃은 앱보다 좀더 짧게해줘야 연결이 되었는데도 앱이 실패로 판단하는 것을 방지가능
-        connectPhase = ConnectPhase::STA_CONNECTED;
-        serverAP.send(200, HTTP_MIME, F("연결 성공"));
-        serverSTA.begin();
-
+          connectPhase = ConnectPhase::STA_CONNECTED;
+          serverSTA.begin();
+          serverAP.send(200, HTTP_MIME, "ok|0|Success");
       } else {
-        serverAP.send(500, HTTP_MIME, F("연결 실패"));
-        connectPhase = ConnectPhase::SETUP;
+        connectPhase = ConnectPhase::INITIAL;
+        serverAP.send(200, HTTP_MIME, "err|2|Fail to connect to external network.");
         return;
       }
 
@@ -39,17 +41,16 @@ void setupAPRouters() {
         connectPhase = ConnectPhase::UDP_BROADCAST;
 
         if (sendUDPMessageUntilACK(("SmartPotModule:" + WiFi.localIP().toString()).c_str(),
-                                   "SmartPotModule:ACK", getBroadcastIP(), STA_PORT, 500, 30000)) {  
+                                   "SmartPotModule:ACK", getBroadcastIP(), STA_PORT, 500, 30000)) {
           connectPhase = ConnectPhase::UDP_ACK;
-        }else{
+        } else {
           LOGLN(F("UDP ACK응답 받기 시간초과"));
-          connectPhase = ConnectPhase::SETUP;
-          initNetwork(true);
+          connectPhase = ConnectPhase::INITIAL;
           return;
         }
       }
     } else {
-      serverAP.send(500, "text/plain", "Query argument is not enough.");
+      serverAP.send(200, HTTP_MIME, "err|0|Query argument is not enough.");
     }
   });
 }
