@@ -362,8 +362,13 @@ public class Fragment1 extends Fragment{
             String dateTime = dateFormat.format(calendar.getTime());
             rTxt.setText(dateTime);
 
+
+
+
             Fragment3.humid = humid;
             Fragment3.light = light;
+
+
 
             ChatGPT chatGPT = new ChatGPT();
             new Thread(){
