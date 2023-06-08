@@ -158,7 +158,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                     connManager.setStatusText("UDP 프로세스 성공");
                     System.out.println("UDP 프로세스 성공");
                     ip = connManager.arduinoIP; //UDP가 성공하면 아두이노 웹서버 IP 가져올수있음
-                    url = "http://" + ip + ":12345/read";
+                    url = "http://" + ip + ":12345/";
                     connManager.sendPing(30000, ip);  //타임아웃 30초
                 });
 

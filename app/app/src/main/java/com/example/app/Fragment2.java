@@ -467,7 +467,6 @@ public class Fragment2 extends Fragment {
             phos = mDataHashMap.get("phos");
             pota = mDataHashMap.get("pota");
             ec = mDataHashMap.get("ec");
-            String ts = mDataHashMap.get("ts");
 
             TextView rTxt = getView().findViewById(R.id.rTxt);
             TextView textView1 = getView().findViewById(R.id.explan_text);
@@ -663,7 +662,4 @@ public class Fragment2 extends Fragment {
         update_btn.setVisibility(View.VISIBLE);
 
     }
-
-
-
 }

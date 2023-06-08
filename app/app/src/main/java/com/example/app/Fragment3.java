@@ -1,12 +1,18 @@
 package com.example.app;
 
+import com.example.app.Fragment1;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,8 +43,8 @@ public class Fragment3 extends Fragment {
     private View includeView;
     private TextView tvCheck, tvValue, tvRange, tvValue1, tvValue2, tvValue3, tvValue4, tvValue5, edValue1,edValue2, tvLight, tvHumid;
     private static CheckBox checkBoxWater, checkBoxLight;
+    private Button waterButton;
     private String curType = WATER;
-
     private Button btDelete, btRegister;
     private DataAdapter dataAdapter;
 
@@ -68,13 +74,12 @@ public class Fragment3 extends Fragment {
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
         Log.i("##INFO", "onCreateView(): fragment3");
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_3, container, false);
+        View view = inflater.inflate(R.layout.fragment_3, container, false);
+        return view;
     }
-
     @Override
     public void onResume() {
         super.onResume();
@@ -86,7 +91,7 @@ public class Fragment3 extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Log.i("##INFO", "onViewCreated(): Fragment3");
-
+        SharedViewModel viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
         tvCheck = view.findViewById(R.id.tv_check_name);
         tabLayout = view.findViewById(R.id.tab_mode);
         tableCenter = view.findViewById(R.id.tab_layout_center);
@@ -128,9 +133,6 @@ public class Fragment3 extends Fragment {
 
         tvLight.setText(getData(requireContext(), "light"));
         tvHumid.setText(getData(requireContext(), "humid"));
-
-
-
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             // Tab이 선택되었을 때
             @Override
@@ -213,7 +215,8 @@ public class Fragment3 extends Fragment {
         checkBoxWater.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                if (isChecked) {
+                viewModel.setWaterState(isChecked);
+               if (isChecked) {
                     includeView.setVisibility(View.GONE);
                     tableCenter.setVisibility(View.VISIBLE);
                 } else {
@@ -226,6 +229,7 @@ public class Fragment3 extends Fragment {
         checkBoxLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                viewModel.setLightState(isChecked);
                 if (isChecked) {
                     includeView.setVisibility(View.GONE);
                     tableCenter.setVisibility(View.VISIBLE);

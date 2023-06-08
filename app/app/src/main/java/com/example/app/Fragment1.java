@@ -14,7 +14,9 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -39,6 +41,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -56,6 +60,10 @@ public class Fragment1 extends Fragment{
     public static ImageView smileface;
     public static ImageView noface ;
     public static ImageView angryface;
+    Button rBtn;
+    AppCompatButton water;
+    ToggleButton toggleButton;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -63,42 +71,140 @@ public class Fragment1 extends Fragment{
         smileface=view.findViewById(R.id.face1);
         noface = view.findViewById(R.id.face2);
         angryface =view.findViewById(R.id.face3);
-        setFace();
+        setBlack();
+
         return view;
     }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        ToggleButton toggleButton = view.findViewById(R.id.toggleButton);
-        Button rBtn = view.findViewById(R.id.rButton);
-        Button water = view.findViewById(R.id.nowWater);
-        CheckBox waterCK = view.findViewById(R.id.check_mode_water);
-        CheckBox lightCK = view.findViewById(R.id.check_mode_light);
+        SharedViewModel viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+
+
+        rBtn = view.findViewById(R.id.rButton);
+        water = view.findViewById(R.id.nowWater);
+        toggleButton = view.findViewById(R.id.toggleButton);
+        viewModel.getWaterState().observe(getViewLifecycleOwner(), state -> {
+            //            water.setVisibility(state ? View.GONE : View.VISIBLE);
+            water.setEnabled(state ? false : true);
+        });
+
+        viewModel.getLightState().observe(getViewLifecycleOwner(), state -> {
+            //            toggleButton.setVisibility(state ? View.GONE : View.VISIBLE);
+            toggleButton.setEnabled(state ? false : true);
+
+        });
 
         rBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                //if (popup.url != null && !popup.url.isEmpty()) {   //아두이노 IP를 알때만 사용가능
-
-                new GetJsonDataTask().execute(popup.url);
-
+                //if (popup.update_url != null && !popup.update_url.isEmpty()) {   //아두이노 IP를 알때만 사용가능
+                new updateRequest().execute();
                 //}
             }
         });
         water.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                //물키는기능
+                new Thread (()->{
+                    try {
+                        URL url = new URL(popup.url + "water");
+                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                        connection.setRequestMethod("GET");
+                        connection.setConnectTimeout(30000);
+                        connection.connect();
+
+                        InputStream inputStream = connection.getInputStream();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                        StringBuilder responseData = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            responseData.append(line);
+                        }
+                        reader.close();
+                        String parsed[] = line.split("|");
+                        if( parsed[0].equals("ok")) {
+                            Toast.makeText(getContext(), "급수 완료", Toast.LENGTH_SHORT).show();
+                        }
+                        else if(parsed[0].equals("err")){
+                            Toast.makeText(getContext(), "급수 실패", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (SocketTimeoutException e) {
+                        e.printStackTrace();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+                System.out.println("급수 테스트 코드");
             }
         });
         toggleButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 if(toggleButton.isChecked()==true){
-                    //켜졌을때 동작할거
+                    new Thread (()->{
+                        try {
+                            URL url = new URL(popup.url + "controlLight?state=true");
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            connection.setRequestMethod("GET");
+                            connection.setConnectTimeout(30000);
+                            connection.connect();
+
+                            InputStream inputStream = connection.getInputStream();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                            StringBuilder responseData = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                responseData.append(line);
+                            }
+                            reader.close();
+                            String parsed[] = line.split("|");
+                            if( parsed[0].equals("ok")) {
+                                Toast.makeText(getContext(), "조명 켜기 완료", Toast.LENGTH_SHORT).show();
+                            }
+                            else if(parsed[0].equals("err")){
+                                Toast.makeText(getContext(), "조명 켜기 실패", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (SocketTimeoutException e) {
+                            e.printStackTrace();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                    System.out.println("조명켜짐");
                 }
                 else {
-                    //꺼짐기능 코드
+                    new Thread (()->{
+                        try {
+                            URL url = new URL(popup.url + "controlLight?state=false");
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            connection.setRequestMethod("GET");
+                            connection.setConnectTimeout(30000);
+                            connection.connect();
+
+                            InputStream inputStream = connection.getInputStream();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                            StringBuilder responseData = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                responseData.append(line);
+                            }
+                            reader.close();
+                            String parsed[] = line.split("|");
+                            if( parsed[0].equals("ok")) {
+                                Toast.makeText(getContext(), "조명 끄기 완료", Toast.LENGTH_SHORT).show();
+                            }
+                            else if(parsed[0].equals("err")){
+                                Toast.makeText(getContext(), "조명 끄기 실패", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (SocketTimeoutException e) {
+                            e.printStackTrace();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                    System.out.println("조명꺼짐");
                 }
             }
         });
@@ -110,13 +216,57 @@ public class Fragment1 extends Fragment{
             }
         });
     }
+
+    private class updateRequest extends AsyncTask<Void, Void, String> {
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
+                HttpURLConnection connection = (HttpURLConnection) new URL(popup.url+"measureNow").openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(30000);
+                connection.connect();
+
+                InputStream inputStream = connection.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder responseData = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    responseData.append(line);
+                }
+                reader.close();
+
+                String[] parsed = line.split("\\|");
+                if (parsed[0].equals("ok")) {
+                    return popup.url;
+                } else if (parsed[0].equals("err")) {
+                    return null;
+                }
+                connection.disconnect();
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            if (result != null) {
+                new GetJsonDataTask().execute(result);
+                Toast.makeText(getContext(), "측정 완료", Toast.LENGTH_SHORT).show();                // 측정 완료 toast메시지 출력
+            } else {
+                Toast.makeText(getContext(), "측정 실패", Toast.LENGTH_SHORT).show();                // 측정 실패 toast메시지 출력
+            }
+        }
+    }
     private class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
         @Override
         protected HashMap<String, String> doInBackground(String... urls) {
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                URL url = new URL(urls[0]);
+                URL url = new URL(urls[0]+"getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
                 InputStream inputStream = httpURLConnection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -139,6 +289,29 @@ public class Fragment1 extends Fragment{
                 resultHashMap.put("ec", jsonObject.getString("ec"));
                 //resultHashMap.put("ts", jsonObject.getString("ts"));
 
+                URL url2 = new URL(urls[0] + "getTableData?name=plant_manage");
+                HttpURLConnection httpURLConnection2 = (HttpURLConnection) url2.openConnection();
+                InputStream inputStream2 = httpURLConnection2.getInputStream();
+                BufferedReader bufferedReader2 = new BufferedReader(new InputStreamReader(inputStream2));
+                String line2;
+                StringBuilder stringBuilder2 = new StringBuilder();
+                while ((line2 = bufferedReader2.readLine()) != null) {
+                    stringBuilder2.append(line2);
+                }
+                bufferedReader2.close();
+                inputStream2.close();
+                httpURLConnection2.disconnect();
+
+                JSONObject jsonObject2 = new JSONObject(stringBuilder2.toString());
+                if(jsonObject.getInt("w_auto") == 0)
+                    water.setEnabled(false);
+                else if(jsonObject.getInt("l_auto") == 0) {
+                    water.setEnabled(false);
+                    if(jsonObject.getInt("l_on") == 1)
+                        toggleButton.setChecked(true);
+                    else if (jsonObject.getInt("l_on") == 0)
+                        toggleButton.setChecked(false);
+                }
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -221,11 +394,14 @@ public class Fragment1 extends Fragment{
 
         }
     }
-
-    public void setFace(){
+    public void setBlack(){
         setBlackImage(smileface, R.drawable.smileface1);
         setBlackImage(noface, R.drawable.noface1);
         setBlackImage(angryface, R.drawable.angryface1);
+    }
+
+    public void setFace(){
+        setBlack();
         try{
             if(score >=80)
                 setColorImage(smileface, R.drawable.smileface);

@@ -12,9 +12,9 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class ChatGPT {
-    JSONObject userMessage;
-    JSONArray messagesArray;
-    JSONObject input;
+    static JSONObject userMessage;
+    static JSONArray messagesArray;
+    static JSONObject input;
     URL url;
     HttpURLConnection con;
     String key;
