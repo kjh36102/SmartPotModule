@@ -167,14 +167,15 @@ public class Fragment2 extends Fragment {
                 inputStream.close();
                 httpURLConnection.disconnect();
                 JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                resultHashMap.put("temp", jsonObject.getString("temp"));
-                resultHashMap.put("humid", jsonObject.getString("humid"));
-                resultHashMap.put("light", jsonObject.getString("light"));
+                resultHashMap.put("temp", jsonObject.getString("tm"));
+                resultHashMap.put("humid", jsonObject.getString("hm"));
+                resultHashMap.put("light", jsonObject.getString("lt"));
                 resultHashMap.put("ph", jsonObject.getString("ph"));
-                resultHashMap.put("nitro", jsonObject.getString("nitro"));
-                resultHashMap.put("phos", jsonObject.getString("phos"));
-                resultHashMap.put("pota", jsonObject.getString("pota"));
+                resultHashMap.put("nitro", jsonObject.getString("n"));
+                resultHashMap.put("phos", jsonObject.getString("p"));
+                resultHashMap.put("pota", jsonObject.getString("k"));
                 resultHashMap.put("ec", jsonObject.getString("ec"));
+                //resultHashMap.put("ts", jsonObject.getString("ts"));
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -283,7 +284,7 @@ public class Fragment2 extends Fragment {
 
         new GetJsonDataTask().execute(popup.url);// 처음에 더미데이터 불러오기
         reset();//Value 초기화
-        gpt_standard(view);
+        //gpt_standard(view);
 
         /*TextView trash = (TextView) view.findViewById(R.id.trash);
         trash.setText("");*/
@@ -606,7 +607,4 @@ public class Fragment2 extends Fragment {
         barChart.invalidate();//차트 갱신
         return barChart;
     }
-
-
-
 }
