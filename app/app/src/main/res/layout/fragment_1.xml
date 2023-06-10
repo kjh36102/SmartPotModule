@@ -1,21 +1,248 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fragment1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_gravity="center"
     tools:context=".Fragment1">
-
     <!-- TODO: Update blank fragment layout -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <TextView
+        <TableRow
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="15dp">
+
+            <ImageView
+                android:id="@+id/face1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <ImageView
+                android:id="@+id/face2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp" />
+
+            <ImageView
+                android:id="@+id/face3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp" />
+        </TableRow>
+        <TableLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="대시보드" />
+            android:layout_marginTop="5dp">
+            <TableRow
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/table_border">
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:text="온도"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"
+                    android:background="@drawable/table_border"/>
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:text="습도"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"/>
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:text="조도"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"
+                    android:background="@drawable/table_border"/>
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:text="PH"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"/>
+            </TableRow>
+            <TableRow
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/table_border2">
+                <TextView
+                    android:id="@+id/temp"
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"
+                    android:background="@drawable/table_border2"/>
+                <TextView
+                    android:id="@+id/humid"
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"/>
+                <TextView
+                    android:id="@+id/light"
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"
+                    android:background="@drawable/table_border2"/>
+                <TextView
+                    android:id="@+id/ph"
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"/>
+            </TableRow>
+            <TableRow
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/table_border3">
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:text="N"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"
+                    android:background="@drawable/table_border3"/>
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:text="P"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"/>
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:text="K"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"
+                    android:background="@drawable/table_border3"/>
+                <TextView
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:text="EC"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"/>
+            </TableRow>
+            <TableRow
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/table_border2">
+                <TextView
+                    android:id="@+id/nitro"
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"
+                    android:background="@drawable/table_border2"/>
+                <TextView
+                    android:id="@+id/phos"
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"/>
+                <TextView
+                    android:id="@+id/pota"
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"
+                    android:background="@drawable/table_border2"/>
+                <TextView
+                    android:id="@+id/ec"
+                    android:layout_width="85dp"
+                    android:layout_height="50dp"
+                    android:textSize="25sp"
+                    android:textAlignment="center"
+                    android:gravity="center"/>
+            </TableRow>
+        </TableLayout>
+        <TextView
+            android:id="@+id/rText"
+            android:layout_width="340dp"
+            android:layout_height="35dp"
+            android:layout_marginTop="-5dp"
+            android:textColor="@color/black"
+            android:textSize="17dp"
+            android:layout_gravity="center"
+            android:gravity="center"/>
+        <Button
+            android:id="@+id/rButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="-10dp"
+            android:text="업데이트"
+            android:textColor="@color/black"
+            android:textSize="18dp"/>
+
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:orientation="vertical"
+        android:layout_gravity="bottom"
+        android:gravity="center"
+        android:layout_marginBottom="15dp">
+        <TextView
+            android:layout_width="300dp"
+            android:layout_height="35dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text= "각각 수동모드일 경우 활성화됨"
+            android:textColor = "@color/white"
+            android:background="@drawable/rounded_background"
+            android:textSize = "20sp"/>
+        <LinearLayout
+            android:id="@+id/container"
+            android:layout_width="250dp"
+            android:layout_height="60dp"
+            android:orientation="horizontal"
+            android:layout_marginTop="5dp">
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/nowWater"
+                android:layout_width="120dp"
+                android:layout_height="55dp"
+                android:layout_marginTop="1dp"
+                android:background="#03A9F4"
+                android:text="바로급수"
+                android:textColor="@color/white"
+                android:textSize="25sp"/>
+            <ToggleButton
+                android:id="@+id/toggleButton"
+                android:layout_width="120dp"
+                android:layout_height="55dp"
+                android:layout_marginLeft="10dp"
+                android:textSize="22sp"
+                android:textOn = "조명 on"
+                android:textOff= "조명 off"
+                android:textColor="@color/white"/>
+        </LinearLayout>
+    </LinearLayout>
 </FrameLayout>

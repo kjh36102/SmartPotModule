@@ -1,7 +1,7 @@
 //RelaySwitchTest.ino
 
-#define PUMP_PIN 32
-#define LED_PIN 33
+#define PUMP_PIN 12
+#define LED_PIN 13
 
 void setup() {
   pinMode(PUMP_PIN, OUTPUT);
