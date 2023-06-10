@@ -33,7 +33,7 @@
             android:background="@drawable/wifi_round"
             android:text="등록"
             android:textColor="@color/black"
-            android:textSize="16sp"/>
+            android:textSize="18sp"/>
     </androidx.appcompat.widget.Toolbar>
 
     <com.google.android.material.tabs.TabLayout
