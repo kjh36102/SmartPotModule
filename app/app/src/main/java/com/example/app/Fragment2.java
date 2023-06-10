@@ -471,8 +471,6 @@ public class Fragment2 extends Fragment {
             TextView rTxt = getView().findViewById(R.id.rTxt);
             TextView textView1 = getView().findViewById(R.id.explan_text);
 
-
-
             ImageButton update_btn = (ImageButton) getView().findViewById(R.id.update);
             Button btn = (Button)getView().findViewById(R.id.more_2);
             Button btn2 = (Button)getView().findViewById(R.id.close_2);
@@ -486,8 +484,6 @@ public class Fragment2 extends Fragment {
 
             editor.putString("datetime", dateTime);
             editor.apply();
-
-
 
             rTxt.setText(dateTime);
             ChatGPT chatGPT = new ChatGPT();

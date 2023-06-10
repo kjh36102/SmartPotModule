@@ -235,15 +235,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 JSONObject jsonObject2 = new JSONObject(stringBuilder2.toString());
                 if(jsonObject.getInt("w_auto") == 0)
+                    water.setEnabled(true);
+                else if(jsonObject.getInt("w_auto") == 1)
                     water.setEnabled(false);
-                else if(jsonObject.getInt("l_auto") == 0) {
-                    water.setEnabled(false);
-                    //if -else
+
+                if(jsonObject.getInt("l_auto") == 0) {
+                    toggleButton.setEnabled(true);
                     if(jsonObject.getInt("l_on") == 1)
                         toggleButton.setChecked(true);
                     else if (jsonObject.getInt("l_on") == 0)
                         toggleButton.setChecked(false);
                 }
+                else if(jsonObject.getInt("l_auto") == 1)
+                    water.setEnabled(false);
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -289,7 +293,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             phosText.setText(phos);
             potaText.setText(pota);
             ecText.setText(ec);
-            //rTxt.setText(ts);
+            //rTxt.setText(ts);  서버의 업데이트시간 불러오기
             Calendar calendar = Calendar.getInstance();
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
             String dateTime = dateFormat.format(calendar.getTime());
