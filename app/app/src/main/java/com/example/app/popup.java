@@ -56,7 +56,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         WifiConnectionManager connManager;
         SeekBar lightSeekBar;
         SeekBar coolSeekBar;
-        SeekBar waterSeekBar;
         Button sendButton;
         Button receiveButton;
         int lightProgress, coolProgress, waterProgress;
@@ -73,7 +72,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         Button plantBtn = findViewById(R.id.btnPlant);
         lightSeekBar = findViewById(R.id.seekBar);
         coolSeekBar = findViewById(R.id.seekBar2);
-        waterSeekBar =findViewById(R.id.seekBar3);
         receiveButton = findViewById(R.id.receivebutton);
         sendButton = findViewById(R.id.sendbutton);
 
@@ -320,7 +318,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                                 public void run() {
                                     lightSeekBar.setProgress(lightProgress);
                                     coolSeekBar.setProgress(coolProgress);
-                                    waterSeekBar.setProgress(waterProgress);
                                 }
                             });
 
@@ -350,7 +347,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 //설정한 progrss bar 값 읽는거
                 lightProgress = lightSeekBar.getProgress();
                 coolProgress = coolSeekBar.getProgress();
-                waterProgress = waterSeekBar.getProgress();
 
                 System.out.println("lightProgress: " + lightProgress);
                 System.out.println("coolProgress: " + coolProgress);
@@ -407,7 +403,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
 
         lightSeekBar.setProgress(lightProgress);
         coolSeekBar.setProgress(coolProgress);
-        waterSeekBar.setProgress(waterProgress);
     }
     public void save(int lightProgress, int coolProgress, int waterProgress){ //값 저장
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
