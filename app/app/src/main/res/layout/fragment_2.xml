@@ -26,23 +26,42 @@
 
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/textView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_margin="10dp"
-                    android:text="해바라기"
-                    android:textSize="40sp" />
-                <ImageButton
-                    android:id="@+id/update"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="right"
-                    android:adjustViewBounds="true"
-                    android:backgroundTint="#FFFCFC"
-                    android:src="@drawable/update_xml" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <TextView
+
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_margin="1dp"
+                        android:text="            "
+                        android:textSize="40sp" />
+
+                    <TextView
+                        android:id="@+id/textView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_margin="10dp"
+                        android:text="해바라기"
+                        android:textSize="40sp" />
+
+                    <ImageButton
+                        android:id="@+id/update"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="right"
+                        android:layout_marginLeft="70dp"
+                        android:layout_marginTop="10dp"
+                        android:adjustViewBounds="true"
+                        android:backgroundTint="#FFFCFC"
+                        android:src="@drawable/update_xml" />
+                </LinearLayout>
 
                 <TextView
 
