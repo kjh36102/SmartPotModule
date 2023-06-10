@@ -196,7 +196,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                URL url = new URL(urls[0]+"getTableData?name=soil_data");
+                URL url = new URL(urls[0]);
+                //URL url = new URL(urls[0]+"getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
                 InputStream inputStream = httpURLConnection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -237,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     water.setEnabled(false);
                 else if(jsonObject.getInt("l_auto") == 0) {
                     water.setEnabled(false);
+                    //if -else
                     if(jsonObject.getInt("l_on") == 1)
                         toggleButton.setChecked(true);
                     else if (jsonObject.getInt("l_on") == 0)
