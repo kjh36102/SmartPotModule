@@ -34,6 +34,7 @@ import android.widget.TextView;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
@@ -196,29 +197,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                URL url = new URL(urls[0]);
-                //URL url = new URL(urls[0]+"getTableData?name=soil_data");
+                //URL url = new URL(urls[0]);
+                URL url = new URL(urls[0]+"getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
                 InputStream inputStream = httpURLConnection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder responseData = new StringBuilder();
                 while ((line = bufferedReader.readLine()) != null) {
-                    stringBuilder.append(line);
+                    responseData.append(line);
                 }
                 bufferedReader.close();
                 inputStream.close();
                 httpURLConnection.disconnect();
-                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                resultHashMap.put("temp", jsonObject.getString("tm"));
-                resultHashMap.put("humid", jsonObject.getString("hm"));
-                resultHashMap.put("light", jsonObject.getString("lt"));
-                resultHashMap.put("ph", jsonObject.getString("ph"));
-                resultHashMap.put("nitro", jsonObject.getString("n"));
-                resultHashMap.put("phos", jsonObject.getString("p"));
-                resultHashMap.put("pota", jsonObject.getString("k"));
-                resultHashMap.put("ec", jsonObject.getString("ec"));
-                //resultHashMap.put("ts", jsonObject.getString("ts"));
+
+                String parsed[] = responseData.toString().split("\\|");
+                if (parsed[0].equals("ok") && parsed[1].equals("0")) {
+                    String dataString = parsed[2];
+                    JSONArray jsonArray = new JSONArray(dataString);
+                    if (jsonArray.length() > 0) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(0);
+                        resultHashMap.put("temp", jsonObject.getString("tm"));
+                        resultHashMap.put("humid", jsonObject.getString("hm"));
+                        resultHashMap.put("light", jsonObject.getString("lt"));
+                        resultHashMap.put("ph", jsonObject.getString("ph"));
+                        resultHashMap.put("nitro", jsonObject.getString("n"));
+                        resultHashMap.put("phos", jsonObject.getString("p"));
+                        resultHashMap.put("pota", jsonObject.getString("k"));
+                        resultHashMap.put("ec", jsonObject.getString("ec"));
+                        resultHashMap.put("ts", jsonObject.getString("ts"));
+                    }
+                }
+
+
 
                 URL url2 = new URL(urls[0] + "getTableData?name=plant_manage");
                 HttpURLConnection httpURLConnection2 = (HttpURLConnection) url2.openConnection();
@@ -234,19 +246,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 httpURLConnection2.disconnect();
 
                 JSONObject jsonObject2 = new JSONObject(stringBuilder2.toString());
-                if(jsonObject.getInt("w_auto") == 0)
+                if(jsonObject2.getInt("w_auto") == 0)
                     water.setEnabled(true);
-                else if(jsonObject.getInt("w_auto") == 1)
+                else if(jsonObject2.getInt("w_auto") == 1)
                     water.setEnabled(false);
 
-                if(jsonObject.getInt("l_auto") == 0) {
+                if(jsonObject2.getInt("l_auto") == 0) {
                     toggleButton.setEnabled(true);
-                    if(jsonObject.getInt("l_on") == 1)
+                    if(jsonObject2.getInt("l_on") == 1)
                         toggleButton.setChecked(true);
-                    else if (jsonObject.getInt("l_on") == 0)
+                    else if (jsonObject2.getInt("l_on") == 0)
                         toggleButton.setChecked(false);
                 }
-                else if(jsonObject.getInt("l_auto") == 1)
+                else if(jsonObject2.getInt("l_auto") == 1)
                     water.setEnabled(false);
 
             } catch (MalformedURLException e) {
@@ -293,11 +305,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             phosText.setText(phos);
             potaText.setText(pota);
             ecText.setText(ec);
-            //rTxt.setText(ts);  서버의 업데이트시간 불러오기
+            rTxt.setText("마지막 업데이트 시간 : " + ts);  //서버의 업데이트시간 불러오기
+            /*
             Calendar calendar = Calendar.getInstance();
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
             String dateTime = dateFormat.format(calendar.getTime());
-            rTxt.setText(dateTime);
+            rTxt.setText(dateTime);*/
 
             Fragment2.temp = temp;
             Fragment2.humid = humid;
@@ -312,6 +325,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Fragment3.humid = humid;
             Fragment3.light = light;
 
+/*
             ChatGPT chatGPT = new ChatGPT();
             new Thread(){
                 public void run(){
@@ -331,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });
                 }
-            }.start();
+            }.start();*/
         }
     }
     public void setBlackFace(){
