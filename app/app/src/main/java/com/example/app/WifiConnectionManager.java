@@ -249,13 +249,13 @@ public class WifiConnectionManager {
                 }
                 else if(parsed[0].equals("err")){
                     runIfNotNull(onFailed);
-                    if(parsed[1].equals(0)){
+                    if(parsed[1].equals("0")){
                         this.statusTextview.setText("쿼리 인자 부족");
                     }
-                    else if(parsed[1].equals(1)){
+                    else if(parsed[1].equals("1")){
                         this.statusTextview.setText("연결모드가 아님");
                     }
-                    else if(parsed[1].equals(2)){
+                    else if(parsed[1].equals("2")){
                         this.statusTextview.setText("외부네트워크 연결 실패");
                     }
                 }
@@ -361,13 +361,13 @@ public class WifiConnectionManager {
             String parsed[] = line.split("|");
             if( parsed[0].equals("ok")) {
                 runIfNotNull(this.onPingSuccess);
-                if(parsed[1].equals(0)){
+                if(parsed[1].equals("0")){
                     this.statusTextview.setText("최종 연결 성공");
                 }
-                else if(parsed[1].equals(1)){
+                else if(parsed[1].equals("1")){
                     this.statusTextview.setText("최종 연결 성공, 그러나 인터넷 안됨");
                 }
-                else if(parsed[1].equals(2)){
+                else if(parsed[1].equals("2")){
                     this.statusTextview.setText("핑");
                 }
             }
