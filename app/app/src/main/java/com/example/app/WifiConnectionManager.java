@@ -242,7 +242,7 @@ public class WifiConnectionManager {
                     responseData.append(line);
                 }
                 reader.close();
-                String parsed[] = line.split("|");
+                String parsed[] = responseData.toString().split("\\|");
                 if( parsed[0].equals("ok")) {
                     runIfNotNull(onSuccess);
                     this.statusTextview.setText("외부와이파이 연결 성공");
@@ -358,7 +358,7 @@ public class WifiConnectionManager {
                 responseData.append(line);
             }
             reader.close();
-            String parsed[] = line.split("|");
+            String parsed[] = responseData.toString().split("\\|");
             if( parsed[0].equals("ok")) {
                 runIfNotNull(this.onPingSuccess);
                 if(parsed[1].equals("0")){

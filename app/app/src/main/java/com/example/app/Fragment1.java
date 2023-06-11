@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
@@ -80,7 +81,7 @@ public class Fragment1 extends Fragment{
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         SharedViewModel viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
-
+        Handler handler = new Handler(Looper.getMainLooper());
 
         rBtn = view.findViewById(R.id.rButton);
         water = view.findViewById(R.id.nowWater);
@@ -123,12 +124,23 @@ public class Fragment1 extends Fragment{
                             responseData.append(line);
                         }
                         reader.close();
-                        String parsed[] = line.split("|");
+                        String parsed[] = responseData.toString().split("\\|");
+
                         if( parsed[0].equals("ok")) {
-                            Toast.makeText(getContext(), "급수 완료", Toast.LENGTH_SHORT).show();
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getContext(), "급수 완료", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                         else if(parsed[0].equals("err")){
-                            Toast.makeText(getContext(), "급수 실패", Toast.LENGTH_SHORT).show();
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getContext(), "급수 실패", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                     } catch (SocketTimeoutException e) {
                         e.printStackTrace();
@@ -159,12 +171,22 @@ public class Fragment1 extends Fragment{
                                 responseData.append(line);
                             }
                             reader.close();
-                            String parsed[] = line.split("|");
+                            String parsed[] = responseData.toString().split("\\|");
                             if( parsed[0].equals("ok")) {
-                                Toast.makeText(getContext(), "조명 켜기 완료", Toast.LENGTH_SHORT).show();
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getContext(), "조명 켜기 완료", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                             else if(parsed[0].equals("err")){
-                                Toast.makeText(getContext(), "조명 켜기 실패", Toast.LENGTH_SHORT).show();
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getContext(), "조명 켜기 실패", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                         } catch (SocketTimeoutException e) {
                             e.printStackTrace();
@@ -191,12 +213,22 @@ public class Fragment1 extends Fragment{
                                 responseData.append(line);
                             }
                             reader.close();
-                            String parsed[] = line.split("|");
+                            String parsed[] = responseData.toString().split("\\|");
                             if( parsed[0].equals("ok")) {
-                                Toast.makeText(getContext(), "조명 끄기 완료", Toast.LENGTH_SHORT).show();
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getContext(), "조명 끄기 완료", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                             else if(parsed[0].equals("err")){
-                                Toast.makeText(getContext(), "조명 끄기 실패", Toast.LENGTH_SHORT).show();
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getContext(), "조명 끄기 실패", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                         } catch (SocketTimeoutException e) {
                             e.printStackTrace();
@@ -235,7 +267,7 @@ public class Fragment1 extends Fragment{
                 }
                 reader.close();
 
-                String[] parsed = line.split("\\|");
+                String parsed[] = responseData.toString().split("\\|");
                 if (parsed[0].equals("ok")) {
                     return popup.url;
                 } else if (parsed[0].equals("err")) {
@@ -266,28 +298,40 @@ public class Fragment1 extends Fragment{
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
+                //URL url = new URL(urls[0]);
                 URL url = new URL(urls[0]+"getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
                 InputStream inputStream = httpURLConnection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder responseData = new StringBuilder();
                 while ((line = bufferedReader.readLine()) != null) {
-                    stringBuilder.append(line);
+                    responseData.append(line);
                 }
                 bufferedReader.close();
                 inputStream.close();
                 httpURLConnection.disconnect();
-                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                resultHashMap.put("temp", jsonObject.getString("tm"));
-                resultHashMap.put("humid", jsonObject.getString("hm"));
-                resultHashMap.put("light", jsonObject.getString("lt"));
-                resultHashMap.put("ph", jsonObject.getString("ph"));
-                resultHashMap.put("nitro", jsonObject.getString("n"));
-                resultHashMap.put("phos", jsonObject.getString("p"));
-                resultHashMap.put("pota", jsonObject.getString("k"));
-                resultHashMap.put("ec", jsonObject.getString("ec"));
-                //resultHashMap.put("ts", jsonObject.getString("ts"));
+
+                String parsed[] = responseData.toString().split("\\|");
+                if (parsed[0].equals("ok") && parsed[1].equals("0")) {
+                    String dataString = parsed[2];
+                    JSONArray jsonArray = new JSONArray(dataString);
+                    if (jsonArray.length() > 0) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(0);
+                        resultHashMap.put("temp", jsonObject.getString("tm"));
+                        resultHashMap.put("humid", jsonObject.getString("hm"));
+                        resultHashMap.put("light", jsonObject.getString("lt"));
+                        resultHashMap.put("ph", jsonObject.getString("ph"));
+                        resultHashMap.put("nitro", jsonObject.getString("n"));
+                        resultHashMap.put("phos", jsonObject.getString("p"));
+                        resultHashMap.put("pota", jsonObject.getString("k"));
+                        resultHashMap.put("ec", jsonObject.getString("ec"));
+                        resultHashMap.put("ts", jsonObject.getString("ts"));
+                    }
+                }
+
+
 
                 URL url2 = new URL(urls[0] + "getTableData?name=plant_manage");
                 HttpURLConnection httpURLConnection2 = (HttpURLConnection) url2.openConnection();
@@ -303,19 +347,19 @@ public class Fragment1 extends Fragment{
                 httpURLConnection2.disconnect();
 
                 JSONObject jsonObject2 = new JSONObject(stringBuilder2.toString());
-                if(jsonObject.getInt("w_auto") == 0)
+                if(jsonObject2.getInt("w_auto") == 0)
                     water.setEnabled(true);
-                else if(jsonObject.getInt("w_auto") == 1)
+                else if(jsonObject2.getInt("w_auto") == 1)
                     water.setEnabled(false);
 
-                if(jsonObject.getInt("l_auto") == 0) {
+                if(jsonObject2.getInt("l_auto") == 0) {
                     toggleButton.setEnabled(true);
-                    if(jsonObject.getInt("l_on") == 1)
+                    if(jsonObject2.getInt("l_on") == 1)
                         toggleButton.setChecked(true);
-                    else if (jsonObject.getInt("l_on") == 0)
+                    else if (jsonObject2.getInt("l_on") == 0)
                         toggleButton.setChecked(false);
                 }
-                else if(jsonObject.getInt("l_auto") == 1)
+                else if(jsonObject2.getInt("l_auto") == 1)
                     water.setEnabled(false);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -361,14 +405,7 @@ public class Fragment1 extends Fragment{
             phosText.setText(phos);
             potaText.setText(pota);
             ecText.setText(ec);
-            //rTxt.setText(ts);
-            Calendar calendar = Calendar.getInstance();
-            SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
-            String dateTime = dateFormat.format(calendar.getTime());
-            rTxt.setText(dateTime);
-
-
-
+            rTxt.setText("마지막 업데이트 시간 : " + ts);  //서버의 업데이트시간 불러오기
 
             Fragment3.humid = humid;
             Fragment3.light = light;
