@@ -62,8 +62,9 @@ public class Fragment1 extends Fragment{
     public static ImageView noface ;
     public static ImageView angryface;
     Button rBtn;
-    AppCompatButton water;
+    AppCompatButton waterBtn;
     ToggleButton toggleButton;
+    boolean water,light0, light1;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -81,14 +82,14 @@ public class Fragment1 extends Fragment{
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         SharedViewModel viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
-        Handler handler = new Handler(Looper.getMainLooper());
+
 
         rBtn = view.findViewById(R.id.rButton);
-        water = view.findViewById(R.id.nowWater);
+        waterBtn = view.findViewById(R.id.nowWater);
         toggleButton = view.findViewById(R.id.toggleButton);
         viewModel.getWaterState().observe(getViewLifecycleOwner(), state -> {
             //            water.setVisibility(state ? View.GONE : View.VISIBLE);
-            water.setEnabled(state ? false : true);
+            waterBtn.setEnabled(state ? false : true);
         });
 
         viewModel.getLightState().observe(getViewLifecycleOwner(), state -> {
@@ -105,7 +106,7 @@ public class Fragment1 extends Fragment{
                 //}
             }
         });
-        water.setOnClickListener(new View.OnClickListener(){
+        waterBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 new Thread (()->{
@@ -127,6 +128,7 @@ public class Fragment1 extends Fragment{
                         String parsed[] = responseData.toString().split("\\|");
 
                         if( parsed[0].equals("ok")) {
+                            Handler handler = new Handler(Looper.getMainLooper());
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -135,6 +137,7 @@ public class Fragment1 extends Fragment{
                             });
                         }
                         else if(parsed[0].equals("err")){
+                            Handler handler = new Handler(Looper.getMainLooper());
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -173,6 +176,7 @@ public class Fragment1 extends Fragment{
                             reader.close();
                             String parsed[] = responseData.toString().split("\\|");
                             if( parsed[0].equals("ok")) {
+                                Handler handler = new Handler(Looper.getMainLooper());
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -181,6 +185,7 @@ public class Fragment1 extends Fragment{
                                 });
                             }
                             else if(parsed[0].equals("err")){
+                                Handler handler = new Handler(Looper.getMainLooper());
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -215,6 +220,7 @@ public class Fragment1 extends Fragment{
                             reader.close();
                             String parsed[] = responseData.toString().split("\\|");
                             if( parsed[0].equals("ok")) {
+                                Handler handler = new Handler(Looper.getMainLooper());
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -223,6 +229,7 @@ public class Fragment1 extends Fragment{
                                 });
                             }
                             else if(parsed[0].equals("err")){
+                                Handler handler = new Handler(Looper.getMainLooper());
                                 handler.post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -331,36 +338,48 @@ public class Fragment1 extends Fragment{
                     }
                 }
 
-
-
-                URL url2 = new URL(urls[0] + "getTableData?name=plant_manage");
+                URL url2 = new URL(urls[0]+"getTableData?name=plant_manage");
                 HttpURLConnection httpURLConnection2 = (HttpURLConnection) url2.openConnection();
+
                 InputStream inputStream2 = httpURLConnection2.getInputStream();
                 BufferedReader bufferedReader2 = new BufferedReader(new InputStreamReader(inputStream2));
                 String line2;
-                StringBuilder stringBuilder2 = new StringBuilder();
+                StringBuilder responseData2 = new StringBuilder();
                 while ((line2 = bufferedReader2.readLine()) != null) {
-                    stringBuilder2.append(line2);
+                    responseData2.append(line2);
                 }
                 bufferedReader2.close();
                 inputStream2.close();
                 httpURLConnection2.disconnect();
 
-                JSONObject jsonObject2 = new JSONObject(stringBuilder2.toString());
-                if(jsonObject2.getInt("w_auto") == 0)
-                    water.setEnabled(true);
-                else if(jsonObject2.getInt("w_auto") == 1)
-                    water.setEnabled(false);
+                String parsed2[] = responseData2.toString().split("\\|");
+                if (parsed2[0].equals("ok") && parsed2[1].equals("0")) {
+                    String dataString2 = parsed2[2];
+                    JSONArray jsonArray2 = new JSONArray(dataString2);
+                    if (jsonArray2.length() > 0) {
+                        JSONObject jsonObject2 = jsonArray2.getJSONObject(0);
+                        System.out.println(jsonObject2);
+                        if (jsonObject2.optString("w_auto").equals("0")) {   //자동=1, 수동=0
+                            water = true;  //수동
+                            System.out.println("버튼 활성화");
+                        }
+                        else if (jsonObject2.optString("w_auto").equals("1")){
+                            water = false;
+                            System.out.println("버튼 비활성화");
+                        }
 
-                if(jsonObject2.getInt("l_auto") == 0) {
-                    toggleButton.setEnabled(true);
-                    if(jsonObject2.getInt("l_on") == 1)
-                        toggleButton.setChecked(true);
-                    else if (jsonObject2.getInt("l_on") == 0)
-                        toggleButton.setChecked(false);
+                        if (jsonObject2.optString("l_auto").equals("0")) {
+                            light0=true;
+                            if (jsonObject2.optString("l_on").equals("1"))
+                                light1=false;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1=true;
+                        }
+                        else if (jsonObject2.optString("l_auto").equals("1"))
+                            light0=false;
+                    }
                 }
-                else if(jsonObject2.getInt("l_auto") == 1)
-                    water.setEnabled(false);
+
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -406,7 +425,9 @@ public class Fragment1 extends Fragment{
             potaText.setText(pota);
             ecText.setText(ec);
             rTxt.setText("마지막 업데이트 시간 : " + ts);  //서버의 업데이트시간 불러오기
-
+            waterBtn.setEnabled(water);
+            toggleButton.setEnabled(light0);
+            toggleButton.setChecked(light1);
             Fragment3.humid = humid;
             Fragment3.light = light;
 
