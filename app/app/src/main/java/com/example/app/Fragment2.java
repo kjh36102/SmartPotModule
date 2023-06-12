@@ -142,9 +142,11 @@ public class Fragment2 extends Fragment {
 
 
         if(popup.plant.equals("")){//식물 이름이 정해지지 않았을 경우
-
-            textView1.setText("     이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
-            textView2.setText("");
+            textName.setText("");
+            textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
+            textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
+            btn.setVisibility(View.GONE);
+            btn3.setVisibility(View.GONE);
 
         }
         else {
@@ -250,11 +252,11 @@ public class Fragment2 extends Fragment {
             @Override
             public void onClick(View v) {//업데이트 클릭시 실행
                 if(popup.plant.equals("")){//이름이 비어있다면 실행
-
-                    textName.setText("     이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
-                    textView2.setText("");
-                    textView2.setText("");
+                    textName.setText("");
+                    textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
+                    textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
                     btn.setVisibility(View.GONE);
+                    btn3.setVisibility(View.GONE);
                 }
                 else {
                     textName.setText(popup.plant);
