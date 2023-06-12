@@ -27,6 +27,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
@@ -290,18 +291,19 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                                 return;
                             }
 
-                            JSONObject jsonObject = new JSONObject(buffer.toString());
-                            System.out.println("json 상태: "+ jsonObject);
+                            JSONArray jsonArray = new JSONArray(buffer.toString());
+                            JSONObject jsonObject = jsonArray.getJSONObject(0);
+                            System.out.println("json 상태: "+ jsonArray);
 
                             //json 데이터 전처리
-//                            lightProgress = jsonObject.getInt("ld");
-//                            coolProgress = jsonObject.getInt("cd");
-//                            waterProgress = jsonObject.getInt("ot");
-//                            System.out.println("ld: " + lightProgress);
-//                            System.out.println("cd: " + coolProgress);
-//                            System.out.println("ot: " + waterProgress);
+                            lightProgress = jsonObject.getInt("ld");
+                            coolProgress = jsonObject.getInt("cd");
+                            waterProgress = jsonObject.getInt("ot");
+                            System.out.println("ld: " + lightProgress);
+                            System.out.println("cd: " + coolProgress);
+                            System.out.println("ot: " + waterProgress);
 
-
+                            /*
                             //sample data test
                             lightProgress = jsonObject.getInt("ec");
                             coolProgress = jsonObject.getInt("lt");
@@ -309,7 +311,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                             System.out.println("ec: " + lightProgress);
                             System.out.println("lt: " + coolProgress);
                             System.out.println("n: " + waterProgress);
-
+                        */
                             //저장
                             save(lightProgress, coolProgress, waterProgress);
 

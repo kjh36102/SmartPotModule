@@ -338,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Fragment3.humid = humid;
             Fragment3.light = light;
 
-/*
+
             ChatGPT chatGPT = new ChatGPT();
             new Thread(){
                 public void run(){
@@ -358,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });
                 }
-            }.start();*/
+            }.start();
         }
     }
     public void setBlackFace(){
