@@ -23,6 +23,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.Legend;
@@ -49,11 +50,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 
-import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.w3c.dom.Text;
 
@@ -141,16 +142,22 @@ public class Fragment2 extends Fragment {
 
 
         if(popup.plant.equals("")){//식물 이름이 정해지지 않았을 경우
-
-            textName.setText("     이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
-            textView2.setText("");
-            textView2.setText("");
+            textName.setText("");
+            textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
+            textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
+            btn.setVisibility(View.GONE);
+            btn2.setVisibility(View.GONE);
+            btn3.setVisibility(View.GONE);
+            btn4.setVisibility(View.GONE);
+            rTxt.setVisibility(View.GONE);
 
         }
         else {
+            rTxt.setVisibility(View.VISIBLE);
+
             if (!MainActivity.sharedPreferences_fragment2.contains(FEEDBACK)) {//저장된 피드백이 없다면 새로 실행시켜 받아오기
 
-                new GetJsonDataTask().execute(popup.url);//데이터 받기
+                new updateRequest().execute();//데이터 받기
                 textView1.setText("...로딩중...");
                 btn.setVisibility(View.GONE);//피드백 더보기, 닫기 버튼 비활성화
                 btn2.setVisibility(View.GONE);
@@ -185,8 +192,6 @@ public class Fragment2 extends Fragment {
                     }
 
                 });
-
-
             }
 
 
@@ -213,7 +218,7 @@ public class Fragment2 extends Fragment {
                 editor.putString(NAME_KEY, popup.plant);
                 editor.apply();
 
-                new GetJsonDataTask().execute(popup.url);
+                new updateRequest().execute();
                 textView1.setText("...로딩중...");
                 btn.setVisibility(View.GONE);
                 btn2.setVisibility(View.GONE);
@@ -252,18 +257,22 @@ public class Fragment2 extends Fragment {
             @Override
             public void onClick(View v) {//업데이트 클릭시 실행
                 if(popup.plant.equals("")){//이름이 비어있다면 실행
-
-                    textName.setText("     이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
-                    textView2.setText("");
-                    textView2.setText("");
+                    textName.setText("");
+                    textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
+                    textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
                     btn.setVisibility(View.GONE);
+                    btn2.setVisibility(View.GONE);
+                    btn3.setVisibility(View.GONE);
+                    btn4.setVisibility(View.GONE);
+                    rTxt.setVisibility(View.GONE);
                 }
                 else {
+                    rTxt.setVisibility(View.VISIBLE);
                     textName.setText(popup.plant);
-                    update_btn.setVisibility(View.GONE);//업데이트 클릭시 업데이트 버튼 사라짐, 각 함수가 실행되고 난뒤 다시 업데이트 버튼 활성화 시키기 위함
+                    update_btn.setVisibility(View.INVISIBLE);//업데이트 클릭시 업데이트 버튼 사라짐, 각 함수가 실행되고 난뒤 다시 업데이트 버튼 활성화 시키기 위함
 
 
-                    new GetJsonDataTask().execute(popup.url);//새로고침을 누르면 현재 데이터를 불러와 피드백을 업데이트
+                    new updateRequest().execute();//새로고침을 누르면 현재 데이터를 불러와 피드백을 업데이트
                     textView1.setText("...로딩중...");
                     btn.setVisibility(View.GONE);
                     btn2.setVisibility(View.GONE);
@@ -296,7 +305,7 @@ public class Fragment2 extends Fragment {
 
                         editor.apply();
 
-                        new GetJsonDataTask().execute(popup.url);
+                        new updateRequest().execute();
                         textView1.setText("...로딩중...");
                         btn.setVisibility(View.GONE);
                         btn2.setVisibility(View.GONE);
@@ -408,35 +417,88 @@ public class Fragment2 extends Fragment {
 
     }//짧은 설명 판단 및 만드는 함수
 
+    private class updateRequest extends AsyncTask<Void, Void, String> {
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
+                HttpURLConnection connection = (HttpURLConnection) new URL(popup.url+"measureNow").openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(30000);
+                connection.connect();
 
+                InputStream inputStream = connection.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder responseData = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    responseData.append(line);
+                }
+                reader.close();
+
+                String parsed[] = responseData.toString().split("\\|");
+                if (parsed[0].equals("ok")) {
+                    return popup.url;
+                } else if (parsed[0].equals("err")) {
+                    return null;
+                }
+                connection.disconnect();
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            if (result != null) {
+                new Fragment2.GetJsonDataTask().execute(result);
+                Toast.makeText(getContext(), "측정 완료", Toast.LENGTH_SHORT).show();                // 측정 완료 toast메시지 출력
+            } else {
+                Toast.makeText(getContext(), "측정 실패", Toast.LENGTH_SHORT).show();                // 측정 실패 toast메시지 출력
+            }
+        }
+    }
     public class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
         @Override
         protected HashMap<String, String> doInBackground(String... urls) {
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                URL url = new URL(urls[0]);
+                //URL url = new URL(urls[0]);
+                URL url = new URL(urls[0]+"getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
                 InputStream inputStream = httpURLConnection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder responseData = new StringBuilder();
+
                 while ((line = bufferedReader.readLine()) != null) {
-                    stringBuilder.append(line);
+                    responseData.append(line);
                 }
                 bufferedReader.close();
                 inputStream.close();
                 httpURLConnection.disconnect();
-                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                resultHashMap.put("temp", jsonObject.getString("tm"));
-                resultHashMap.put("humid", jsonObject.getString("hm"));
-                resultHashMap.put("light", jsonObject.getString("lt"));
-                resultHashMap.put("ph", jsonObject.getString("ph"));
-                resultHashMap.put("nitro", jsonObject.getString("n"));
-                resultHashMap.put("phos", jsonObject.getString("p"));
-                resultHashMap.put("pota", jsonObject.getString("k"));
-                resultHashMap.put("ec", jsonObject.getString("ec"));
-                //resultHashMap.put("ts", jsonObject.getString("ts"));
+
+                String parsed[] = responseData.toString().split("\\|");
+                if (parsed[0].equals("ok") && parsed[1].equals("0")) {
+                    String dataString = parsed[2];
+                    org.json.JSONArray jsonArray = new JSONArray(dataString);
+                    if (jsonArray.length() > 0) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(0);
+                        resultHashMap.put("temp", jsonObject.getString("tm"));
+                        resultHashMap.put("humid", jsonObject.getString("hm"));
+                        resultHashMap.put("light", jsonObject.getString("lt"));
+                        resultHashMap.put("ph", jsonObject.getString("ph"));
+                        resultHashMap.put("nitro", jsonObject.getString("n"));
+                        resultHashMap.put("phos", jsonObject.getString("p"));
+                        resultHashMap.put("pota", jsonObject.getString("k"));
+                        resultHashMap.put("ec", jsonObject.getString("ec"));
+                        resultHashMap.put("ts", jsonObject.getString("ts"));
+                    }
+                }
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -467,47 +529,41 @@ public class Fragment2 extends Fragment {
             phos = mDataHashMap.get("phos");
             pota = mDataHashMap.get("pota");
             ec = mDataHashMap.get("ec");
-            String ts = mDataHashMap.get("ts");
-
+            dateTime = mDataHashMap.get("ts");
+            dateTime = "마지막 업데이트 시간 :"+dateTime;
             TextView rTxt = getView().findViewById(R.id.rTxt);
             TextView textView1 = getView().findViewById(R.id.explan_text);
 
 
+            rTxt.setText(dateTime);
 
-            ImageButton update_btn = (ImageButton) getView().findViewById(R.id.update);
-            Button btn = (Button)getView().findViewById(R.id.more_2);
-            Button btn2 = (Button)getView().findViewById(R.id.close_2);
-
-
-            Calendar calendar = Calendar.getInstance();
+            /*Calendar calendar = Calendar.getInstance();
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
-            dateTime = dateFormat.format(calendar.getTime());
+            dateTime = dateFormat.format(calendar.getTime());*/
 
             SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
 
             editor.putString("datetime", dateTime);
             editor.apply();
 
-
-
             rTxt.setText(dateTime);
             ChatGPT chatGPT = new ChatGPT();
 
-            if (null_judge() == true) {
+            /*if (null_judge() == true) {
 
                 textView1.setText("오류입니다 새로고침을 눌러주세요");
                 btn.setVisibility(View.GONE);
                 update_btn.setVisibility(View.VISIBLE);
 
 
-            }
-            else {
+            }*/
+            //else {
 
 
-                gpt_feedback(getView(),textView1, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(light), Double.parseDouble(ph), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ec));
+            gpt_feedback(getView(),textView1, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(light), Double.parseDouble(ph), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ec));
 
 
-            }
+            //}
 
 
 
@@ -663,7 +719,4 @@ public class Fragment2 extends Fragment {
         update_btn.setVisibility(View.VISIBLE);
 
     }
-
-
-
 }
