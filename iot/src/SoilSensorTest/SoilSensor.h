@@ -21,6 +21,10 @@ public:
     this->pin_RO = RO;
     this->pin_DI = DI;
 
+    Serial.println(DE_RE);
+    Serial.println(RO);
+    Serial.println(DI);
+
     this->soilSerial.begin(4800, SWSERIAL_8N1, this->pin_RO, this->pin_DI, false);
 
     pinMode(this->pin_DE_RE, OUTPUT);
@@ -32,7 +36,7 @@ public:
     this->soilSerial.write(this->CODE, 8);
     digitalWrite(this->pin_DE_RE, LOW);
 
-    delay(200);
+    delay(250);
 
     for (byte i = 0; i < 19; i++) {
       this->buffer[i] = this->soilSerial.read();

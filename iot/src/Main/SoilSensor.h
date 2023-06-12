@@ -1,7 +1,7 @@
 #ifndef __SOIL_SENSOR_H__
 #define __SOIL_SENSOR_H__
 
-#include <SoftwareSerial.h> //<- EspSoftwareSerial.h
+#include <SoftwareSerial.h>  //<- EspSoftwareSerial.h
 #include <Wire.h>
 #include "MultitaskRTOS.h"
 
@@ -34,20 +34,22 @@ public:
   }
 
   float* read() {
+
+    taskENTER_CRITICAL(&myMutex);  //다른 FreeRTOS 태스크의 선점방지, 크리티컬 영역 실행중에는 다른 태스크가 실행되지않음, 최대한 짧게 유지하기 위해 이곳에 작성함
+
     digitalWrite(this->pin_DE_RE, HIGH);
     this->soilSerial.write(this->CODE, 8);
+
+    vTaskDelay(100);
     digitalWrite(this->pin_DE_RE, LOW);
 
-
-    vTaskDelay(250);
-
-    taskENTER_CRITICAL(&myMutex); //다른 FreeRTOS 태스크의 선점방지, 크리티컬 영역 실행중에는 다른 태스크가 실행되지않음, 최대한 짧게 유지하기 위해 이곳에 작성함
+    vTaskDelay(100);
 
     for (byte i = 0; i < 19; i++) {
       this->buffer[i] = this->soilSerial.read();  //값 읽기
     }
 
-    taskEXIT_CRITICAL(&myMutex); //크리티컬 영역 종료
+    taskEXIT_CRITICAL(&myMutex);  //크리티컬 영역 종료
 
     for (byte i = 0; i < 7; i++) {
       this->receive[i] = this->concat_byte(buffer, 3 + 2 * i);
@@ -68,4 +70,4 @@ public:
 
 portMUX_TYPE SoilSensor::myMutex = portMUX_INITIALIZER_UNLOCKED;
 
-#endif // __SOIL_SENSOR_H__
+#endif  // __SOIL_SENSOR_H__

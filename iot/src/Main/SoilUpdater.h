@@ -17,7 +17,7 @@
 #include "Logger.h"
 //-------------------------------------------------------------
 
-#define SOIL_UPDATE_INTERVAL 9000//00  //15분
+#define SOIL_UPDATE_INTERVAL 900000  //15분
 
 class SoilUpdater {
 
@@ -129,7 +129,7 @@ public:
     if (
       (received[0] < 0 || received[0] > 100) || (received[1] < -40 || received[1] > 60) || (received[2] < 0 || received[2] > 2000) || (received[3] < 0 || received[3] > 10) || (received[4] < 0 || received[4] > 2000) || (received[5] < 0 || received[5] > 2000) || (received[6] < 0 || received[6] > 2000)) {
       LOGLN("SoilSensor Value is not valid! Retrying..");
-      vTaskDelay(100);  //올바르지않으면 잠시 대기
+      vTaskDelay(250);  //올바르지않으면 잠시 대기
       return false;
     }
 

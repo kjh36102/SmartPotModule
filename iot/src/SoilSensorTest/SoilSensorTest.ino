@@ -7,16 +7,28 @@
 #define SoilSensor_DI 33
 
 //토양센서 객체 생성
-SoilSensor soilSensor(SoilSensor_DERE, SoilSensor_RO, SoilSensor_DI);
+SoilSensor* soilSensor;
 // SoilSensor soilSensor(SoilSensor_DERE, SoilSensor_RO, SoilSensor_DI, Serial1); // or Serial1
 
 
 void setup() {
   Serial.begin(9600);
+
+  soilSensor = new SoilSensor(SoilSensor_DERE, SoilSensor_RO, SoilSensor_DI);
+
+  pinMode(25, OUTPUT);
+  pinMode(26, OUTPUT);
+  pinMode(2, OUTPUT);
+
+  digitalWrite(25, 0);
+  digitalWrite(26, 0);
+  digitalWrite(2, 1);
+  delay(500);
+  digitalWrite(2, 0);
 }
 
 void loop() {
-  float* received = soilSensor.read();
+  float* received = soilSensor->read();
 
   //json 생성
   StaticJsonDocument<200> doc;

@@ -24,7 +24,19 @@ void blinkLedNtime(unsigned int nTime, unsigned int interval = 100, unsigned int
 }
 
 void tReadConnBtn(void* taskParams) {
+  // pinMode(2, OUTPUT);
+  // pinMode(0, INPUT);
+
+
+  // digitalWrite(2, LOW);
+
   for (;;) {
+
+    // if (!digitalRead(0) == HIGH) {
+    //   digitalWrite(2, HIGH);
+    // } else {
+    //   digitalWrite(2, LOW);
+    // }
     bool reading = !digitalRead(PIN_CONN_BTN);
 
     if (reading) {
@@ -44,10 +56,12 @@ void tReadConnBtn(void* taskParams) {
     }
 
     vTaskDelay(1000);
+    // vTaskDelay(10);
   }
 }
 
 void tControlWifiLed(void* taskParams) {
+
   for (;;) {
 
     switch (connectPhase) {

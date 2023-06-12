@@ -10,6 +10,7 @@
 #include "DB_Manager.h"
 #include "TimeUpdater.h"
 #include "NextOperationHandler.h"
+#include "WaterJarController.h"
 
 //-------------------------------------------------------------
 #define LOGKEY "RoutersSTA.h"
@@ -34,6 +35,18 @@ void setupSTARouters() {
       WiFi.softAPdisconnect(true);  //핫스팟끄기
 
       serverSTA.send(200, HTTP_MIME, "All connected!");
+
+
+      DB_Manager& dbManager = DB_Manager::getInstance();
+
+      char sqlBuffer[256];
+      sprintf(sqlBuffer, "update wifi_info set ssid_sta='%s', pw_sta='%s', phone_ip='%s'", STA_SSID.c_str(), STA_PW.c_str(), smartphoneIP.toString().c_str());
+      auto rc = dbManager.execute(sqlBuffer);
+
+      if (rc != SQLITE_OK) {
+        serverSTA.send(200, HTTP_MIME, "err[1]Update sql failed.");
+        return;
+      }
 
       if (!TimeUpdater::getInstance().updateCurrentTime()) {  //연결되면 현재시간 업데이트
         //실패시
@@ -150,7 +163,7 @@ void setupSTARouters() {
       }
 
       // db에서 json 가져오기
-      char sqlBuffer[40];
+      char sqlBuffer[50];
       sprintf(sqlBuffer, "select * from %s order by id asc", tableName.c_str());
 
       if (dbManager.execute(sqlBuffer) == SQLITE_OK) {
@@ -272,6 +285,42 @@ void setupSTARouters() {
     }
   });
 
+  serverSTA.on("/water", HTTP_GET, []() {
+    WaterJarController& waterJar = WaterJarController::getInstance();
+
+    //db에서 ot값 가져오기
+
+    DB_Manager& dbManager = DB_Manager::getInstance();
+    dbManager.execute("select ot from manage_auto");
+    JsonObject row = dbManager.getRowFromJsonArray(dbManager.getResult(), 0);
+
+    int ot = row["ot"];
+
+    if (ot == 0) {
+      serverSTA.send(200, HTTP_MIME, "err|1|ot is 0");
+      return;
+    }
+
+    if (waterJar.feed(ot * 1000)) {
+      serverSTA.send(200, HTTP_MIME, "ok|0|Success");
+    } else {
+      serverSTA.send(200, HTTP_MIME, "err|0|Failed to run watering..");
+    }
+  });
+
+  serverSTA.on("/setWaterLoad", HTTP_GET, []() {
+    if (hasValidArg(serverSTA, "val")) {
+      int val = serverSTA.arg("val").toInt();
+
+      WaterJarController& waterJar = WaterJarController::getInstance();
+
+      waterJar.setWaterLoadTime(val);
+      serverSTA.send(200, HTTP_MIME, "ok|0|Success");
+    } else {
+      serverSTA.send(200, HTTP_MIME, "err|0|Not enough query args.");
+    }
+  });
+
   //manageAuto 값 변경
   serverSTA.on("/manageAutoSet", HTTP_GET, []() {
     DB_Manager& dbManager = DB_Manager::getInstance();
@@ -314,9 +363,23 @@ void setupSTARouters() {
       isFirst = false;
       sqlQuery += "ot = " + serverSTA.arg("ot");
     }
+    if (hasValidArg(serverSTA, "ld")) {
+      if (!isFirst) {
+        sqlQuery += ", ";
+      }
+      isFirst = false;
+      sqlQuery += "ld = " + serverSTA.arg("ld");
+    }
+    if (hasValidArg(serverSTA, "cd")) {
+      if (!isFirst) {
+        sqlQuery += ", ";
+      }
+      isFirst = false;
+      sqlQuery += "cd = " + serverSTA.arg("cd");
+    }
 
-    if (!isFirst) {  
-      if(dbManager.execute(sqlQuery.c_str()) != SQLITE_OK){
+    if (!isFirst) {
+      if (dbManager.execute(sqlQuery.c_str()) != SQLITE_OK) {
         serverSTA.send(200, HTTP_MIME, "err|0|Update sql failed.");
         return;
       }

@@ -14,6 +14,7 @@
 #include "LightStandController.h"
 #include "TimeUpdater.h"
 #include "NextOperationHandler.h"
+#include "WaterJarController.h"
 
 
 //-------------------------------------------------------------
@@ -37,6 +38,7 @@ void enableLoggings() {
   enableLogging("PWMController.h");
   enableLogging("NextOperationHandler.h");
   enableLogging("TimeUpdater.h");
+  enableLogging("WaterJarController.h");
 }
 
 void registerCommands() {
@@ -128,35 +130,10 @@ void registerCommands() {
         return;
       }
 
-      dbManager.prepareTable("soil_data",
-                             F("CREATE TABLE IF NOT EXISTS soil_data (id INTEGER PRIMARY KEY AUTOINCREMENT, tm REAL, hm REAL, n REAL, p REAL, k REAL, ph REAL, ec INTEGER, lt INTEGER, ts TEXT DEFAULT (datetime('now','localtime')))"),
-                             F("INSERT INTO soil_data(id,tm,hm,n,p,k,ph,ec,lt) VALUES (0,0,0,0,0,0,0,0,0)"));
-
-      dbManager.prepareTable("wifi_info",
-                             F("CREATE TABLE IF NOT EXISTS wifi_info (id INTEGER PRIMARY KEY, ssid_ap TEXT, pw_ap TEXT, ssid_sta TEXT, pw_sta TEXT)"),
-                             F("INSERT INTO wifi_info VALUES(0, 'SmartPotModule', '', '', '')"));
-
-      dbManager.prepareTable("plant_manage",
-                             F("CREATE TABLE IF NOT EXISTS plant_manage (id INTEGER PRIMARY KEY, w_auto INTEGER, l_auto INTEGER, w_on INTEGER, l_on INTEGER)"),
-                             F("INSERT INTO plant_manage VALUES(0, 0, 0, 0, 0)"));
-
-      dbManager.prepareTable("manage_auto",
-                             F("CREATE TABLE IF NOT EXISTS manage_auto (id INTEGER PRIMARY KEY, hm REAL, th REAL, lt INTEGER, dr INTEGER, ot INTEGER)"),
-                             F("INSERT INTO manage_auto VALUES(0, 0, 0, 0, 0, 0)"));
-
-      dbManager.prepareTable("manage_water",
-                             F("CREATE TABLE IF NOT EXISTS manage_water (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, wt INTEGER, no TEXT)"),
-                             NULL,
-                             false);
-
-      dbManager.prepareTable("manage_light",
-                             F("CREATE TABLE IF NOT EXISTS manage_light (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, ls INTEGER, no TEXT)"),
-                             NULL,
-                             false);
-
+      dbManager.initTables();
     } else if (line.equals("droptables")) {
       dbManager.dropAllTables();
-    } else if(line.equals("count")){
+    } else if (line.equals("count")) {
       LOG("COUNT COUNT: ");
       LOGLN(dbManager.getTableRecordCount("manage_light"));
     } else {
@@ -191,32 +168,44 @@ void registerCommands() {
     } else if (line.equals("off")) {
       soilUpdater.off();
       LOGLN("SoilUpdater 꺼짐");
-    } else if (line.equals("measure")){
+    } else if (line.equals("measure")) {
       soilUpdater.measureNow(true);
+    }
+  });
+
+  commander.registerCallback("waterjar", [](String line) {
+    WaterJarController& waterJar = WaterJarController::getInstance();
+
+    if (line.equals("on")) {
+      waterJar.on();
+    } else if (line.equals("off")) {
+      waterJar.off();
+    } else if (line.startsWith("loadtime")) {
+      int index = line.indexOf(' ');
+
+      if (index != -1) {                                 // Ensure that ' ' is found.
+        String loadTimeStr = line.substring(index + 1);  // Extracts the part after ' '.
+        char* pEnd;
+        long loadTime = strtol(loadTimeStr.c_str(), &pEnd, 10);
+
+        if (*pEnd) {
+          LOGLN("Invalid number format!");
+        } else {
+          waterJar.setWaterLoadTime(loadTime);
+        }
+      } else {
+        LOGLN("Missing load time value!");
+      }
+    } else {
+      waterJar.testFeed(line.toInt());
     }
   });
 }
 
 void initFirstPriority() {
-  LightStandController::getInstance();  //객체 생성해줘야 팬 꺼짐
-  NextOperationHandler::getInstance();
-}
-
-void setup() {
-  Serial.begin(9600);
-  initFirstPriority();
-  enableLoggings();
-  registerCommands();
-  initPins();
-
-  createAndRunTask(PowerMonitor::taskFunction, "PowerMonitor", 10000);
-  createAndRunTask(SerialCommander::taskFunction, "SerialCommander", 40000);
-  // createAndRunTask(tReadConnBtn, "TaskReadConnBtn", 3000);
-  createAndRunTask(tControlWifiLed, "TaskControlWifiLed");
-  createAndRunTask(SoilUpdater::taskFunction, "SoilUpdater", 10000, 2);
-
-  setupAPRouters();
-  setupSTARouters();
+  DB_Manager& dbManager = DB_Manager::getInstance();
+  dbManager.open("data");
+  dbManager.initTables();
 
   //외부전원 차단시 DB닫기 실행함수로 등록
   PowerMonitor& powerMonitor = PowerMonitor::getInstance();
@@ -225,6 +214,32 @@ void setup() {
     DB_Manager& dbManager = DB_Manager::getInstance();
     dbManager.close();
   });
+
+  LightStandController::getInstance();  //객체 생성해줘야 팬 꺼짐
+  WaterJarController::getInstance();
+  NextOperationHandler::getInstance();
+}
+
+PWMController sysfanController(4, 25, 22000, 300, 1024);
+
+void setup() {
+  Serial.begin(9600);
+  initFirstPriority();
+  enableLoggings();
+  registerCommands();
+  initPins();
+
+  sysfanController.setDutyCycle(400);
+  sysfanController.start();
+
+  createAndRunTask(PowerMonitor::taskFunction, "PowerMonitor", 10000);
+  createAndRunTask(SerialCommander::taskFunction, "SerialCommander", 30000);
+  createAndRunTask(tReadConnBtn, "TaskReadConnBtn", 3000);
+  createAndRunTask(tControlWifiLed, "TaskControlWifiLed");
+  createAndRunTask(SoilUpdater::taskFunction, "SoilUpdater", 10000, 2);
+
+  setupAPRouters();
+  setupSTARouters();
 }
 
 void loop() {

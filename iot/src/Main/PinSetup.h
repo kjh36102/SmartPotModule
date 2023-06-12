@@ -12,8 +12,8 @@
 //-------------------------------------------------------------
 
 //핀 이름과 번호 정의
-#define PIN_CONN_BTN 18
-#define PIN_CONN_LED 5
+#define PIN_CONN_BTN 0
+#define PIN_CONN_LED 15
 
 
 
@@ -24,7 +24,7 @@ void initPins() {
   pinMode(PIN_CONN_BTN, INPUT_PULLUP);
   pinMode(PIN_CONN_LED, OUTPUT);
 
-  pinMode(5, OUTPUT);
+  pinMode(15, OUTPUT);
 
   LOGLN("All pin has been inited.");
 }

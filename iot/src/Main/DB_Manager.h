@@ -306,6 +306,62 @@ public:
 
     return SQLITE_OK;
   }
+
+  // JsonObject를 반환하는 함수 정의
+  JsonObject getRowFromJsonArray(char* jsonArray, int rowIndex) {
+    // JsonDocument를 생성합니다 (크기는 충분히 크게 설정합니다).
+    StaticJsonDocument<DB_RESULT_BUFFER_SIZE> doc;
+
+    // JsonArray 파싱
+    auto error = deserializeJson(doc, jsonArray);
+
+    // 에러 체크
+    if (error) {
+      Serial.print(F("deserializeJson() failed with code "));
+      Serial.println(error.c_str());
+      return JsonObject();
+    }
+
+    // 파싱한 JsonArray
+    JsonArray arr = doc.as<JsonArray>();
+
+    // rowIndex가 JsonArray의 범위 내에 있는지 확인
+    if (rowIndex < arr.size()) {
+      // JsonObject 반환
+      return arr[rowIndex].as<JsonObject>();
+    } else {
+      // rowIndex가 범위를 벗어났다면 빈 JsonObject 반환
+      return JsonObject();
+    }
+  }
+
+  void initTables() {
+    prepareTable("soil_data",
+                 F("CREATE TABLE IF NOT EXISTS soil_data (id INTEGER PRIMARY KEY AUTOINCREMENT, tm REAL, hm REAL, n REAL, p REAL, k REAL, ph REAL, ec INTEGER, lt INTEGER, ts TEXT DEFAULT (datetime('now','localtime')))"),
+                 F("INSERT INTO soil_data(id,tm,hm,n,p,k,ph,ec,lt) VALUES (0,0,0,0,0,0,0,0,0)"));
+
+    prepareTable("wifi_info",
+                 F("CREATE TABLE wifi_info (id INTEGER PRIMARY KEY, ssid_ap TEXT, pw_ap TEXT, ssid_sta TEXT, pw_sta TEXT, phone_ip TEXT)"),
+                 F("INSERT INTO wifi_info VALUES(0, 'SmartPotModule', '', '', '', '')"));
+
+    prepareTable("plant_manage",
+                 F("CREATE TABLE IF NOT EXISTS plant_manage (id INTEGER PRIMARY KEY, w_auto INTEGER, l_auto INTEGER, w_on INTEGER, l_on INTEGER)"),
+                 F("INSERT INTO plant_manage VALUES(0, 0, 0, 0, 0)"));
+
+    prepareTable("manage_auto",
+                 F("CREATE TABLE IF NOT EXISTS manage_auto (id INTEGER PRIMARY KEY, hm REAL, th REAL, lt INTEGER, dr INTEGER, ot INTEGER, ld INTEGER, cd INTEGER)"),
+                 F("INSERT INTO manage_auto VALUES(0, 0, 0, 0, 0, 0, 0, 0)"));
+
+    prepareTable("manage_water",
+                 F("CREATE TABLE IF NOT EXISTS manage_water (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, wt INTEGER, no TEXT)"),
+                 NULL,
+                 false);
+
+    prepareTable("manage_light",
+                 F("CREATE TABLE IF NOT EXISTS manage_light (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, ls INTEGER, no TEXT)"),
+                 NULL,
+                 false);
+  }
 };
 
 DB_Manager* DB_Manager::instance = nullptr;

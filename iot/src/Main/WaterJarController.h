@@ -3,15 +3,16 @@
 
 //-------------------------------------------------------------
 #include <Arduino.h>
-#include "MultitaskRTOS"
+#include "MultitaskRTOS.h"
+#include "DB_Manager.h"
 
 //-------------------------------------------------------------
 #define LOGKEY "WaterJarController.h"
 #include "Logger.h"
 //-------------------------------------------------------------
 
-#define PIN_WATERJAR_RELAY_SIGNAL 00
-#define PIN_WATERJAR_READ_WATERLEVEL 00
+#define PIN_WATERJAR_RELAY_SIGNAL 2
+#define PIN_WATERJAR_READ_WATERLEVEL 34
 
 class WaterJarController {
 private:
@@ -19,55 +20,126 @@ private:
   WaterJarController() {
     pinMode(PIN_WATERJAR_RELAY_SIGNAL, OUTPUT);
     pinMode(PIN_WATERJAR_READ_WATERLEVEL, INPUT);
+  }
 
-    off();
-
-  }  // 생성자를 private로 선언하여 외부에서의 객체 생성을 막음
-
-  int maxFeedTime = 30;
+  int maxFeedTime = 30000;
+  int waterLoadTime = 500;
+  int waterLoadTimer = 0;
+  bool waterPumpOn = false;
+  int unitTime = 100;
 
 public:
   static WaterJarController& getInstance() {
     if (instance == nullptr) {
       instance = new WaterJarController();  // 인스턴스 생성
+      createAndRunTask(tOffWaterPump, "TaskOffWaterPump", 4000);
+      createAndRunTask(tSimulateWaterLoad, "tSimulateWaterLoad", 3000);
+      // createAndRunTask(tTestWaterLevel, "tTestWaterLevel");
     }
     return *instance;
   }
 
   // 다른 멤버 함수들 정의
 
-  void directFeed() {
-    //DB의 manage_auto테이블의 ot 칼럼값을 읽어와 int로 변환
-    int ot = 0;
+  bool feed(int ot) {
+    if (waterPumpOn) return false;
+    else if (ot < 1000 || ot > maxFeedTime) {
+      LOGLN("TaskFeedWater operationTIme range is invalid!");
+      return false;
+    }
 
-    //ot (초) 동안 실행되는 task 실행하기
-    createAndRunTask(tFeedWater, "TaskFeedWater", 2000, 1, ot);
+    createAndRunTask(tFeedWater, "TaskFeedWater", 4000, 1, &ot);
+    return true;
   }
 
-  static void tFeedWater(void* taskParams) {
-    WaterJarController& waterJar = WaterJarController::getInstance();
-    int operationTime = (*(int*)taskParams) * 1000;
+  void testFeed(int time) {
+    createAndRunTask(tFeedWater, "TaskFeedWater", 4000, 1, &time);
 
-    LOGf("물주기 %d 초 동안 작동\n", operationTime);
-
-    if (operationTime < 1 || operationTime > waterJar.maxFeedTIme) {
+    if (time < 1000 || time > maxFeedTime) {
       LOGLN("TaskFeedWater operationTIme range is invalid!");
+      return;
     }
-    //릴레이에 신호를 보내 연결된 물펌프와 솔레노이드를 operation time 만큼 작동시킨다.
+  }
+
+  // static void tTestWaterLevel(void* taskParams) {
+  //   WaterJarController& waterJar = WaterJarController::getInstance();
+
+  //   for (;;) {
+  //     LOGF("state: %d", waterJar.readWaterLevel());
+  //     vTaskDelay(250);
+  //   }
+  // }
+
+  static void tOffWaterPump(void* taskParams) {
+    WaterJarController& waterJar = WaterJarController::getInstance();
+
+    waterJar.on();
+    vTaskDelay(100);
+    waterJar.off();
+
+    vTaskDelete(NULL);
+  }
+
+  static void tSimulateWaterLoad(void* taskParams) {
+    WaterJarController& waterJar = WaterJarController::getInstance();
+
+    for (;;) {
+
+      while (waterJar.waterPumpOn) {
+        if (!waterJar.readWaterLevel()) {
+          waterJar.off();
+          waterJar.onWaterJarEmpty();
+          break;
+        }
+
+        if (waterJar.waterLoadTimer > (waterJar.waterLoadTime - waterJar.unitTime)) {  // modify this line
+          break;
+        }
+
+        if (!waterJar.waterPumpOn) break;
+
+        waterJar.waterLoadTimer += waterJar.unitTime;
+        vTaskDelay(waterJar.unitTime);
+      }
+
+      while (!waterJar.waterPumpOn) {
+        if (waterJar.waterLoadTimer < waterJar.unitTime) {
+          break;
+        }
+
+        if (waterJar.waterPumpOn) break;
+
+        waterJar.waterLoadTimer -= waterJar.unitTime;
+        vTaskDelay(waterJar.unitTime);
+      }
+
+      vTaskDelay(200);
+    }
+  }
+
+
+  static void tFeedWater(void* taskParams) {
+
+    WaterJarController& waterJar = WaterJarController::getInstance();
+
+    //이미 물주고있다면 무시
+    if (waterJar.waterPumpOn) vTaskDelete(NULL);
+
+    int operationTime = (*(int*)taskParams);
+
+    LOGF("물주기 %d 초 동안 작동\n", operationTime);
+
+    waterJar.on();                                                                    //물펌프 켜기
+    while (waterJar.waterLoadTimer < (waterJar.waterLoadTime - waterJar.unitTime)) {  //물이 출수구까지 차오를때까지 대기
+      vTaskDelay(waterJar.unitTime);
+    }
 
 
     int timer = 0;
-    waterJar.on();
-
     while (true) {
-      //물펌프에 물이 있는지 확인
-      if (!waterJar.readWaterLevel()) {
-        waterJar.onWaterJarEmpty();
-        break;
-      }
-
       //지정시간이 되었는지 확인
       if (timer >= operationTime) break;
+      if (!waterJar.waterPumpOn) break;
 
       timer += 250;
       vTaskDelay(250);
@@ -78,24 +150,35 @@ public:
   }
 
   void on() {
-    //릴레이에 신호를 보내 연결된 물펌프와 솔레노이드를 켠다.
+    DB_Manager& dbManager = DB_Manager::getInstance();
+
     digitalWrite(PIN_WATERJAR_RELAY_SIGNAL, HIGH);
-    LOGLN("물펌프 켜짐");
+    waterPumpOn = true;
+    dbManager.execute("update plant_manage set w_on=1");
+    LOGF("물펌프 켜짐, 현재 로드 양 : %d/%d\n", waterLoadTimer, waterLoadTime);
   }
 
   void off() {
-    //물펌프를 끈다
+    DB_Manager& dbManager = DB_Manager::getInstance();
+
     digitalWrite(PIN_WATERJAR_RELAY_SIGNAL, LOW);
-    LOGLN("물펌프 꺼짐");
+    waterPumpOn = false;
+    dbManager.execute("update plant_manage set w_on=0");
+    LOGF("물펌프 꺼짐, 현재 로드 양 : %d/%d\n", waterLoadTimer, waterLoadTime);
   }
 
   int readWaterLevel() {
-    return digitalRead(PIN_WATERJAR_READ_WATERLEVEL);
+    return !digitalRead(PIN_WATERJAR_READ_WATERLEVEL);
   }
 
-  void onWaterJarEmpty(){
+  void onWaterJarEmpty() {
     //물통이 비었을 때 처리될 코드 작성
     LOGLN("물통에 물 부족함");
+  }
+
+  void setWaterLoadTime(int time) {
+    waterLoadTime = time;
+    LOGF("WaterLoadTime %d 로 설정됨!", waterLoadTime);
   }
 };
 
