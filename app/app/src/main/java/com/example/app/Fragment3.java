@@ -1,17 +1,12 @@
 package com.example.app;
 
-import com.example.app.Fragment1;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -29,23 +24,46 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TableLayout;
 import android.widget.TextView;
-
+import java.util.concurrent.CountDownLatch;
 import com.google.android.material.tabs.TabLayout;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.ObjIntConsumer;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class Fragment3 extends Fragment {
+    public boolean waterState, lightState;
+    public AtomicReference<int[]> waterUdsRef = new AtomicReference<>();
+    public AtomicReference<String[]> waterStsRef = new AtomicReference<>();
+    public AtomicReference<int[]> waterWtsRef = new AtomicReference<>();
+    public AtomicReference<int[]> lightUdsRef = new AtomicReference<>();
+    public AtomicReference<String[]> lightStsRef = new AtomicReference<>();
+    public AtomicReference<int[]> lightLssRef = new AtomicReference<>();
+    final CountDownLatch latch = new CountDownLatch(1);
+    public int otReference, hmReference, thReference, ltReference, drReference;
+
     private TabLayout tabLayout;
     private TableLayout tableCenter;
     private View includeView;
     private TextView tvCheck, tvValue, tvRange, tvValue1, tvValue2, tvValue3, tvValue4, tvValue5, edValue1,edValue2, tvLight, tvHumid;
-    private static CheckBox checkBoxWater, checkBoxLight;
-    private Button waterButton;
+    private static CheckBox checkBoxWater, checkBoxLight, CheckSetNearestWater, CheckSetNearestLight;
     private String curType = WATER;
-    private Button btDelete, btRegister;
+
+    private Button btDelete, btRegister, receiveBt1, receiveBt2, receiveBt3, receiveBt4;;
     private DataAdapter dataAdapter;
 
     private static ArrayList<DataValue> waterDataList = null;
@@ -71,27 +89,32 @@ public class Fragment3 extends Fragment {
     private String lightValue2 = "";
     public static String humid = "";
     public static String light = "";
-
+    SharedViewModel viewModel;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         Log.i("##INFO", "onCreateView(): fragment3");
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_3, container, false);
-        return view;
+        return inflater.inflate(R.layout.fragment_3, container, false);
     }
-    @Override
-    public void onResume() {
-        super.onResume();
-        tvHumid.setText(humid);
-        tvLight.setText(light);
-    }
+
+
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Log.i("##INFO", "onViewCreated(): Fragment3");
-        SharedViewModel viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+
+        viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        waterState = sharedPreferences.getBoolean("WaterCheckBoxState", false);
+        lightState = sharedPreferences.getBoolean("LightCheckBoxState", false);
+
+        receiveBt1 = view.findViewById(R.id.receiveBt1);
+        receiveBt2 = view.findViewById(R.id.receiveBt2);
+        receiveBt3 = view.findViewById(R.id.receiveBt3);
+        receiveBt4 = view.findViewById(R.id.receiveBt4);
         tvCheck = view.findViewById(R.id.tv_check_name);
         tabLayout = view.findViewById(R.id.tab_mode);
         tableCenter = view.findViewById(R.id.tab_layout_center);
@@ -100,8 +123,14 @@ public class Fragment3 extends Fragment {
         includeView = view.findViewById(R.id.in_uncheck);
         tvValue1 = view.findViewById(R.id.tv_value_1);
         tvValue2 = view.findViewById(R.id.tv_value_2);
+
         checkBoxWater = view.findViewById(R.id.check_mode_water);
         checkBoxLight = view.findViewById(R.id.check_mode_light);
+        CheckSetNearestWater = view.findViewById(R.id.setNearest_water); //최단시간 적용 Water
+        CheckSetNearestLight = view.findViewById(R.id.setNearest_light); //최단시간 적용
+        checkBoxWater.setChecked(waterState);
+        checkBoxLight.setChecked(lightState);
+
         tvValue3 = includeView.findViewById(R.id.tv_time_to_status);
         btDelete = includeView.findViewById(R.id.bt_delete);
         btRegister = includeView.findViewById(R.id.bt_register);
@@ -133,6 +162,9 @@ public class Fragment3 extends Fragment {
 
         tvLight.setText(getData(requireContext(), "light"));
         tvHumid.setText(getData(requireContext(), "humid"));
+
+
+
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             // Tab이 선택되었을 때
             @Override
@@ -148,6 +180,13 @@ public class Fragment3 extends Fragment {
                         curType = WATER;
                         checkBoxLight.setVisibility(View.GONE);
                         checkBoxWater.setVisibility(View.VISIBLE);
+                        CheckSetNearestWater.setVisibility(View.VISIBLE);
+                        CheckSetNearestLight.setVisibility(View.GONE);
+                        receiveBt1.setVisibility(View.VISIBLE);
+                        receiveBt2.setVisibility(View.GONE);
+                        receiveBt3.setVisibility(View.GONE);
+                        receiveBt4.setVisibility(View.GONE);
+
                         tvValue1.setText(waterValue1);
                         tvValue2.setText(waterValue2);
 
@@ -175,6 +214,12 @@ public class Fragment3 extends Fragment {
                         curType = LIGHT;
                         checkBoxWater.setVisibility(View.GONE);
                         checkBoxLight.setVisibility(View.VISIBLE);
+                        CheckSetNearestWater.setVisibility(View.GONE);
+                        CheckSetNearestLight.setVisibility(View.VISIBLE);
+                        receiveBt1.setVisibility(View.GONE);
+                        receiveBt2.setVisibility(View.GONE);
+                        receiveBt3.setVisibility(View.VISIBLE);
+                        receiveBt4.setVisibility(View.GONE);
                         tvValue1.setText(lightValue1);
                         tvValue2.setText(lightValue2);
 
@@ -202,11 +247,13 @@ public class Fragment3 extends Fragment {
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
+                // Tab이 선택 해제될 때 호출되는 메서드
 
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
+                // 이미 선택된 Tab이 다시 선택될 때 호출되는 메서드
 
             }
         });
@@ -215,13 +262,21 @@ public class Fragment3 extends Fragment {
         checkBoxWater.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("WaterCheckBoxState", isChecked);
+                editor.apply();
                 viewModel.setWaterState(isChecked);
-               if (isChecked) {
+
+                if (isChecked) {
                     includeView.setVisibility(View.GONE);
                     tableCenter.setVisibility(View.VISIBLE);
+                    receiveBt1.setVisibility((View.GONE));
+                    receiveBt2.setVisibility(View.VISIBLE);
                 } else {
                     includeView.setVisibility(View.VISIBLE);
                     tableCenter.setVisibility(View.GONE);
+                    receiveBt1.setVisibility((View.VISIBLE));
+                    receiveBt2.setVisibility(View.GONE);
                 }
             }
         });
@@ -229,13 +284,21 @@ public class Fragment3 extends Fragment {
         checkBoxLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("LightCheckBoxState", isChecked);
+                editor.apply();
                 viewModel.setLightState(isChecked);
+
                 if (isChecked) {
                     includeView.setVisibility(View.GONE);
                     tableCenter.setVisibility(View.VISIBLE);
+                    receiveBt3.setVisibility((View.GONE));
+                    receiveBt4.setVisibility(View.VISIBLE);
                 } else {
                     includeView.setVisibility(View.VISIBLE);
                     tableCenter.setVisibility(View.GONE);
+                    receiveBt3.setVisibility((View.VISIBLE));
+                    receiveBt4.setVisibility(View.GONE);
                 }
             }
         });
@@ -244,6 +307,7 @@ public class Fragment3 extends Fragment {
         //등록부분
         btRegister.setOnClickListener(v -> {
             if (Objects.equals(curType, WATER)) {
+                //현재 타입이 WATER인 경우
                 //최대 6개까지만 입력 가능
                 if (waterDataList.size() < 7) {
                     DataValue dataValue = new DataValue();
@@ -390,7 +454,659 @@ public class Fragment3 extends Fragment {
                 Log.i("##INFO", "afterTextChanged(): editable = " + editable);
             }
         });
+        receiveBt1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { //데이터 값 받는 버튼
+                manuWaterData(new Runnable() {
+                    @Override
+                    public void run() {
+                        manuWaterArray();
+                    }
+                });
+//                manuWaterData();
+//                manuWaterArray();
+            }
+        });
+        receiveBt2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { //데이터 값 받는 버튼
+                autoWaterData();
+            }
+        });
+        receiveBt3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { //데이터 값 받는 버튼
+//                manuLightData();
+                manuLightArray();
+            }
+        });
+        receiveBt4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { //데이터 값 받는 버튼
+                autoLightData();
+            }
+        });
+
     }
+
+    public void manuWaterData(final Runnable callback){
+        new Thread(new Runnable() {
+            @Override
+            public void run() { //http통신으로 받아옴
+                System.out.println("manuWaterData시작 -----------------------");
+                HttpURLConnection urlConnection = null;
+                BufferedReader reader = null;
+
+                try {
+                    urlConnection = null;
+                    reader = null;
+                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
+
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setConnectTimeout(30000); // 15 seconds
+                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setRequestProperty("Connection", "close");
+
+                    urlConnection.connect();
+                    // HTTP 상태 코드 확인
+                    int responseCode = urlConnection.getResponseCode();
+                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                        System.out.println("HTTP error code: " + responseCode);
+                        return;
+                    }
+
+                    InputStream inputStream = urlConnection.getInputStream();
+
+                    if (inputStream == null) {
+                        System.out.println("inputStream ㅜull");
+                        return;
+                    }
+
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder output = new StringBuilder();
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line);
+
+                    }
+                    reader.close();
+                    inputStream.close();
+                    urlConnection.disconnect();
+                    if (output.length() == 0) {
+                        System.out.println("받은 값 길이가 0");
+                        return;
+                    }
+                    String[] parts = output.toString().split("\\|");
+                    if (parts[0].equals("err")) {
+                        System.out.println("error받음");
+                    }
+
+                    JSONArray jsonArray = new JSONArray(parts[2]);
+                    JSONObject jsonObject = jsonArray.getJSONObject(0);
+                    System.out.println("첫번째 jsonObject: " + jsonObject);
+                    //sample data test
+                    otReference = jsonObject.getInt("ot");
+
+                    System.out.println("ot: " + otReference);
+
+
+                } catch (IOException ioException) {
+                    System.out.println("IO error: " + ioException.getMessage());
+                    ioException.printStackTrace();
+                } catch (JSONException jsonException) {
+                    System.out.println("JSON parsing error");
+                    jsonException.printStackTrace();
+                } catch (Exception e) {
+                    System.out.println("Exception error");
+                    e.printStackTrace();
+                }
+                finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (callback != null) {
+                        new Thread(callback).start();
+                    }
+                }
+            }
+        }).start();
+    }
+    public void manuWaterArray() {
+        new Thread(new Runnable(){
+            @Override
+            public void run() { //http통신으로 받아옴
+                System.out.println("manuWaterArray 시작 -----------------------");
+                HttpURLConnection urlConnection = null;
+                BufferedReader reader = null;
+
+                try {
+                    urlConnection = null;
+                    reader = null;
+
+                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_water"); //밑에 테이블
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setConnectTimeout(15000); // 15 seconds
+                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setRequestProperty("Connection", "close");
+
+                    urlConnection.connect();
+                    int responseCode = urlConnection.getResponseCode();
+                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                        System.out.println("HTTP error code: " + responseCode);
+                        return;
+                    }
+
+                    InputStream inputStream = urlConnection.getInputStream();
+
+                    if (inputStream == null) {
+                        System.out.println("inputStream ㅜull");
+                        return;
+                    }
+
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder output = new StringBuilder();
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line);
+                    }
+                    reader.close();
+                    inputStream.close();
+                    urlConnection.disconnect();
+
+                    if (output.length() == 0) {
+                        System.out.println("받은 값 길이가 0");
+                        return;
+                    }
+                    String[] parts = output.toString().split("\\|");
+                    if(parts[0].equals("err")) {
+                        System.out.println("error받음");
+                    }
+                    JSONArray jsonArray = new JSONArray(parts[2]);
+
+                    int[] uds = new int[jsonArray.length()];
+                    String[] sts = new String[jsonArray.length()];
+                    int[] wts = new int[jsonArray.length()];
+
+
+                    //sample data test
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        System.out.println("두 번째 jsonObject: " + jsonObject);
+
+                        uds[i] = jsonObject.getInt("ud");
+                        sts[i] = jsonObject.getString("st");
+                        wts[i] = jsonObject.getInt("wt");
+
+                        System.out.println("uds[i]: " + uds[i]);
+                        System.out.println("sts[i]: " + sts[i]);
+                        System.out.println("wts[i]: " + wts[i]);
+                    }
+                    waterUdsRef.set(uds);
+                    waterStsRef.set(sts);
+                    waterWtsRef.set(wts);
+
+
+                } catch (IOException ioException) {
+                    System.out.println("IO error: " + ioException.getMessage());
+                    ioException.printStackTrace();
+
+                } catch (JSONException jsonException){
+                    System.out.println("JSON parsing error");
+                    jsonException.printStackTrace();
+                } catch (Exception e){
+                    System.out.println("Exception error");
+                    e.printStackTrace();
+                } finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                int[] uds = waterUdsRef.get();
+                String[] sts = waterStsRef.get();
+                int[] wts = waterWtsRef.get();
+
+                JSONArray udJsonArray = new JSONArray();
+                if (uds != null) {
+                    for (int ud : uds) {
+                        udJsonArray.put(ud);
+                    }
+                }
+
+                JSONArray stJsonArray = new JSONArray();
+                if (sts != null) {
+                    for (String st : sts) {
+                        stJsonArray.put(st);
+                    }
+                }
+
+                JSONArray wtJsonArray = new JSONArray();
+                if (wts != null) {
+                    for (int wt : wts) {
+                        wtJsonArray.put(wt);
+                    }
+                }
+                System.out.println("udJsonArray: " + udJsonArray);
+                System.out.println("stJsonArray: " + stJsonArray);
+                System.out.println("wtJsonArray: " + wtJsonArray);
+
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("otReference", otReference);
+                //배열을 저장해야함
+                editor.putString("wateruds", udJsonArray.toString());
+                editor.putString("watersts", stJsonArray.toString());
+                editor.putString("waterwts", wtJsonArray.toString());
+                editor.apply();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        edWater1 = Integer.toString(otReference);
+                        if (!edWater1.equals("")) {
+                            edValue1.setText(edWater1);
+                        }
+                        for (int i = 0; i < udJsonArray.length(); i++) {
+                            try {
+                                DataValue dataValue = new DataValue();
+                                dataValue.setDate(udJsonArray.get(i).toString());
+                                dataValue.setTime(stJsonArray.get(i).toString());
+                                dataValue.setValue(wtJsonArray.get(i).toString());
+                                waterDataList.add(dataValue);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        dataAdapter.setDataList(waterDataList);
+                        dataAdapter.notifyDataSetChanged();
+
+                        //이후 ui적용
+
+                    }
+                });
+            }
+        }).start();
+    }
+    public void autoWaterData(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() { //http통신으로 받아옴
+                System.out.println("autoWaterData시작 -----------------------");
+                HttpURLConnection urlConnection = null;
+                BufferedReader reader = null;
+                int responseCode = 0;
+
+                try {
+                    urlConnection = null;
+                    reader = null;
+                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
+
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setConnectTimeout(15000); // 15 seconds
+                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setRequestProperty("Connection", "close");
+
+                    urlConnection.connect();
+                    // HTTP 상태 코드 확인
+                    responseCode = urlConnection.getResponseCode();
+                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                        System.out.println("HTTP error code: " + responseCode);
+                        return;
+                    }
+
+                    InputStream inputStream = urlConnection.getInputStream();
+
+                    if (inputStream == null) {
+                        System.out.println("inputStream ㅜull");
+                        return;
+                    }
+
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder output = new StringBuilder();
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line);
+
+                    }
+                    reader.close();
+                    inputStream.close();
+                    urlConnection.disconnect();
+                    if (output.length() == 0) {
+                        System.out.println("받은 값 길이가 0");
+                        return;
+                    }
+                    String[] parts = output.toString().split("\\|");
+                    if(parts[0].equals("err")) {
+                        System.out.println("error받음");
+                    }
+
+                    JSONArray jsonArray = new JSONArray(parts[2]);
+                    JSONObject jsonObject = jsonArray.getJSONObject(0);
+                    System.out.println("첫번째 jsonObject: " + jsonObject);
+                    //sample data test
+                    hmReference = jsonObject.getInt("hm");
+                    thReference = jsonObject.getInt("th");
+                    System.out.println("hm: " + hmReference);
+                    System.out.println("th: " + thReference);
+
+                } catch (IOException ioException) {
+                    System.out.println("IO error: " + ioException.getMessage());
+                    ioException.printStackTrace();
+                }catch (JSONException jsonException){
+                    System.out.println("JSON parsing error");
+                    jsonException.printStackTrace();
+                }catch (Exception e){
+                    System.out.println("Exception error");
+                    e.printStackTrace();
+                }
+                finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if(responseCode == HttpURLConnection.HTTP_OK){
+                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putInt("hmReference", hmReference);
+                        editor.putInt("thReference", thReference);
+                        editor.apply();
+                    }
+                }
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+
+                        //이후 ui적용
+
+                    }
+                });
+            }
+        }).start();
+    }
+    public void manuLightArray(){
+        new Thread(new Runnable(){
+            @Override
+            public void run() { //http통신으로 받아옴
+                System.out.println("manuLightArray시작 -----------------------");
+                HttpURLConnection urlConnection = null;
+                BufferedReader reader = null;
+                int responseCode = 0;
+                try {
+                    urlConnection = null;
+                    reader = null;
+
+                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_light"); //밑에 테이블
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setConnectTimeout(15000); // 15 seconds
+                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setRequestProperty("Connection", "close");
+
+                    urlConnection.connect();
+                    responseCode = urlConnection.getResponseCode();
+                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                        System.out.println("HTTP error code: " + responseCode);
+                        return;
+                    }
+
+                    InputStream inputStream = urlConnection.getInputStream();
+
+                    if (inputStream == null) {
+                        System.out.println("inputStream ㅜull");
+                        return;
+                    }
+
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder output = new StringBuilder();
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line);
+                    }
+                    reader.close();
+                    inputStream.close();
+                    urlConnection.disconnect();
+
+                    if (output.length() == 0) {
+                        System.out.println("받은 값 길이가 0");
+                        return;
+                    }
+                    String[] parts = output.toString().split("\\|");
+                    if(parts[0].equals("err")) {
+                        System.out.println("error받음");
+                    }
+                    JSONArray jsonArray = new JSONArray(parts[2]);
+
+                    int[] uds = new int[jsonArray.length()];
+                    String[] sts = new String[jsonArray.length()];
+                    int[] lss = new int[jsonArray.length()];
+
+
+                    //sample data test
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        System.out.println("두 번째 jsonObject: " + jsonObject);
+
+                        uds[i] = jsonObject.getInt("ud");
+                        sts[i] = jsonObject.getString("st");
+                        lss[i] = jsonObject.getInt("ls");
+
+                        System.out.println("uds[i]: " + uds[i]);
+                        System.out.println("sts[i]: " + sts[i]);
+                        System.out.println("wts[i]: " + lss[i]);
+                    }
+                    waterUdsRef.set(uds);
+                    waterStsRef.set(sts);
+                    waterWtsRef.set(lss);
+
+
+                } catch (IOException ioException) {
+                    System.out.println("IO error: " + ioException.getMessage());
+                    ioException.printStackTrace();
+                } catch (JSONException jsonException){
+                    System.out.println("JSON parsing error");
+                    jsonException.printStackTrace();
+                } catch (Exception e){
+                    System.out.println("Exception error");
+                    e.printStackTrace();
+                } finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                int[] uds = waterUdsRef.get();
+                String[] sts = waterStsRef.get();
+                int[] lss = waterWtsRef.get();
+
+                JSONArray udJsonArray = new JSONArray();
+                if (uds != null) {
+                    for (int ud : uds) {
+                        udJsonArray.put(ud);
+                    }
+                }
+
+                JSONArray stJsonArray = new JSONArray();
+                if (sts != null) {
+                    for (String st : sts) {
+                        stJsonArray.put(st);
+                    }
+                }
+
+                JSONArray lsJsonArray = new JSONArray();
+                if (lss != null) {
+                    for (int ls : lss) {
+                        lsJsonArray.put(ls);
+                    }
+                }
+                System.out.println("udJsonArray: " + udJsonArray);
+                System.out.println("stJsonArray: " + stJsonArray);
+                System.out.println("lsJsonArray: " + lsJsonArray);
+
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("otReference", otReference);
+                //배열을 저장해야함
+                editor.putString("lightuds", udJsonArray.toString());
+                editor.putString("lightsts", stJsonArray.toString());
+                editor.putString("lightlss", lsJsonArray.toString());
+                editor.apply();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+
+                        //이후 ui적용
+
+                    }
+                });
+            }
+        }).start();
+    }
+    public void autoLightData(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() { //http통신으로 받아옴
+                System.out.println("autoLightData시작 -----------------------");
+                HttpURLConnection urlConnection = null;
+                BufferedReader reader = null;
+                int responseCode = 0;
+                try {
+                    urlConnection = null;
+                    reader = null;
+                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
+
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setConnectTimeout(15000); // 15 seconds
+                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setRequestProperty("Connection", "close");
+
+                    urlConnection.connect();
+                    // HTTP 상태 코드 확인
+                    responseCode = urlConnection.getResponseCode();
+                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                        System.out.println("HTTP error code: " + responseCode);
+                        return;
+                    }
+
+                    InputStream inputStream = urlConnection.getInputStream();
+
+                    if (inputStream == null) {
+                        System.out.println("inputStream ㅜull");
+                        return;
+                    }
+
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder output = new StringBuilder();
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line);
+
+                    }
+                    reader.close();
+                    inputStream.close();
+                    urlConnection.disconnect();
+                    if (output.length() == 0) {
+                        System.out.println("받은 값 길이가 0");
+                        return;
+                    }
+                    String[] parts = output.toString().split("\\|");
+                    if(parts[0].equals("err")) {
+                        System.out.println("error받음");
+                    }
+
+                    JSONArray jsonArray = new JSONArray(parts[2]);
+                    JSONObject jsonObject = jsonArray.getJSONObject(0);
+                    System.out.println("첫번째 jsonObject: " + jsonObject);
+                    //sample data test
+                    hmReference = jsonObject.getInt("lt");
+                    thReference = jsonObject.getInt("dr");
+                    System.out.println("lt: " + ltReference);
+                    System.out.println("dr: " + drReference);
+
+                } catch (IOException ioException) {
+                    System.out.println("IO error: " + ioException.getMessage());
+                    ioException.printStackTrace();
+                }catch (JSONException jsonException){
+                    System.out.println("JSON parsing error");
+                    jsonException.printStackTrace();
+                }catch (Exception e){
+                    System.out.println("Exception error");
+                    e.printStackTrace();
+                }
+                finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if(responseCode == HttpURLConnection.HTTP_OK){
+                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putInt("ltReference", ltReference);
+                        editor.putInt("drReference", drReference);
+                        editor.apply();
+                    }
+                }
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+
+                        //이후 ui적용
+
+                    }
+                });
+            }
+        }).start();
+    }
+
+
+
 
     private void changeText(String value, String range, String value1, String value2, String value3, String value4, String value5) {
         tvValue.setText(value);
@@ -411,4 +1127,20 @@ public class Fragment3 extends Fragment {
 
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        tvHumid.setText(humid);
+        tvLight.setText(light);
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+        waterState = sharedPreferences.getBoolean("WaterCheckBoxState", false);
+        lightState = sharedPreferences.getBoolean("LightCheckBoxState", false);
+
+        checkBoxWater.setChecked(waterState);
+        checkBoxLight.setChecked(lightState);
+
+
+    }
 }
