@@ -8,9 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager2.widget.ViewPager2;
-import com.example.app.R;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -24,10 +22,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -37,8 +32,6 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,17 +39,13 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.HashMap;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Bundle;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -119,14 +108,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         popup.ssid = sharedPreferences.getString("ssid", "");
         popup.pw = sharedPreferences.getString("pw", "");
         popup.ip = sharedPreferences.getString("ip", "");
-        //popup.url = sharedPreferences.getString("url", "");
+        popup.url = sharedPreferences.getString("url", "");
+        System.out.println(popup.ssid);
+        //new GetJsonDataTask().execute(popup.url);
 
-        new GetJsonDataTask().execute(popup.url);
-        /*
         WifiConnectionManager connManager = new WifiConnectionManager(this, popup.connText);
         if (!connManager.permission.hasAll())
             connManager.permission.requestAll();
-        if(!popup.ssid.equals("")&& !popup.pw.equals("") && !popup.ip.equals("") && !popup.url+"getTableData?name=soil_data".equals("")){
+
+        if(!popup.ssid.equals("")&& !popup.pw.equals("") && !popup.ip.equals("") && !popup.url.equals("")){
             new Thread(()->{
                 connManager.connectToExternal(popup.ssid,popup.pw, 30000);
             }).start();
@@ -141,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 }
                             });
                             System.out.println(popup.ip + " " + popup.url);
-                            new GetJsonDataTask().execute(popup.url+"getTableData?name=soil_data");
+                            new GetJsonDataTask().execute(popup.url);
                             new Thread(()->{
                                 try {
                                     while(score != -1) {
@@ -174,8 +164,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
                 setBlackFace();
             }
-            */
-
 
     }
 
@@ -259,10 +247,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         if (jsonObject2.optString("l_auto").equals("0")) {
                                 light0=true;
-                            if (jsonObject2.optString("l_on").equals("1"))
-                                light1=false;
-                            else if (jsonObject2.optString("l_on").equals("0"))
+                            if (jsonObject2.optString("l_on").equals("1"))   //
                                 light1=true;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1=false;
                         }
                         else if (jsonObject2.optString("l_auto").equals("1"))
                             light0=false;
@@ -313,7 +301,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             phosText.setText(phos);
             potaText.setText(pota);
             ecText.setText(ec);
-            rTxt.setText("마지막 업데이트 시간 : " + ts);  //서버의 업데이트시간 불러오기
+            if(ts!=null)
+                rTxt.setText("마지막 업데이트 시간 : " + ts);  //서버의 업데이트시간 불러오기
             AppCompatButton waterBtn = findViewById(R.id.nowWater);
             ToggleButton toggleButton = findViewById(R.id.toggleButton);
             waterBtn.setEnabled(water);
@@ -338,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Fragment3.humid = humid;
             Fragment3.light = light;
 
-
+            System.out.println(temp);
             ChatGPT chatGPT = new ChatGPT();
             new Thread(){
                 public void run(){
