@@ -1,23 +1,13 @@
 package com.example.app;
 
-import static android.content.ContentValues.TAG;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
-import android.net.wifi.WifiManager;
-import android.net.wifi.WifiNetworkSpecifier;
+
 import android.os.Bundle;
-import android.os.PatternMatcher;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -30,27 +20,22 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.net.URLEncoder;
 
 public class popup extends AppCompatActivity implements View.OnClickListener {
         public static boolean CONNECT_STATE = false;    //현재 아두이노와의 연결상태
         public static String ssid;
         public static String pw;
         public static String ip;
-        public static String url = "http://cofon.xyz:9090/";
+        public static String url;
         public static String plant;
         public static TextView connText;
         private Context context;
@@ -126,17 +111,17 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                             () -> {    // 에러시 콜백
                                 Exception e = connManager.getCurrentException();  //오류 가져오기
 
-                                if (e instanceof SocketException) {        //오류 종류에따른 처리
-                                    connManager.setStatusText("아두이노에게 정보전송 중 연결 실패오류");
-                                    System.out.println("아두이노에게 정보전송 중 연결 실패오류");
-                                } else if (e instanceof SocketTimeoutException) {
+                                if (e instanceof SocketTimeoutException) {
                                     connManager.setStatusText("아두이노에게 정보전송 타임아웃");
                                     System.out.println("아두이노에게 정보전송 타임아웃");
+                                }
+                                 else if (e instanceof SocketException) {        //오류 종류에따른 처리
+                                    connManager.setStatusText("아두이노에게 정보전송 중 연결 실패오류");
+                                    System.out.println("아두이노에게 정보전송 중 연결 실패오류");
                                 } else {
                                     connManager.setStatusText("아두이노에게 정보전송중 오류발생");
                                     System.out.println("아두이노에게 정보전송중 오류발생: " + e.getClass().getName() + ", " + e.getMessage());
                                 }
-
                             }
                     );
                 });
@@ -175,6 +160,9 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                     System.out.println("UDP 프로세스 성공");
                     ip = connManager.arduinoIP; //UDP가 성공하면 아두이노 웹서버 IP 가져올수있음
                     url = "http://" + ip + ":12345/";
+
+
+
                     connManager.sendPing(30000, ip);  //타임아웃 30초
                 });
 
@@ -202,7 +190,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                         Thread.sleep(2000);
                         connManager.setStatusText("최종 연결 성공!");
                         System.out.println("최종 연결 성공!");
-
                         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
                         // 값을 편집하기 위한 Editor 객체 생성
                         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -266,7 +253,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                         BufferedReader reader = null;
                         try {
 //                            URL url = new URL("http://arduino.ip:12345/getTableData?name=manage_auto"); //컬럼 다 넘겨주나보네
-                            URL url = new URL("http://cofon.xyz:9090/read?col=temp_humid"); //sample data test
+                            URL url = new URL(popup.url + "read?col=temp_humid"); //sample data test
                             urlConnection = (HttpURLConnection) url.openConnection();
                             urlConnection.setRequestMethod("GET");
                             urlConnection.connect();
@@ -355,10 +342,9 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 System.out.println("waterProgress: " + waterProgress);
 
 
-//                String sendUrlString = "http://arduino.ip:12345/manageAutoSet?ld=" + lightProgress
-//                        + "&cd=" + coolProgress;
+                String sendUrlString = url + "manageAutoSet?ld=" + lightProgress + "&cd=" + coolProgress;
 
-                String sendUrlString= "https://zmzlqay.request.dreamhack.games"; //sample test
+                //String sendUrlString= "https://zmzlqay.request.dreamhack.games"; //sample test
 
                 new Thread(new Runnable() { //http 통신 시작
                     @Override

@@ -338,7 +338,6 @@ public class WifiConnectionManager {
 
         try {
             if (rememberedIP == null) return false;
-
             URL url = new URL("http://" + rememberedIP + ":12345/hello");
 //            URL url;
 //            if (rememberedIP == null) url = new URL("http://" + this.arduinoIP + ":12345/hello");
@@ -359,20 +358,25 @@ public class WifiConnectionManager {
             }
             reader.close();
             String parsed[] = responseData.toString().split("\\|");
+
             if( parsed[0].equals("ok")) {
                 runIfNotNull(this.onPingSuccess);
                 if(parsed[1].equals("0")){
-                    this.statusTextview.setText("최종 연결 성공");
+                    if(this.statusTextview != null)
+                        this.statusTextview.setText("최종 연결 성공");
                 }
                 else if(parsed[1].equals("1")){
-                    this.statusTextview.setText("최종 연결 성공, 그러나 인터넷 안됨");
+                    if(this.statusTextview != null)
+                        this.statusTextview.setText("최종 연결 성공, 그러나 인터넷 안됨");
                 }
                 else if(parsed[1].equals("2")){
-                    this.statusTextview.setText("핑");
+                    if(this.statusTextview != null)
+                        this.statusTextview.setText("핑");
                 }
             }
             else if(parsed[0].equals("err")){
                 runIfNotNull(this.onPingFailed);
+                if(this.statusTextview != null)
                     this.statusTextview.setText("아직 외부네트워크 연결 안됨");
             }
             return true;
