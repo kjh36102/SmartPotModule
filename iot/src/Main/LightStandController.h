@@ -53,6 +53,7 @@ public:
     LOGF("LightStand UnionDuty set to %d%%\n", percent);
   }
 
+  //켤때 manage_auto db에서 duty값 가져와서 켜기, 시스템팬도 마찬가지
   void on() {
     lightController.start();
     fanController.start();

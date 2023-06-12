@@ -36,6 +36,7 @@ private:
 
   int maxRecordCount = 6;
   static bool runningFlag;
+  char sqlBuffer[100];
 
 
   // ...
@@ -44,8 +45,6 @@ private:
     dbManager = &DB_Manager::getInstance();
     lightStand = &LightStandController::getInstance();
     waterJar = &WaterJarController::getInstance();
-
-    // createAndRunTask(NextOperationHandler::tCheckManageLightTimestamp, "tCheckManageLightTimestamp", 4000);
   }
 
 public:
@@ -53,8 +52,7 @@ public:
   static void startTasks() {
     if (!runningFlag) {
       runningFlag = true;
-      createAndRunTask(NextOperationHandler::tCheckManageLightTimestamp, "tCheckManageLightTimestamp", 6000);
-      createAndRunTask(NextOperationHandler::tCheckManageWaterTimestamp, "tCheckManageWaterTimestamp", 6000);
+      createAndRunTask(NextOperationHandler::tHandleProcess, "tHandleProcess", 6000);
     }
   }
 
@@ -70,10 +68,128 @@ public:
     return *instance;
   }
 
+
+  static void tHandleProcess(void* taskParams) {
+    LOGLN("Starting NextOperationHandler...");
+    NextOperationHandler& handler = NextOperationHandler::getInstance();
+
+    // Calculate the time until the next minute
+    int secondsToNextMinute = 60 - handler.timeUpdater->getCurrentSeconds();
+    vTaskDelay(secondsToNextMinute * 1000 / portTICK_PERIOD_MS);
+
+    // Get the current tick count
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    // Define the delay period in ticks (1000 ticks per second, so 60000 for one minute)
+    const TickType_t xDelay = 60000 / portTICK_PERIOD_MS;
+
+    while (NextOperationHandler::runningFlag) {
+
+      handler.dbManager->execute("select l_auto, w_auto from plant_manage");
+      JsonObject row = handler.dbManager->getRowFromJsonArray(handler.dbManager->getResult(), 0);
+
+      int l_auto = row["l_auto"];
+      int w_auto = row["w_auto"];
+
+      if (l_auto == 0) {
+        handler.handleLightManual();
+      } else {
+        handler.handleLightAuto();
+      }
+
+      if (w_auto == 0) {
+        handler.handleWaterManual();
+      } else {
+        handler.handleWaterAuto();
+      }
+
+      // Delay until the next period
+      vTaskDelayUntil(&xLastWakeTime, xDelay);
+    }
+
+    vTaskDelete(NULL);
+  }
+
+  void handleLightAuto() {
+    LOGLN("HANDLE LIGHT AUTO");
+  }
+
+  void handleLightManual() {
+    // Get data from the database
+    std::vector<NextOperData> data = getDataFromDB("manage_light", "ls");
+
+    if (!data.empty()) {
+      // Get the current timestamp
+      String currentTimestamp = timeUpdater->getCurrentTimeNoSecond();
+
+      LOGF("Handling Light Manual... CurrentTime: %s\n", currentTimestamp.c_str());
+
+      // Go through each record and check if the timestamp matches the current time
+      for (NextOperData& record : data) {
+        if (strcmp(record.no, currentTimestamp.c_str()) == 0) {
+          // If the timestamp matches, control the light based on the value
+          LOGF("\tHandling Light Manual founds same time: %s\n", record.no);
+          if (record.val == 1) {
+            lightStand->on();
+          } else {
+            lightStand->off();
+          }
+
+          //디버깅용, 원래 0 못들어옴
+          if (record.ud == 0) record.ud = 1;
+
+          //ud, st, 그리고 현재시간을 이용해서 no 업데이트
+          String no = timeUpdater->getNextOperationTime((int)record.ud, String(record.st), false);
+
+          sprintf(sqlBuffer, "update manage_light set no='%s' where id=%d", no.c_str(), record.id);
+
+          dbManager->execute(sqlBuffer);
+          LOGLN("nextHandler Light no updated");
+        }
+      }
+    }
+  }
+
+  void handleWaterAuto() {
+    LOGLN("HANDLE WATER AUTO");
+  }
+
+  void handleWaterManual() {
+    // Get data from the database
+    std::vector<NextOperData> data = getDataFromDB("manage_water", "wt");
+
+    if (!data.empty()) {
+      // Get the current timestamp
+      String currentTimestamp = timeUpdater->getCurrentTimeNoSecond();
+
+      LOGF("Handling Water Manual... CurrentTime: %s\n", currentTimestamp.c_str());
+
+      // Go through each record and check if the timestamp matches the current time
+      for (NextOperData& record : data) {
+        if (strcmp(record.no, currentTimestamp.c_str()) == 0) {
+          // If the timestamp matches, control the light based on the value
+          LOGF("\tHandling Water Manual founds same time: %s\n", record.no);
+
+          waterJar->feed(record.val * 1000);
+
+          //디버깅용, 원래 0 못들어옴
+          if (record.ud == 0) record.ud = 1;
+
+          //ud, st, 그리고 현재시간을 이용해서 no 업데이트
+          String no = timeUpdater->getNextOperationTime((int)record.ud, String(record.st), false);
+
+          sprintf(sqlBuffer, "update manage_water set no='%s' where id=%d", no.c_str(), record.id);
+
+          dbManager->execute(sqlBuffer);
+          LOGLN("nextHandler Water no updated");
+        }
+      }
+    }
+  }
+
   int getMaxRecordCount() {
     return maxRecordCount;
   }
-
 
   std::vector<NextOperData> getDataFromDB(const char* tableName, const char* valueColumnName) {
     std::vector<NextOperData> data;
@@ -111,124 +227,6 @@ public:
 
     return data;
   }
-
-  static void tCheckManageLightTimestamp(void* taskParams) {
-    LOGLN("Starting tCheckManageLightTimestamp...");
-    NextOperationHandler& handler = NextOperationHandler::getInstance();
-
-    // Calculate the time until the next minute
-    int secondsToNextMinute = 60 - handler.timeUpdater->getCurrentSeconds();
-    vTaskDelay(secondsToNextMinute * 1000 / portTICK_PERIOD_MS);
-
-    // Get the current tick count
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-
-    // Define the delay period in ticks (1000 ticks per second, so 60000 for one minute)
-    const TickType_t xDelay = 60000 / portTICK_PERIOD_MS;
-
-    while (NextOperationHandler::runningFlag) {
-
-      // Get data from the database
-      std::vector<NextOperData> data = handler.getDataFromDB("manage_light", "ls");
-
-      if (!data.empty()) {
-        // Get the current timestamp
-        String currentTimestamp = handler.timeUpdater->getCurrentTimeNoSecond();
-
-        LOGF("Running tCheckManageLightTimestamp... CurrentTime: %s\n", currentTimestamp.c_str());
-
-        // Go through each record and check if the timestamp matches the current time
-        for (NextOperData& record : data) {
-          if (strcmp(record.no, currentTimestamp.c_str()) == 0) {
-            // If the timestamp matches, control the light based on the value
-            LOGF("\ttCheckManageLightTimestamp founds same time: %s\n", record.no);
-            if (record.val == 1) {
-              handler.lightStand->on();
-            } else {
-              handler.lightStand->off();
-            }
-
-            //디버깅용, 원래 0 못들어옴
-            if (record.ud == 0) record.ud = 1;
-
-            //ud, st, 그리고 현재시간을 이용해서 no 업데이트
-            String no = handler.timeUpdater->getNextOperationTime((int)record.ud, String(record.st), false);
-
-            char sqlBuffer[100];
-
-            sprintf(sqlBuffer, "update manage_light set no='%s' where id=%d", no.c_str(), record.id);
-
-            handler.dbManager->execute(sqlBuffer);
-            LOGLN("nextHandler Light no updated");
-          }
-        }
-      }
-
-      // Delay until the next period
-      vTaskDelayUntil(&xLastWakeTime, xDelay);
-    }
-
-    vTaskDelete(NULL);
-  }
-
-  static void tCheckManageWaterTimestamp(void* taskParams) {
-    LOGLN("Starting tCheckManageLightTimestamp...");
-    NextOperationHandler& handler = NextOperationHandler::getInstance();
-
-    // Calculate the time until the next minute
-    int secondsToNextMinute = 60 - handler.timeUpdater->getCurrentSeconds();
-    vTaskDelay(secondsToNextMinute * 1000 / portTICK_PERIOD_MS);
-
-    // Get the current tick count
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-
-    // Define the delay period in ticks (1000 ticks per second, so 60000 for one minute)
-    const TickType_t xDelay = 60000 / portTICK_PERIOD_MS;
-
-    while (NextOperationHandler::runningFlag) {
-
-      // Get data from the database
-      std::vector<NextOperData> data = handler.getDataFromDB("manage_water", "wt");
-
-      if (!data.empty()) {
-        // Get the current timestamp
-        String currentTimestamp = handler.timeUpdater->getCurrentTimeNoSecond();
-
-        LOGF("Running tCheckManageWaterTimestamp... CurrentTime: %s\n", currentTimestamp.c_str());
-
-        // Go through each record and check if the timestamp matches the current time
-        for (NextOperData& record : data) {
-          if (strcmp(record.no, currentTimestamp.c_str()) == 0) {
-            // If the timestamp matches, control the light based on the value
-            LOGF("\ttCheckManageWaterTimestamp founds same time: %s\n", record.no);
-
-            handler.waterJar->feed(record.val * 1000);
-
-            //디버깅용, 원래 0 못들어옴
-            if (record.ud == 0) record.ud = 1;
-
-            //ud, st, 그리고 현재시간을 이용해서 no 업데이트
-            String no = handler.timeUpdater->getNextOperationTime((int)record.ud, String(record.st), false);
-
-            char sqlBuffer[100];
-
-            sprintf(sqlBuffer, "update manage_water set no='%s' where id=%d", no.c_str(), record.id);
-
-            handler.dbManager->execute(sqlBuffer);
-            LOGLN("nextHandler Water no updated");
-          }
-        }
-      }
-
-      // Delay until the next period
-      vTaskDelayUntil(&xLastWakeTime, xDelay);
-    }
-
-    vTaskDelete(NULL);
-  }
-
-
-  // ...
 };
 
 // Initialization

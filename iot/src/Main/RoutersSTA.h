@@ -34,8 +34,6 @@ void setupSTARouters() {
       serverAP.stop();
       WiFi.softAPdisconnect(true);  //핫스팟끄기
 
-      serverSTA.send(200, HTTP_MIME, "All connected!");
-
 
       DB_Manager& dbManager = DB_Manager::getInstance();
 
@@ -44,7 +42,7 @@ void setupSTARouters() {
       auto rc = dbManager.execute(sqlBuffer);
 
       if (rc != SQLITE_OK) {
-        serverSTA.send(200, HTTP_MIME, "err[1]Update sql failed.");
+        serverSTA.send(200, HTTP_MIME, "err|1|Update sql failed.");
         return;
       }
 
