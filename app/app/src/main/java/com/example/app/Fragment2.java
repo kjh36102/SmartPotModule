@@ -146,15 +146,10 @@ public class Fragment2 extends Fragment {
             textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
             textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
             btn.setVisibility(View.GONE);
-            btn2.setVisibility(View.GONE);
             btn3.setVisibility(View.GONE);
-            btn4.setVisibility(View.GONE);
-            rTxt.setVisibility(View.GONE);
 
         }
         else {
-            rTxt.setVisibility(View.VISIBLE);
-
             if (!MainActivity.sharedPreferences_fragment2.contains(FEEDBACK)) {//저장된 피드백이 없다면 새로 실행시켜 받아오기
 
                 new updateRequest().execute();//데이터 받기
@@ -261,13 +256,9 @@ public class Fragment2 extends Fragment {
                     textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
                     textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
                     btn.setVisibility(View.GONE);
-                    btn2.setVisibility(View.GONE);
                     btn3.setVisibility(View.GONE);
-                    btn4.setVisibility(View.GONE);
-                    rTxt.setVisibility(View.GONE);
                 }
                 else {
-                    rTxt.setVisibility(View.VISIBLE);
                     textName.setText(popup.plant);
                     update_btn.setVisibility(View.INVISIBLE);//업데이트 클릭시 업데이트 버튼 사라짐, 각 함수가 실행되고 난뒤 다시 업데이트 버튼 활성화 시키기 위함
 
@@ -496,7 +487,7 @@ public class Fragment2 extends Fragment {
                         resultHashMap.put("phos", jsonObject.getString("p"));
                         resultHashMap.put("pota", jsonObject.getString("k"));
                         resultHashMap.put("ec", jsonObject.getString("ec"));
-                        resultHashMap.put("ts", jsonObject.getString("ts"));
+                        //resultHashMap.put("ts", jsonObject.getString("ts"));
                     }
                 }
             } catch (MalformedURLException e) {
@@ -529,17 +520,18 @@ public class Fragment2 extends Fragment {
             phos = mDataHashMap.get("phos");
             pota = mDataHashMap.get("pota");
             ec = mDataHashMap.get("ec");
-            dateTime = mDataHashMap.get("ts");
-            dateTime = "마지막 업데이트 시간 :"+dateTime;
+
             TextView rTxt = getView().findViewById(R.id.rTxt);
             TextView textView1 = getView().findViewById(R.id.explan_text);
 
+            ImageButton update_btn = (ImageButton) getView().findViewById(R.id.update);
+            Button btn = (Button)getView().findViewById(R.id.more_2);
+            Button btn2 = (Button)getView().findViewById(R.id.close_2);
 
-            rTxt.setText(dateTime);
 
-            /*Calendar calendar = Calendar.getInstance();
+            Calendar calendar = Calendar.getInstance();
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
-            dateTime = dateFormat.format(calendar.getTime());*/
+            dateTime = dateFormat.format(calendar.getTime());
 
             SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
 

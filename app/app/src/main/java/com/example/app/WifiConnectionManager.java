@@ -14,6 +14,9 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
@@ -231,11 +234,31 @@ public class WifiConnectionManager {
                 connection.setReadTimeout(connTimeout);
                 connection.connect();
 
-                final int responseCode = connection.getResponseCode();
-
-                if (responseCode == HttpURLConnection.HTTP_OK) runIfNotNull(onSuccess);
-                else runIfNotNull(onFailed);
-
+                InputStream inputStream = connection.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder responseData = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    responseData.append(line);
+                }
+                reader.close();
+                String parsed[] = responseData.toString().split("\\|");
+                if( parsed[0].equals("ok")) {
+                    runIfNotNull(onSuccess);
+                    this.statusTextview.setText("외부와이파이 연결 성공");
+                }
+                else if(parsed[0].equals("err")){
+                    runIfNotNull(onFailed);
+                    if(parsed[1].equals("0")){
+                        this.statusTextview.setText("쿼리 인자 부족");
+                    }
+                    else if(parsed[1].equals("1")){
+                        this.statusTextview.setText("연결모드가 아님");
+                    }
+                    else if(parsed[1].equals("2")){
+                        this.statusTextview.setText("외부네트워크 연결 실패");
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 synchronized (this) {
@@ -327,11 +350,31 @@ public class WifiConnectionManager {
             connection.setConnectTimeout(timeout);
             connection.connect();
 
-            final int responseCode = connection.getResponseCode();
-
-            if (responseCode == HttpURLConnection.HTTP_OK) runIfNotNull(this.onPingSuccess);
-            else runIfNotNull(this.onPingFailed);
-
+            InputStream inputStream = connection.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuilder responseData = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                responseData.append(line);
+            }
+            reader.close();
+            String parsed[] = responseData.toString().split("\\|");
+            if( parsed[0].equals("ok")) {
+                runIfNotNull(this.onPingSuccess);
+                if(parsed[1].equals("0")){
+                    this.statusTextview.setText("최종 연결 성공");
+                }
+                else if(parsed[1].equals("1")){
+                    this.statusTextview.setText("최종 연결 성공, 그러나 인터넷 안됨");
+                }
+                else if(parsed[1].equals("2")){
+                    this.statusTextview.setText("핑");
+                }
+            }
+            else if(parsed[0].equals("err")){
+                runIfNotNull(this.onPingFailed);
+                    this.statusTextview.setText("아직 외부네트워크 연결 안됨");
+            }
             return true;
         } catch (SocketTimeoutException e) {
             e.printStackTrace();

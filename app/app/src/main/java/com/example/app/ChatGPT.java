@@ -12,16 +12,16 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class ChatGPT {
-    JSONObject userMessage;
-    JSONArray messagesArray;
-    JSONObject input;
+    static JSONObject userMessage;
+    static JSONArray messagesArray;
+    static JSONObject input;
     URL url;
     HttpURLConnection con;
     String key;
     public ChatGPT(){
         try {
             this.url = new URL("https://api.openai.com/v1/chat/completions");
-            this.key = "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";
+            this.key = "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";
         }catch (Exception e) {
             e.printStackTrace();
         }
