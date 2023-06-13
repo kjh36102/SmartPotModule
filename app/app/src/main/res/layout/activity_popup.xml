@@ -209,25 +209,69 @@
                     android:max="100"
                     android:progress="50" />
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="5dp"
-                    android:text="바로급수시간"
-                    android:textColor="@color/black"
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/directFeedTime"
-                    android:layout_width="102dp"
-                    android:layout_height="38dp"
-                    android:layout_marginBottom="10dp"
                     android:gravity="center"
-                    android:background="@drawable/background_round_5_gray"
-                    android:ems="10"
-                    android:singleLine="true"
-                    android:textColor="@color/black" />
+                    android:orientation="horizontal">
+
+
+                    <LinearLayout
+                        android:layout_width="150dp"
+                        android:layout_height="114dp"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginBottom="5dp"
+                            android:text="바로급수시간 (초)"
+                            android:textColor="@color/black"
+                            android:textSize="18sp" />
+
+                        <EditText
+                            android:id="@+id/directFeedTime"
+                            android:layout_width="102dp"
+                            android:layout_height="38dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@drawable/background_round_5_gray"
+                            android:ems="10"
+                            android:gravity="center"
+                            android:singleLine="true"
+                            android:textColor="@color/black" />
+                    </LinearLayout>
+
+
+                    <LinearLayout
+                        android:layout_width="150dp"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginBottom="5dp"
+                            android:text="조명감지시간 (분)"
+                            android:textColor="@color/black"
+                            android:textSize="18sp" />
+
+                        <EditText
+                            android:id="@+id/lightDetectionTime"
+                            android:layout_width="102dp"
+                            android:layout_height="38dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@drawable/background_round_5_gray"
+                            android:ems="10"
+                            android:gravity="center"
+                            android:singleLine="true"
+                            android:textColor="@color/black" />
+                    </LinearLayout>
+
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="330dp"

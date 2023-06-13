@@ -44,8 +44,8 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
     SeekBar coolSeekBar;
     Button sendButton;
     Button receiveButton;
-    int lightProgress, coolProgress, directFeedTimeVal; //바로급수시간 추가
-    EditText directFeedTime;    //바로급수시간 추가
+    int lightProgress, coolProgress, directFeedTimeVal, lightDetectionTimeVal; //바로급수시간 추가
+    EditText directFeedTime, lightDetectionTime;    //바로급수시간 추가
 
 
     @Override
@@ -60,6 +60,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         lightSeekBar = findViewById(R.id.seekBar);
         coolSeekBar = findViewById(R.id.seekBar2);
         directFeedTime = findViewById(R.id.directFeedTime); //바로급수시간 추가
+        lightDetectionTime = findViewById(R.id.lightDetectionTime);
         receiveButton = findViewById(R.id.receivebutton);
         sendButton = findViewById(R.id.sendbutton);
 
@@ -284,11 +285,14 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                                     lightProgress = jsonObject.getInt("ld");
                                     coolProgress = jsonObject.getInt("cd");
                                     directFeedTimeVal = jsonObject.getInt("ot");
+                                    lightDetectionTimeVal = jsonObject.getInt("dr");
+
                                     System.out.println("ld: " + lightProgress);
                                     System.out.println("cd: " + coolProgress);
                                     System.out.println("ot: " + directFeedTimeVal);
+                                    System.out.println("dr: " + lightDetectionTimeVal);
 
-                                    save(lightProgress, coolProgress, directFeedTimeVal);
+                                    save(lightProgress, coolProgress, directFeedTimeVal, lightDetectionTimeVal);
                                 }
                             }
 
@@ -315,12 +319,14 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 coolProgress = coolSeekBar.getProgress();
                 //바로급수시간 추가로읽기
                 directFeedTimeVal = Integer.parseInt(directFeedTime.getText().toString().replaceAll("\\D+",""));
+                lightDetectionTimeVal = Integer.parseInt(lightDetectionTime.getText().toString().replaceAll("\\D+",""));
 
                 System.out.println("lightProgress: " + lightProgress);
                 System.out.println("coolProgress: " + coolProgress);
                 System.out.println("directFeedTimeVal: " + directFeedTimeVal);
+                System.out.println("lightDetectionTimeVal: " + lightDetectionTimeVal);
 
-                String sendUrlString = url + "manageAutoSet?ot=" + directFeedTimeVal +"&ld=" + lightProgress + "&cd=" + coolProgress;
+                String sendUrlString = url + "manageAutoSet?dr=" + lightDetectionTimeVal + "&ot=" + directFeedTimeVal +"&ld=" + lightProgress + "&cd=" + coolProgress;
 
                 //String sendUrlString= "https://zmzlqay.request.dreamhack.games"; //sample test
 
@@ -336,7 +342,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
 
                             if(responseCode == HttpURLConnection.HTTP_OK){
                                 System.out.println("progress bar data 보내기 성공");
-                                save(lightProgress, coolProgress, directFeedTimeVal); //이 코드는 고민
+                                save(lightProgress, coolProgress, directFeedTimeVal, lightDetectionTimeVal); //이 코드는 고민
                             }
 
                         } catch (IOException e) {
@@ -360,19 +366,21 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         lightProgress = sharedPreferences.getInt("lightProgress", 50); // Default value is 50
         coolProgress = sharedPreferences.getInt("coolProgress", 50); // Default value is 50
         directFeedTimeVal = sharedPreferences.getInt("directFeedTimeVal", 0); // Default value is 0
+        lightDetectionTimeVal = sharedPreferences.getInt("lightDetectionTimeVal", 1); // Default value is 1
 
 
         lightSeekBar.setProgress(lightProgress);
         coolSeekBar.setProgress(coolProgress);
-        System.out.println("바로급수시간: " + directFeedTimeVal);
         directFeedTime.setText(String.valueOf(directFeedTimeVal));
+        lightDetectionTime.setText(String.valueOf((lightDetectionTimeVal)));
     }
-    public void save(int lightProgress, int coolProgress, int directFeedTimeVal){ //값 저장
+    public void save(int lightProgress, int coolProgress, int directFeedTimeVal, int lightDetectionTimeVal){ //값 저장
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("lightProgress", lightProgress);
         editor.putInt("coolProgress", coolProgress);
         editor.putInt("directFeedTimeVal", directFeedTimeVal);
+        editor.putInt("lightDetectionTimeVal", lightDetectionTimeVal);
         editor.apply();
     }
     public void onClick(View v){
