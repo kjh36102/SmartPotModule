@@ -14,6 +14,9 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
@@ -105,7 +108,6 @@ public class WifiConnectionManager {
         this.permission = new Permission(activity);
         this.activity = activity;
         this.statusTextview = statusTextview;
-//            this.externalSocket = new DatagramSocket(12345);
 
     }
 
@@ -179,8 +181,8 @@ public class WifiConnectionManager {
         connectivityManager.requestNetwork(networkRequest, networkCallback, timeout);
 
         if(pw == null){
-          this.hotspotConnManager = connectivityManager;
-          this.hotspotNetworkCallback = networkCallback;
+            this.hotspotConnManager = connectivityManager;
+            this.hotspotNetworkCallback = networkCallback;
         }else{
             this.externalConnManager = connectivityManager;
             this.externalNetworkCallback = networkCallback;
@@ -231,11 +233,31 @@ public class WifiConnectionManager {
                 connection.setReadTimeout(connTimeout);
                 connection.connect();
 
-                final int responseCode = connection.getResponseCode();
-
-                if (responseCode == HttpURLConnection.HTTP_OK) runIfNotNull(onSuccess);
-                else runIfNotNull(onFailed);
-
+                InputStream inputStream = connection.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder responseData = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    responseData.append(line);
+                }
+                reader.close();
+                String parsed[] = responseData.toString().split("\\|");
+                if( parsed[0].equals("ok")) {
+                    runIfNotNull(onSuccess);
+                    this.statusTextview.setText("외부와이파이 연결 성공");
+                }
+                else if(parsed[0].equals("err")){
+                    runIfNotNull(onFailed);
+                    if(parsed[1].equals("0")){
+                        this.statusTextview.setText("쿼리 인자 부족");
+                    }
+                    else if(parsed[1].equals("1")){
+                        this.statusTextview.setText("연결모드가 아님");
+                    }
+                    else if(parsed[1].equals("2")){
+                        this.statusTextview.setText("외부네트워크 연결 실패");
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 synchronized (this) {
@@ -256,9 +278,9 @@ public class WifiConnectionManager {
      */
     public boolean listenAndACKtoUDP(int timeout) {
 
+        DatagramSocket socket = null;
         try {   //UDP 리스닝 및 ACK응답
-
-            DatagramSocket socket = new DatagramSocket(12345);
+            socket = new DatagramSocket(12345);
             socket.setSoTimeout(timeout);
 
             byte[] buffer = new byte[128];
@@ -273,8 +295,6 @@ public class WifiConnectionManager {
 
                 this.arduinoIP = arduinoIP = message.split(":")[1];
                 System.out.println("아두이노IP: " + arduinoIP);
-
-
                 break;
             }
 
@@ -298,6 +318,8 @@ public class WifiConnectionManager {
                 this.currentException = e;
             }
             runIfNotNull(this.onUdpError);
+        }finally {
+            if(socket != null) socket.close();
         }
 
         return false;
@@ -317,7 +339,6 @@ public class WifiConnectionManager {
 
         try {
             if (rememberedIP == null) return false;
-
             URL url = new URL("http://" + rememberedIP + ":12345/hello");
 //            URL url;
 //            if (rememberedIP == null) url = new URL("http://" + this.arduinoIP + ":12345/hello");
@@ -329,11 +350,36 @@ public class WifiConnectionManager {
             connection.setConnectTimeout(timeout);
             connection.connect();
 
-            final int responseCode = connection.getResponseCode();
+            InputStream inputStream = connection.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuilder responseData = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                responseData.append(line);
+            }
+            reader.close();
+            String parsed[] = responseData.toString().split("\\|");
 
-            if (responseCode == HttpURLConnection.HTTP_OK) runIfNotNull(this.onPingSuccess);
-            else runIfNotNull(this.onPingFailed);
-
+            if( parsed[0].equals("ok")) {
+                runIfNotNull(this.onPingSuccess);
+                if(parsed[1].equals("0")){
+                    if(this.statusTextview != null)
+                        this.statusTextview.setText("최종 연결 성공");
+                }
+                else if(parsed[1].equals("1")){
+                    if(this.statusTextview != null)
+                        this.statusTextview.setText("최종 연결 성공, 그러나 인터넷 안됨");
+                }
+                else if(parsed[1].equals("2")){
+                    if(this.statusTextview != null)
+                        this.statusTextview.setText("핑");
+                }
+            }
+            else if(parsed[0].equals("err")){
+                runIfNotNull(this.onPingFailed);
+                if(this.statusTextview != null)
+                    this.statusTextview.setText("아직 외부네트워크 연결 안됨");
+            }
             return true;
         } catch (SocketTimeoutException e) {
             e.printStackTrace();
@@ -355,7 +401,7 @@ public class WifiConnectionManager {
      * @param runnable 실행할 runnable
      */
     private void runIfNotNull(Runnable runnable) {
-        if (runnable != null) runnable.run();
+        if (runnable != null) { runnable.run();}
     }
 
     /**
@@ -421,4 +467,3 @@ public class WifiConnectionManager {
     }
 
 }
-
