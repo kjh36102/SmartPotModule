@@ -450,7 +450,15 @@ public class Fragment1 extends Fragment{
                     }
                 }.start();
             }
-
+            else{
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getContext(), "식물이름 등록바람", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         }
     }
     public void setBlack(){
