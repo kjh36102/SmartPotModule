@@ -343,6 +343,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }.start();
             }
+            else{
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "식물이름 등록바람", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         }
     }
     public void setBlackFace(){
