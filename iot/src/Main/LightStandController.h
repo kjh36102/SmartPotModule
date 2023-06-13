@@ -19,16 +19,26 @@ private:
   PWMController lightController;
   BH1750 lightMeter;
   float lastLuxValue = 0;
-  int initialDutyPercent = 80;
 
   LightStandController() {
     fanController = PWMController(0, 26, 22000, 600, 750);  //채널, 핀번호, 주파수, 최소듀티, 최대듀티
     lightController = PWMController(2, 27, 5000, 300, 1024);
 
-    setUnionDuty(initialDutyPercent);
+    DB_Manager& dbManager = DB_Manager::getInstance();
+    dbManager.execute("select ld from manage_auto");
+    JsonObject result = dbManager.getRowFromJsonArray(dbManager.getResult(), 0);
 
-    Wire.begin();
-    lightMeter.begin();
+    int ld = result["ld"];
+    setUnionDuty(ld);
+
+    if (Wire.begin()) {
+      if (lightMeter.begin()) {
+        LOGLN("LightMeter Instance Created.");
+      } else LOGLN("Failed to begin LightMeter.");
+    } else {
+      LOGLN("Failed to begin Wire.");
+    }
+
     LOGLN("LightStandController Instance Created.");
   }
 
@@ -45,57 +55,49 @@ public:
   void setUnionDuty(int percent) {
     if (percent < 0 || percent > 100) return;
 
-    int lightDuty = (lightController.getMaxDuty() - lightController.getMinDuty()) * (100 - percent) / 100 + lightController.getMinDuty();
-    int fanDuty = (fanController.getMaxDuty() - fanController.getMinDuty()) * (100 - percent) / 100 + fanController.getMinDuty();
+    lightController.setPercentDuty(percent);
+    fanController.setPercentDuty(percent);
 
-    lightController.setDutyCycle(lightDuty);
-    fanController.setDutyCycle(fanDuty);
     LOGF("LightStand UnionDuty set to %d%%\n", percent);
   }
 
   //켤때 manage_auto db에서 duty값 가져와서 켜기, 시스템팬도 마찬가지
   void on() {
-    lightController.start();
-    fanController.start();
-
     DB_Manager& dbManager = DB_Manager::getInstance();
 
     //plant_manage에서 lightstate 업데이트하기
     if (dbManager.execute("update plant_manage set l_on=1") != SQLITE_OK) {
       LOGLN("Failed to update l_on state on");
     }
+
+    lightController.start();
+    fanController.start();
   }
 
   void off() {
-    lightController.stop();
-    fanController.stop();
-
     DB_Manager& dbManager = DB_Manager::getInstance();
 
     //plant_manage에서 lightstate 업데이트하기
     if (dbManager.execute("update plant_manage set l_on=0") != SQLITE_OK) {
       LOGLN("Failed to update l_on state off");
     }
+
+    lightController.stop();
+    fanController.stop();
   }
 
   float readLightLevel() {
     float readed = -1;
 
-    // Serial.println("Start reading lightlevel...");
     do {
       readed = lightMeter.readLightLevel();
       vTaskDelay(1);
     } while (readed < 0);
-    // Serial.println("Done reading lightlevel");
 
-    // Serial.print("Readed lux value: ");
-    // Serial.println(readed);
-    // if(readed != -1)
     this->lastLuxValue = readed;
     return this->lastLuxValue;
   }
 };
-
 
 // 초기화
 LightStandController* LightStandController::instance = nullptr;

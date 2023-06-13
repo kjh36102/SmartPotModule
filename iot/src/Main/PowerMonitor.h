@@ -12,10 +12,29 @@
 #define PIN_SHUTDOWN_O 12
 
 class PowerMonitor {
+private:
+
+  static PowerMonitor* instance;
+
+  std::queue<std::function<void()>> shutdownFuncQueue;
+
+  PowerMonitor() {
+    pinMode(PIN_EXTPWR_ON_R, INPUT);
+    pinMode(PIN_SHUTDOWN_O, OUTPUT);
+    digitalWrite(PIN_SHUTDOWN_O, LOW);
+  }
+
 public:
+
   static PowerMonitor& getInstance() {
-    static PowerMonitor instance;
-    return instance;
+    if (instance == nullptr) {
+      instance = new PowerMonitor();
+      instance->appendAll();
+
+      createAndRunTask(taskFunction, "PowerMonitor", 10000);
+    }
+
+    return *instance;
   }
 
   void appendShutdownProcess(std::function<void()> func) {
@@ -23,14 +42,22 @@ public:
     LOGF("종료큐에 함수 저장됨. 현재 개수: %d\n", shutdownFuncQueue.size());
   }
 
-  void init() {
-    pinMode(PIN_EXTPWR_ON_R, INPUT);
-    pinMode(PIN_SHUTDOWN_O, OUTPUT);
-    digitalWrite(PIN_SHUTDOWN_O, LOW);
+  void appendAll() {
+    appendShutdownProcess([]() {
+      DB_Manager& dbManager = DB_Manager::getInstance();
+      dbManager.close();
+    });
   }
 
   static void taskFunction(void* pvParameters) {
     PowerMonitor::getInstance().run();
+  }
+
+  void executeAll() {
+    while (!shutdownFuncQueue.empty()) {
+      shutdownFuncQueue.front()();
+      shutdownFuncQueue.pop();
+    }
   }
 
   void run() {
@@ -42,20 +69,15 @@ public:
 
       if (!digitalRead(PIN_EXTPWR_ON_R)) {
         LOGF("외부전원 차단 감지됨! 실행할 함수 수: %d\n", shutdownFuncQueue.size());
-        while (!shutdownFuncQueue.empty()) {
-          shutdownFuncQueue.front()();
-          shutdownFuncQueue.pop();
-        }
+        executeAll();
         vTaskDelay(1000);
         digitalWrite(PIN_SHUTDOWN_O, HIGH);
       }
       vTaskDelay(2500);
     }
   }
-
-private:
-  PowerMonitor() {}
-  std::queue<std::function<void()>> shutdownFuncQueue;
 };
+
+PowerMonitor* PowerMonitor::instance = nullptr;
 
 #endif  //__POWER_MONITOR_H__

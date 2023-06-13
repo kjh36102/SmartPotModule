@@ -11,6 +11,7 @@
 #include "TimeUpdater.h"
 #include "NextOperationHandler.h"
 #include "WaterJarController.h"
+#include "SystemFanController.h"
 
 //-------------------------------------------------------------
 #define LOGKEY "RoutersSTA.h"
@@ -57,7 +58,7 @@ void setupSTARouters() {
       SoilUpdater::getInstance().on();
       NextOperationHandler::startTasks();
 
-      LOGLN(F("성공적으로 앱과 연결됨!"));
+      LOGLN(("성공적으로 앱과 연결됨!"));
       LOGF("\t스마트폰IP: %s\n\t외부네트워크IP: %s\n", smartphoneIP.toString().c_str(), WiFi.localIP().toString().c_str());
     } else {
       serverSTA.send(200, HTTP_MIME, "ok|2|hello!");
@@ -94,6 +95,7 @@ void setupSTARouters() {
       }
 
       bool setNearest = (serverSTA.arg("setNearest").equals("true")) ? true : false;
+      Serial.printf("최단시간적용 쿼리값: %s, 쿼리데이터 길이: %d\n", serverSTA.arg("setNearest").c_str(), serverSTA.arg("setNearest").length());
 
       // 예외 처리: unitDay가 0이하인 경우
       if (unitDay <= 0) {
@@ -126,51 +128,6 @@ void setupSTARouters() {
     }
   });
 
-  //센서데이터 바로 측정
-  serverSTA.on("/measureNow", HTTP_GET, []() {
-    SoilUpdater& soilUpdater = SoilUpdater::getInstance();
-
-    if (soilUpdater.measureNow()) {
-      serverSTA.send(200, HTTP_MIME, "ok|0|Success");
-    } else {
-      serverSTA.send(200, HTTP_MIME, "err|0|Failed");
-    }
-  });
-
-  //DB 테이블 데이터 가져오기
-  serverSTA.on("/getTableData", HTTP_GET, []() {
-    if (hasValidArg(serverSTA, "name")) {
-      DB_Manager& dbManager = DB_Manager::getInstance();
-
-
-      String tableName = serverSTA.arg("name");
-
-      // 테이블 레코드 개수 확인
-      int tableCount = dbManager.getTableRecordCount(tableName.c_str());
-
-      if (tableCount < 0) {
-        serverSTA.send(200, HTTP_MIME, (String("err|0|error while get table count. code is|") + String(tableCount)).c_str());
-        return;
-      } else if (tableCount == 0) {
-        if (!(tableName.equals("manage_light") || tableName.equals("manage_water"))) {
-          serverSTA.send(200, HTTP_MIME, "err|1|this table can't be empty");
-        } else {
-          serverSTA.send(200, HTTP_MIME, "ok|1|no contents");
-        }
-        return;
-      }
-
-      // db에서 json 가져오기
-      char sqlBuffer[50];
-      sprintf(sqlBuffer, "select * from %s order by id asc", tableName.c_str());
-
-      if (dbManager.execute(sqlBuffer) == SQLITE_OK) {
-        serverSTA.send(200, HTTP_MIME, (String("ok|0|") + String(dbManager.getResult())));
-      } else {
-        serverSTA.send(200, HTTP_MIME, "err|2|failed to execute select sql");
-      }
-    }
-  });
 
   serverSTA.on("/manageDelete", HTTP_GET, []() {
     if (hasValidArg(serverSTA, "table") && hasValidArg(serverSTA, "id")) {
@@ -264,6 +221,53 @@ void setupSTARouters() {
       serverSTA.send(200, HTTP_MIME, "ok|0|Removed");
     }
   });
+
+  //센서데이터 바로 측정
+  serverSTA.on("/measureNow", HTTP_GET, []() {
+    SoilUpdater& soilUpdater = SoilUpdater::getInstance();
+
+    if (soilUpdater.measureNow()) {
+      serverSTA.send(200, HTTP_MIME, "ok|0|Success");
+    } else {
+      serverSTA.send(200, HTTP_MIME, "err|0|Failed");
+    }
+  });
+
+  //DB 테이블 데이터 가져오기
+  serverSTA.on("/getTableData", HTTP_GET, []() {
+    if (hasValidArg(serverSTA, "name")) {
+      DB_Manager& dbManager = DB_Manager::getInstance();
+
+
+      String tableName = serverSTA.arg("name");
+
+      // 테이블 레코드 개수 확인
+      int tableCount = dbManager.getTableRecordCount(tableName.c_str());
+
+      if (tableCount < 0) {
+        serverSTA.send(200, HTTP_MIME, (String("err|0|error while get table count. code is|") + String(tableCount)).c_str());
+        return;
+      } else if (tableCount == 0) {
+        if (!(tableName.equals("manage_light") || tableName.equals("manage_water"))) {
+          serverSTA.send(200, HTTP_MIME, "err|1|this table can't be empty");
+        } else {
+          serverSTA.send(200, HTTP_MIME, "ok|1|no contents");
+        }
+        return;
+      }
+
+      // db에서 json 가져오기
+      char sqlBuffer[50];
+      sprintf(sqlBuffer, "select * from %s order by id asc", tableName.c_str());
+
+      if (dbManager.execute(sqlBuffer) == SQLITE_OK) {
+        serverSTA.send(200, HTTP_MIME, (String("ok|0|") + String(dbManager.getResult())));
+      } else {
+        serverSTA.send(200, HTTP_MIME, "err|2|failed to execute select sql");
+      }
+    }
+  });
+
 
   serverSTA.on("/controlLight", HTTP_GET, []() {
     if (hasValidArg(serverSTA, "state")) {
@@ -367,6 +371,9 @@ void setupSTARouters() {
       }
       isFirst = false;
       sqlQuery += "ld = " + serverSTA.arg("ld");
+
+      LightStandController& lightStand = LightStandController::getInstance();
+      lightStand.setUnionDuty(serverSTA.arg("ld").toInt());
     }
     if (hasValidArg(serverSTA, "cd")) {
       if (!isFirst) {
@@ -374,6 +381,41 @@ void setupSTARouters() {
       }
       isFirst = false;
       sqlQuery += "cd = " + serverSTA.arg("cd");
+
+      SystemFanController& systemFan = SystemFanController::getInstance();
+      systemFan.setPercentDuty(serverSTA.arg("cd").toInt());
+    }
+
+    if (!isFirst) {
+      if (dbManager.execute(sqlQuery.c_str()) != SQLITE_OK) {
+        serverSTA.send(200, HTTP_MIME, "err|0|Update sql failed.");
+        return;
+      }
+    }
+
+    serverSTA.send(200, HTTP_MIME, "ok|0|Success");
+  });
+
+  //plantManageSet  추가해야함
+  serverSTA.on("/plantManageSet", HTTP_GET, []() {
+    DB_Manager& dbManager = DB_Manager::getInstance();
+
+    String sqlQuery = "UPDATE plant_manage SET ";
+
+    bool isFirst = true;
+    if (hasValidArg(serverSTA, "w_auto")) {
+      if (!isFirst) {
+        sqlQuery += ", ";
+      }
+      isFirst = false;
+      sqlQuery += "w_auto = " + serverSTA.arg("w_auto");
+    }
+    if (hasValidArg(serverSTA, "l_auto")) {
+      if (!isFirst) {
+        sqlQuery += ", ";
+      }
+      isFirst = false;
+      sqlQuery += "l_auto = " + serverSTA.arg("l_auto");
     }
 
     if (!isFirst) {

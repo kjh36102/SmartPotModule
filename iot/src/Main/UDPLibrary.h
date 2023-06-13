@@ -36,7 +36,7 @@ IPAddress getBroadcastIP() {
 * @return 전송 성공시 true
 */
 bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress targetIP, unsigned int targetPort, unsigned int interval = 1000, unsigned int timeout = 30000) {
-  LOGLN(F("Start UDP Broadcasting..."));
+  LOGLN(("Start UDP Broadcasting..."));
   LOGF("\tmsg: %s\n", msg);
   LOGF("\texpectAck: %s\n", expectAck);
   LOGF("\ttargetIP: %s\n", targetIP.toString().c_str());
@@ -60,7 +60,7 @@ bool sendUDPMessageUntilACK(const char* msg, const char* expectAck, IPAddress ta
 
     //시간초과 확인
     if(millis() - transferStartTime > timeout){
-      LOGLN(F("UDP Broadcast reached to timeout!"));
+      LOGLN(("UDP Broadcast reached to timeout!"));
       return false;
     }
 

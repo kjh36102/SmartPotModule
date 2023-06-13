@@ -44,7 +44,7 @@ void setupAPRouters() {
                                    "SmartPotModule:ACK", getBroadcastIP(), STA_PORT, 500, 30000)) {
           connectPhase = ConnectPhase::UDP_ACK;
         } else {
-          LOGLN(F("UDP ACK응답 받기 시간초과"));
+          LOGLN(("UDP ACK응답 받기 시간초과"));
           connectPhase = ConnectPhase::INITIAL;
           return;
         }

@@ -11,6 +11,7 @@
 #include <FS.h>
 #include "SD.h"
 #include "ArduinoJson.h"
+#include <map>
 
 //-------------------------------------------------------------
 #define LOGKEY "DB_Manager.h"
@@ -86,26 +87,29 @@ private:
 
     int rc = sqlite3_exec(DB, sql, callbackOnExecuteDB, this, &DBErrMsg);
 
-    if (rc != SQLITE_OK) {
-      if (rc == SQLITE_IOERR) {
-        // 디스크 I/O 오류 발생 시 DB를 닫고 다시 열기
+    if (rc != SQLITE_OK) {  //오류가있을 때
+
+      // 오류 발생 시 DB를 닫고 다시 열기
+      if (strstr(DBErrMsg, "no such table") == NULL) {  //테이블 없는 오류는 걸러내기
+        LOGF("SQL 오류발생! 재시도함.. 오류내용: %s\n", DBErrMsg);
+
         close();
         open("data");
 
         // 다시 실행
         rc = sqlite3_exec(DB, sql, callbackOnExecuteDB, this, &DBErrMsg);
-      }
 
-      if (rc != SQLITE_OK) {
-        LOGF("SQL 오류: %s\n", DBErrMsg);
-      } else {
-        LOGLN("SQL 실행됨");
+        if (rc != SQLITE_OK) {
+          LOGF("SQL 오류: %s\n", DBErrMsg);
+        } else {
+          LOGLN("SQL 다시 실행됨");
+        }
       }
     }
 
     sqlite3_free(DBErrMsg);
 
-    Serial.print(F("\t소요 시간(ms):"));
+    Serial.print(("\t소요 시간(ms):"));
     Serial.println(millis() - start);
     return rc;
   }
@@ -125,6 +129,9 @@ public:
   static DB_Manager& getInstance() {
     if (instance == nullptr) {
       instance = new DB_Manager();
+
+      instance->open("data");
+      instance->initTables();
     }
     return *instance;
   }
@@ -223,7 +230,7 @@ public:
 
       // 추가: 오류 체크
       if (err) {
-        Serial.print(F("deserializeJson() failed with code "));
+        Serial.print(("deserializeJson() failed with code "));
         Serial.println(err.c_str());
         doc.clear();  // 실패했더라도 사용한 메모리는 해제
         return -3;
@@ -239,7 +246,29 @@ public:
     }
   }
 
-  void prepareTable(const char* tableName, const __FlashStringHelper* tableSql, const __FlashStringHelper* dataSql, bool dataEssential = true) {
+  // void prepareTable(const char* tableName, const __FlashStringHelper* tableSql, const __FlashStringHelper* dataSql, bool dataEssential = true) {
+  //   int count;
+  //   count = getTableRecordCount(tableName);
+
+  //   if (count == -2) {
+  //     LOGLN("DB가 열려있지 않아 테이블 초기화 불가능");
+  //     return;
+  //   } else if (count > 0) {
+  //     LOGF("테이블 %s 이미 초기화됨\n", tableName);
+  //     return;
+  //   }
+
+  //   if (count == -1) {  // 테이블이 없는 경우 테이블 생성 후 데이터생성
+  //     execute(reinterpret_cast<const char*>(tableSql));
+  //     if (dataEssential) execute(reinterpret_cast<const char*>(dataSql));
+  //   } else if (count == 0) {  //테이블이 있는경우는 데이터만 생성
+  //     if (dataEssential) execute(reinterpret_cast<const char*>(dataSql));
+  //   }
+
+  //   LOGF("테이블 %s 초기화 완료\n", tableName);
+  // }
+
+  void prepareTable(const char* tableName, const char* tableSql, const char* dataSql, bool dataEssential = true) {
     int count;
     count = getTableRecordCount(tableName);
 
@@ -252,15 +281,14 @@ public:
     }
 
     if (count == -1) {  // 테이블이 없는 경우 테이블 생성 후 데이터생성
-      execute(reinterpret_cast<const char*>(tableSql));
-      if (dataEssential) execute(reinterpret_cast<const char*>(dataSql));
+      execute(tableSql);
+      if (dataEssential) execute(dataSql);
     } else if (count == 0) {  //테이블이 있는경우는 데이터만 생성
-      if (dataEssential) execute(reinterpret_cast<const char*>(dataSql));
+      if (dataEssential) execute(dataSql);
     }
 
     LOGF("테이블 %s 초기화 완료\n", tableName);
   }
-
 
   int dropAllTables() {
     if (!stateOpenDB) {
@@ -317,7 +345,7 @@ public:
 
     // 에러 체크
     if (error) {
-      Serial.print(F("deserializeJson() failed with code "));
+      Serial.print(("deserializeJson() failed with code "));
       Serial.println(error.c_str());
       return JsonObject();
     }
@@ -334,6 +362,40 @@ public:
       return JsonObject();
     }
   }
+
+  std::map<std::string, std::string> getRowFromMap(char* jsonArray, int rowIndex) {
+    // JsonDocument를 생성합니다 (크기는 충분히 크게 설정합니다).
+    StaticJsonDocument<DB_RESULT_BUFFER_SIZE> doc;
+
+    // JsonArray 파싱
+    auto error = deserializeJson(doc, jsonArray);
+
+    // 에러 체크
+    if (error) {
+      Serial.print(("deserializeJson() failed with code "));
+      Serial.println(error.c_str());
+      return std::map<std::string, std::string>();  // 실패시 빈 맵 반환
+    }
+
+    // 파싱한 JsonArray
+    JsonArray arr = doc.as<JsonArray>();
+
+    // rowIndex가 JsonArray의 범위 내에 있는지 확인
+    if (rowIndex < arr.size()) {
+      // JsonObject 반환
+      JsonObject obj = arr[rowIndex].as<JsonObject>();
+      std::map<std::string, std::string> result;
+
+      for (JsonPair kv : obj) {
+        result[kv.key().c_str()] = kv.value().as<std::string>();
+      }
+      return result;
+    } else {
+      // rowIndex가 범위를 벗어났다면 빈 맵 반환
+      return std::map<std::string, std::string>();
+    }
+  }
+
 
   void initTables() {
     // prepareTable("soil_data",
@@ -361,6 +423,32 @@ public:
     //              F("CREATE TABLE IF NOT EXISTS manage_light (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, ls INTEGER, no TEXT)"),
     //              NULL,
     //              false);
+
+    prepareTable("soil_data",
+                 ("CREATE TABLE IF NOT EXISTS soil_data (id INTEGER PRIMARY KEY AUTOINCREMENT, tm REAL, hm REAL, n REAL, p REAL, k REAL, ph REAL, ec INTEGER, lt INTEGER, ts TEXT DEFAULT (datetime('now','localtime')))"),
+                 ("INSERT INTO soil_data(id,tm,hm,n,p,k,ph,ec,lt) VALUES (0,0,0,0,0,0,0,0,0)"));
+
+    prepareTable("wifi_info",
+                 ("CREATE TABLE wifi_info (id INTEGER PRIMARY KEY, ssid_ap TEXT, pw_ap TEXT, ssid_sta TEXT, pw_sta TEXT, phone_ip TEXT)"),
+                 ("INSERT INTO wifi_info VALUES(0, 'SmartPotModule', '', '', '', '')"));
+
+    prepareTable("plant_manage",
+                 ("CREATE TABLE IF NOT EXISTS plant_manage (id INTEGER PRIMARY KEY, w_auto INTEGER, l_auto INTEGER, w_on INTEGER, l_on INTEGER)"),
+                 ("INSERT INTO plant_manage VALUES(0, 0, 0, 0, 0)"));
+
+    prepareTable("manage_auto",
+                 ("CREATE TABLE IF NOT EXISTS manage_auto (id INTEGER PRIMARY KEY, hm REAL, th REAL, lt INTEGER, dr INTEGER, ot INTEGER, ld INTEGER, cd INTEGER)"),
+                 ("INSERT INTO manage_auto VALUES(0, 0, 0, 0, 0, 0, 0, 0)"));
+
+    prepareTable("manage_water",
+                 ("CREATE TABLE IF NOT EXISTS manage_water (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, wt INTEGER, no TEXT)"),
+                 NULL,
+                 false);
+
+    prepareTable("manage_light",
+                 ("CREATE TABLE IF NOT EXISTS manage_light (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, ls INTEGER, no TEXT)"),
+                 NULL,
+                 false);
   }
 };
 

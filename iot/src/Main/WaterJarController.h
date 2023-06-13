@@ -52,15 +52,6 @@ public:
     return true;
   }
 
-  void testFeed(int time) {
-    createAndRunTask(tFeedWater, "TaskFeedWater", 4000, 1, &time);
-
-    if (time < 1000 || time > maxFeedTime) {
-      LOGLN("TaskFeedWater operationTIme range is invalid!");
-      return;
-    }
-  }
-
   // static void tTestWaterLevel(void* taskParams) {
   //   WaterJarController& waterJar = WaterJarController::getInstance();
 
@@ -73,8 +64,13 @@ public:
   static void tOffWaterPump(void* taskParams) {
     WaterJarController& waterJar = WaterJarController::getInstance();
 
+    // digitalWrite(PIN_WATERJAR_RELAY_SIGNAL, HIGH);
+
+    // waterJar.off();
+    // vTaskDelay(100);
     waterJar.on();
-    vTaskDelay(100);
+    vTaskDelay(50);
+    // digitalWrite(PIN_WATERJAR_RELAY_SIGNAL, LOW);
     waterJar.off();
 
     vTaskDelete(NULL);
@@ -131,15 +127,16 @@ public:
 
     waterJar.on();                                                                    //물펌프 켜기
     while (waterJar.waterLoadTimer < (waterJar.waterLoadTime - waterJar.unitTime)) {  //물이 출수구까지 차오를때까지 대기
+      if (!waterJar.readWaterLevel()) break;
       vTaskDelay(waterJar.unitTime);
     }
 
 
     int timer = 0;
-    while (true) {
+    while (waterJar.waterPumpOn) {
       //지정시간이 되었는지 확인
       if (timer >= operationTime) break;
-      if (!waterJar.waterPumpOn) break;
+      if (!waterJar.readWaterLevel()) break;
 
       timer += 250;
       vTaskDelay(250);
@@ -150,6 +147,8 @@ public:
   }
 
   void on() {
+    // if (waterPumpOn) return;
+
     DB_Manager& dbManager = DB_Manager::getInstance();
 
     digitalWrite(PIN_WATERJAR_RELAY_SIGNAL, HIGH);
@@ -159,6 +158,8 @@ public:
   }
 
   void off() {
+    // if (!waterPumpOn) return;
+
     DB_Manager& dbManager = DB_Manager::getInstance();
 
     digitalWrite(PIN_WATERJAR_RELAY_SIGNAL, LOW);

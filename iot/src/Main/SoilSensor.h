@@ -3,7 +3,12 @@
 
 #include <SoftwareSerial.h>  //<- EspSoftwareSerial.h
 #include <Wire.h>
+#include <vector>
 #include "MultitaskRTOS.h"
+
+#define PIN_SOIL_DERE 13
+#define PIN_SOIL_RO 32
+#define PIN_SOIL_DI 33
 
 class SoilSensor {
 private:
@@ -15,33 +20,40 @@ private:
     0.0,
   };
   EspSoftwareSerial::UART soilSerial;
-  uint8_t pin_DE_RE;
-  uint8_t pin_RO;
-  uint8_t pin_DI;
 
-  static portMUX_TYPE myMutex;
+  static portMUX_TYPE criticalMutex;
+  static SemaphoreHandle_t xMutex;
 
-public:
-  SoilSensor(uint8_t DE_RE, uint8_t RO, uint8_t DI) {
-    this->pin_DE_RE = DE_RE;
-    this->pin_RO = RO;
-    this->pin_DI = DI;
+  static SoilSensor* instance;
 
-    this->soilSerial.begin(4800, SWSERIAL_8N1, this->pin_RO, this->pin_DI, false);
+  SoilSensor() {
+    this->soilSerial.begin(4800, SWSERIAL_8N1, PIN_SOIL_RO, PIN_SOIL_DI, false);
 
-    pinMode(this->pin_DE_RE, OUTPUT);
-    digitalWrite(this->pin_DE_RE, LOW);
+    pinMode(PIN_SOIL_DERE, OUTPUT);
+    digitalWrite(PIN_SOIL_DERE, LOW);
   }
 
-  float* read() {
+public:
+  static SoilSensor& getInstance(){
+    if(instance == nullptr){
+      instance = new SoilSensor();
+    }
 
-    taskENTER_CRITICAL(&myMutex);  //다른 FreeRTOS 태스크의 선점방지, 크리티컬 영역 실행중에는 다른 태스크가 실행되지않음, 최대한 짧게 유지하기 위해 이곳에 작성함
+    return *instance;
+  }
 
-    digitalWrite(this->pin_DE_RE, HIGH);
+  std::vector<float> read() {
+    std::vector<float> ret(7);
+
+    xSemaphoreTake(xMutex, portMAX_DELAY);  // 뮤텍스 획득
+    taskENTER_CRITICAL(&criticalMutex);     //다른 FreeRTOS 태스크의 선점방지, 크리티컬 영역 실행중에는 다른 태스크가 실행되지않음, 최대한 짧게 유지하기 위해 이곳에 작성함
+
+
+    digitalWrite(PIN_SOIL_DERE, HIGH);
     this->soilSerial.write(this->CODE, 8);
 
     vTaskDelay(100);
-    digitalWrite(this->pin_DE_RE, LOW);
+    digitalWrite(PIN_SOIL_DERE, LOW);
 
     vTaskDelay(100);
 
@@ -49,18 +61,19 @@ public:
       this->buffer[i] = this->soilSerial.read();  //값 읽기
     }
 
-    taskEXIT_CRITICAL(&myMutex);  //크리티컬 영역 종료
+    taskEXIT_CRITICAL(&criticalMutex);  //크리티컬 영역 종료
+    xSemaphoreGive(xMutex);             // 뮤텍스 획득
+
 
     for (byte i = 0; i < 7; i++) {
-      this->receive[i] = this->concat_byte(buffer, 3 + 2 * i);
+      ret[i] = this->concat_byte(buffer, 3 + 2 * i);
     }
 
-    //일부 값 10으로 나눠서 전처리
-    this->receive[0] /= 10;
-    this->receive[1] /= 10;
-    this->receive[3] /= 10;
+    ret[0] /= 10;
+    ret[1] /= 10;
+    ret[3] /= 10;
 
-    return this->receive;
+    return ret;
   }
 
   uint16_t concat_byte(uint8_t* buff, uint8_t startIdx) {
@@ -68,6 +81,9 @@ public:
   }
 };
 
-portMUX_TYPE SoilSensor::myMutex = portMUX_INITIALIZER_UNLOCKED;
+SoilSensor* SoilSensor::instance = nullptr;
+portMUX_TYPE SoilSensor::criticalMutex = portMUX_INITIALIZER_UNLOCKED;
+SemaphoreHandle_t SoilSensor::xMutex = xSemaphoreCreateMutex();
+
 
 #endif  // __SOIL_SENSOR_H__

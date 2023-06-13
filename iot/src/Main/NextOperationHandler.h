@@ -38,6 +38,9 @@ private:
   static bool runningFlag;
   char sqlBuffer[100];
 
+  int lightAutoPassedMin = 0;
+  int waterAutoAccel = 0;
+
 
   // ...
   NextOperationHandler() {
@@ -52,7 +55,7 @@ public:
   static void startTasks() {
     if (!runningFlag) {
       runningFlag = true;
-      createAndRunTask(NextOperationHandler::tHandleProcess, "tHandleProcess", 6000);
+      createAndRunTask(NextOperationHandler::tHandleProcess, "tHandleProcess", 10000);
     }
   }
 
@@ -68,9 +71,8 @@ public:
     return *instance;
   }
 
-
   static void tHandleProcess(void* taskParams) {
-    LOGLN("Starting NextOperationHandler...");
+    LOGLN("Starting ManualHandler...");
     NextOperationHandler& handler = NextOperationHandler::getInstance();
 
     // Calculate the time until the next minute
@@ -85,22 +87,55 @@ public:
 
     while (NextOperationHandler::runningFlag) {
 
-      handler.dbManager->execute("select l_auto, w_auto from plant_manage");
-      JsonObject row = handler.dbManager->getRowFromJsonArray(handler.dbManager->getResult(), 0);
+      handler.dbManager->execute("select pm.l_on, pm.w_on, pm.l_auto, pm.w_auto, ma.lt, ma.dr, ma.hm, ma.th from plant_manage pm, manage_auto ma");
+      LOGF("DB RESULT: %s\n", handler.dbManager->getResult());
+      // JsonObject row = handler.dbManager->getRowFromJsonArray(handler.dbManager->getResult(), 0);
+      std::map<std::string, std::string> row = handler.dbManager->getRowFromMap(handler.dbManager->getResult(), 0);
 
-      int l_auto = row["l_auto"];
-      int w_auto = row["w_auto"];
+      Serial.print("JsonObjectSize: ");
+      Serial.println(row.size());
+
+      // int l_auto = row["l_auto"].as<int>();
+      // int w_auto = row["w_auto"].as<int>();
+      // int l_on = row["l_on"].as<int>();
+      // int w_on = row["w_on"].as<int>();
+      // int lt = row["lt"].as<int>();
+      // int dr = row["dr"].as<int>();
+      // float hm = row["hm"].as<float>();
+      // float th = row["th"].as<float>();
+
+      // int l_auto = row["l_auto"].toInt();
+      // int w_auto = row["w_auto"].toInt();
+      // int l_on = row["l_on"].toInt();
+      // int w_on = row["w_on"].toInt();
+      // int lt = row["lt"].toInt();
+      // int dr = row["dr"].toInt();
+      // float hm = row["hm"].toFloat();
+      // float th = row["th"].toFloat();
+
+      int l_auto = atoi(row["l_auto"].c_str());
+      int w_auto = atoi(row["w_auto"].c_str());
+      int l_on = atoi(row["l_on"].c_str());
+      int w_on = atoi(row["w_on"].c_str());
+      int lt = atoi(row["lt"].c_str());
+      int dr = atoi(row["dr"].c_str());
+      float hm = atof(row["hm"].c_str());
+      float th = atof(row["th"].c_str());
+
+
+
+      LOGF("%d, %d, %d, %d, %d, %d, %.2f, %.2f\n", l_auto, w_auto, l_on, w_on, lt, dr, hm, th);
 
       if (l_auto == 0) {
         handler.handleLightManual();
       } else {
-        handler.handleLightAuto();
+        handler.handleLightAuto(l_on, lt, dr);
       }
 
       if (w_auto == 0) {
-        handler.handleWaterManual();
+        // handler.handleWaterManual();
       } else {
-        handler.handleWaterAuto();
+        // handler.handleWaterAuto(w_on, hm, th);
       }
 
       // Delay until the next period
@@ -110,8 +145,31 @@ public:
     vTaskDelete(NULL);
   }
 
-  void handleLightAuto() {
-    LOGLN("HANDLE LIGHT AUTO");
+  void handleLightAuto(int l_on, int lt, int dr) {
+    LOGF("HANDLE LIGHT AUTO l_on:%d, lt:%d, dr:%d\n", l_on, lt, dr);
+
+    //조명등에서 현재 조도값 불러오기
+    LightStandController& lightStand = LightStandController::getInstance();
+    float currentLux = lightStand.readLightLevel();
+    LOGF("Readed currentLux: %.1f\n", currentLux);
+
+
+    if (currentLux <= lt) {
+      LOGLN("pin1");
+      lightAutoPassedMin = min(++lightAutoPassedMin, dr);
+    } else if (currentLux > lt) {
+      LOGLN("pin2");
+      lightAutoPassedMin = 0;
+    }
+
+    LOGF("lightAutoPassedMin: %d\n", lightAutoPassedMin);
+    if (lightAutoPassedMin >= dr) {
+      LOGLN("pin3");
+      lightStand.on();
+    } else {
+      LOGLN("pin4");
+      lightStand.off();
+    }
   }
 
   void handleLightManual() {
@@ -150,7 +208,7 @@ public:
     }
   }
 
-  void handleWaterAuto() {
+  void handleWaterAuto(int w_on, int hm, int th) {
     LOGLN("HANDLE WATER AUTO");
   }
 
