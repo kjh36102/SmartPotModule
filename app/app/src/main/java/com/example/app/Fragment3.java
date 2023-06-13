@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.util.Printer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,8 +35,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.ObjIntConsumer;
-
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
@@ -108,6 +105,7 @@ public class Fragment3 extends Fragment {
 
         viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+
         waterState = sharedPreferences.getBoolean("WaterCheckBoxState", false);
         lightState = sharedPreferences.getBoolean("LightCheckBoxState", false);
 
@@ -162,6 +160,8 @@ public class Fragment3 extends Fragment {
 
         tvLight.setText(getData(requireContext(), "light"));
         tvHumid.setText(getData(requireContext(), "humid"));
+
+        //저장되어 있는 값 가져오기
 
 
 
@@ -842,7 +842,14 @@ public class Fragment3 extends Fragment {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-
+                        waterValue1 = Integer.toString(hmReference);
+                        if (!waterValue1.equals("")) {
+                            tvValue1.setText(waterValue1);
+                        }
+                        waterValue2 = Integer.toString(thReference);
+                        if (!waterValue2.equals("")) {
+                            tvValue2.setText(waterValue2);
+                        }
 
                         //이후 ui적용
 
@@ -989,7 +996,23 @@ public class Fragment3 extends Fragment {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-
+                        edLight1 = Integer.toString(otReference);
+                        if (!edLight1.equals("")) {
+                            edValue1.setText(edLight1);
+                        }
+                        for (int i = 0; i < udJsonArray.length(); i++) {
+                            try {
+                                DataValue dataValue = new DataValue();
+                                dataValue.setDate(udJsonArray.get(i).toString());
+                                dataValue.setTime(stJsonArray.get(i).toString());
+                                dataValue.setValue(lsJsonArray.get(i).toString());
+                                lightDataList.add(dataValue);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        dataAdapter.setDataList(lightDataList);
+                        dataAdapter.notifyDataSetChanged();
 
                         //이후 ui적용
 
@@ -1095,9 +1118,15 @@ public class Fragment3 extends Fragment {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        lightValue1 = Integer.toString(ltReference);
+                        if (!lightValue1.equals("")) {
+                            tvValue1.setText(lightValue1);
+                        }
+                        lightValue2 = Integer.toString(drReference);
+                        if (!lightValue2.equals("")) {
+                            tvValue2.setText(lightValue2);
+                        }
 
-
-                        //이후 ui적용
 
                     }
                 });
@@ -1132,15 +1161,129 @@ public class Fragment3 extends Fragment {
         super.onResume();
         tvHumid.setText(humid);
         tvLight.setText(light);
+//        //배열을 저장해야함
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         waterState = sharedPreferences.getBoolean("WaterCheckBoxState", false);
         lightState = sharedPreferences.getBoolean("LightCheckBoxState", false);
 
+
         checkBoxWater.setChecked(waterState);
         checkBoxLight.setChecked(lightState);
 
+        JSONArray waterUdJsonArray = null;
+        JSONArray waterStJsonArray = null;
+        JSONArray waterWtJsonArray = null;
+        JSONArray lightUdJsonArray = null;
+        JSONArray lightStJsonArray = null;
+        JSONArray lightLsJsonArray = null;
 
+//        try {
+//
+//            waterUdJsonArray = new JSONArray(sharedPreferences.getString("wateruds", "[]"));
+//            waterStJsonArray = new JSONArray(sharedPreferences.getString("watersts", "[]"));
+//            waterWtJsonArray = new JSONArray(sharedPreferences.getString("waterwts", "[]"));
+//            lightUdJsonArray = new JSONArray(sharedPreferences.getString("lightuds", "[]"));
+//            lightStJsonArray = new JSONArray(sharedPreferences.getString("lightsts", "[]"));
+//            lightLsJsonArray = new JSONArray(sharedPreferences.getString("lightlss", "[]"));
+//
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+        //ui적용
+//        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+        // Tab이 선택되었을 때
+//            @Override
+//            public void onTabSelected(TabLayout.Tab tab) {
+//                // 선택된 Tab의 위치를 가져옴
+//                int position = tab.getPosition();
+//                value1.setText("");
+//                value2.setText("");
+//                value3.setText("");
+//
+////                switch (position) {
+////                    case 0:
+////                        curType = WATER;
+////                        checkBoxLight.setVisibility(View.GONE);
+////                        checkBoxWater.setVisibility(View.VISIBLE);
+////                        CheckSetNearestWater.setVisibility(View.VISIBLE);
+////                        CheckSetNearestLight.setVisibility(View.GONE);
+////                        receiveBt1.setVisibility(View.VISIBLE);
+////                        receiveBt2.setVisibility(View.GONE);
+////                        receiveBt3.setVisibility(View.GONE);
+////                        receiveBt4.setVisibility(View.GONE);
+////
+////                        tvValue1.setText(waterValue1);
+////                        tvValue2.setText(waterValue2);
+////
+////                        if (edWater1 != null || edWater2 != null) {
+////                            edValue1.setText(edWater1);
+////                            edValue2.setText(edWater2);
+////                        } else {
+////                            edValue1.setText("");
+////                            edValue2.setText("");
+////                        }
+////
+////                        if (checkBoxWater.isChecked()) {
+////                            tableCenter.setVisibility(View.VISIBLE);
+////                            includeView.setVisibility(View.GONE);
+////                        } else {
+////                            tableCenter.setVisibility(View.GONE);
+////                            includeView.setVisibility(View.VISIBLE);
+////                        }
+////                        changeText("희망값", "임계범위", "1", "25", "급수시간", "수동급수시간", "");
+////                        dataAdapter.notifyItemRangeRemoved(0, waterDataList.size());
+////                        dataAdapter.setDataList(waterDataList);
+////
+////                        break;
+////                    case 1:
+////                        curType = LIGHT;
+////                        checkBoxWater.setVisibility(View.GONE);
+////                        checkBoxLight.setVisibility(View.VISIBLE);
+////                        CheckSetNearestWater.setVisibility(View.GONE);
+////                        CheckSetNearestLight.setVisibility(View.VISIBLE);
+////                        receiveBt1.setVisibility(View.GONE);
+////                        receiveBt2.setVisibility(View.GONE);
+////                        receiveBt3.setVisibility(View.VISIBLE);
+////                        receiveBt4.setVisibility(View.GONE);
+////                        tvValue1.setText(lightValue1);
+////                        tvValue2.setText(lightValue2);
+////
+////                        if (edLight1 != null || edLight2 != null) {
+////                            edValue1.setText(edLight1);
+////                            edValue2.setText(edLight2);
+////                        } else {
+////                            edValue1.setText("");
+////                            edValue2.setText("");
+////                        }
+////
+////                        if (checkBoxLight.isChecked()) {
+////                            tableCenter.setVisibility(View.VISIBLE);
+////                            includeView.setVisibility(View.GONE);
+////                        } else {
+////                            tableCenter.setVisibility(View.GONE);
+////                            includeView.setVisibility(View.VISIBLE);
+////                        }
+////                        changeText("조도값", "감지시간", "600", "60", "조명상태", "수동조명시간", "");
+////                        dataAdapter.setDataList(lightDataList);
+////                        break;
+////
+////                }
+////            }
+////
+////            @Override
+////            public void onTabUnselected(TabLayout.Tab tab) {
+////
+////            }
+////
+////            @Override
+////            public void onTabReselected(TabLayout.Tab tab) {
+////
+////            }
+////
+////        });
     }
 }

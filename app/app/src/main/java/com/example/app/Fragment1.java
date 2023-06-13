@@ -1,8 +1,6 @@
 package com.example.app;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
+
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,7 +11,6 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -24,7 +21,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -34,7 +30,6 @@ import android.widget.ToggleButton;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,13 +37,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.ProtocolException;
+
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -101,9 +93,9 @@ public class Fragment1 extends Fragment{
         rBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                //if (popup.update_url != null && !popup.update_url.isEmpty()) {   //아두이노 IP를 알때만 사용가능
+                if (popup.url != null && !popup.url.isEmpty()) {   //아두이노 IP를 알때만 사용가능
                 new updateRequest().execute();
-                //}
+                }
             }
         });
         waterBtn.setOnClickListener(new View.OnClickListener(){
@@ -371,9 +363,9 @@ public class Fragment1 extends Fragment{
                         if (jsonObject2.optString("l_auto").equals("0")) {
                             light0=true;
                             if (jsonObject2.optString("l_on").equals("1"))
-                                light1=false;
-                            else if (jsonObject2.optString("l_on").equals("0"))
                                 light1=true;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1=false;
                         }
                         else if (jsonObject2.optString("l_auto").equals("1"))
                             light0=false;
@@ -424,7 +416,10 @@ public class Fragment1 extends Fragment{
             phosText.setText(phos);
             potaText.setText(pota);
             ecText.setText(ec);
-            rTxt.setText("마지막 업데이트 시간 : " + ts);  //서버의 업데이트시간 불러오기
+            if(ts != null)
+                rTxt.setText("마지막 업데이트 시간 : " + ts);  //서버의 업데이트시간 불러오기
+            else
+                rTxt.setText("");
             waterBtn.setEnabled(water);
             toggleButton.setEnabled(light0);
             toggleButton.setChecked(light1);

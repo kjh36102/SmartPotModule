@@ -14,10 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -27,26 +24,17 @@
                 android:orientation="vertical">
 
 
-                <LinearLayout
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:gravity="center">
+                    android:layout_height="wrap_content">
 
-                    <TextView
 
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_margin="1dp"
-                        android:text="            "
-                        android:textSize="40sp" />
 
                     <TextView
                         android:id="@+id/textView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
+                        android:layout_centerHorizontal="true"
                         android:layout_margin="10dp"
                         android:text="해바라기"
                         android:textSize="40sp" />
@@ -55,14 +43,11 @@
                         android:id="@+id/update"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
-                        android:layout_gravity="right"
-                        android:layout_marginLeft="70dp"
-                        android:layout_marginTop="10dp"
+                        android:layout_alignParentEnd="true"
                         android:adjustViewBounds="true"
                         android:backgroundTint="#FFFCFC"
                         android:src="@drawable/update_xml" />
-                </LinearLayout>
-
+                </RelativeLayout>>
                 <TextView
 
                     android:layout_width="match_parent"
@@ -206,7 +191,7 @@
                     android:text="abc" />
 
             </LinearLayout>
-        </LinearLayout>
+
     </ScrollView>
 
 
