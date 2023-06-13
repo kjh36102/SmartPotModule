@@ -31,20 +31,21 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 
 public class popup extends AppCompatActivity implements View.OnClickListener {
-        public static boolean CONNECT_STATE = false;    //현재 아두이노와의 연결상태
-        public static String ssid;
-        public static String pw;
-        public static String ip;
-        public static String url;
-        public static String plant;
-        public static TextView connText;
-        private Context context;
-        WifiConnectionManager connManager;
-        SeekBar lightSeekBar;
-        SeekBar coolSeekBar;
-        Button sendButton;
-        Button receiveButton;
-        int lightProgress, coolProgress, waterProgress;
+    public static boolean CONNECT_STATE = false;    //현재 아두이노와의 연결상태
+    public static String ssid;
+    public static String pw;
+    public static String ip;
+    public static String url;
+    public static String plant;
+    public static TextView connText;
+    private Context context;
+    WifiConnectionManager connManager;
+    SeekBar lightSeekBar;
+    SeekBar coolSeekBar;
+    Button sendButton;
+    Button receiveButton;
+    int lightProgress, coolProgress, directFeedTimeVal; //바로급수시간 추가
+    EditText directFeedTime;    //바로급수시간 추가
 
 
     @Override
@@ -58,6 +59,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         Button plantBtn = findViewById(R.id.btnPlant);
         lightSeekBar = findViewById(R.id.seekBar);
         coolSeekBar = findViewById(R.id.seekBar2);
+        directFeedTime = findViewById(R.id.directFeedTime); //바로급수시간 추가
         receiveButton = findViewById(R.id.receivebutton);
         sendButton = findViewById(R.id.sendbutton);
 
@@ -79,10 +81,10 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 //처음 안내
                 connManager.setStatusText("SSID 및 비밀번호를 입력하세요");
                 System.out.println("SSID 및 비밀번호를 입력하세요");
-                 new Thread(()->{
-                     startConnect();
+                new Thread(()->{
+                    startConnect();
 
-                 }).start();
+                }).start();
                 //핫스팟이 연결되면 실행될 콜백 정의
                 connManager.setOnHotspotAvailable(() -> {
                     connManager.setStatusText("핫스팟 이용가능, 아두이노에게 전송 시작함...");
@@ -115,7 +117,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                                     connManager.setStatusText("아두이노에게 정보전송 타임아웃");
                                     System.out.println("아두이노에게 정보전송 타임아웃");
                                 }
-                                 else if (e instanceof SocketException) {        //오류 종류에따른 처리
+                                else if (e instanceof SocketException) {        //오류 종류에따른 처리
                                     connManager.setStatusText("아두이노에게 정보전송 중 연결 실패오류");
                                     System.out.println("아두이노에게 정보전송 중 연결 실패오류");
                                 } else {
@@ -281,9 +283,12 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
 
                                     lightProgress = jsonObject.getInt("ld");
                                     coolProgress = jsonObject.getInt("cd");
+                                    directFeedTimeVal = jsonObject.getInt("ot");
                                     System.out.println("ld: " + lightProgress);
                                     System.out.println("cd: " + coolProgress);
-                                    save(lightProgress, coolProgress);
+                                    System.out.println("ot: " + directFeedTimeVal);
+
+                                    save(lightProgress, coolProgress, directFeedTimeVal);
                                 }
                             }
 
@@ -308,12 +313,14 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 //설정한 progrss bar 값 읽는거
                 lightProgress = lightSeekBar.getProgress();
                 coolProgress = coolSeekBar.getProgress();
+                //바로급수시간 추가로읽기
+                directFeedTimeVal = Integer.parseInt(directFeedTime.getText().toString().replaceAll("\\D+",""));
 
                 System.out.println("lightProgress: " + lightProgress);
                 System.out.println("coolProgress: " + coolProgress);
+                System.out.println("directFeedTimeVal: " + directFeedTimeVal);
 
-
-                String sendUrlString = url + "manageAutoSet?ld=" + lightProgress + "&cd=" + coolProgress;
+                String sendUrlString = url + "manageAutoSet?ot=" + directFeedTimeVal +"&ld=" + lightProgress + "&cd=" + coolProgress;
 
                 //String sendUrlString= "https://zmzlqay.request.dreamhack.games"; //sample test
 
@@ -329,8 +336,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
 
                             if(responseCode == HttpURLConnection.HTTP_OK){
                                 System.out.println("progress bar data 보내기 성공");
-                                save(lightProgress, coolProgress); //이 코드는 고민
-
+                                save(lightProgress, coolProgress, directFeedTimeVal); //이 코드는 고민
                             }
 
                         } catch (IOException e) {
@@ -346,11 +352,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         });
 
 
-
-
-
-
-
     }
     @Override
     public void onResume() { //새로고침 할 떄마다 로컬저장소에 있는 데이터 불러와서 ui 적용
@@ -358,16 +359,20 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         lightProgress = sharedPreferences.getInt("lightProgress", 50); // Default value is 50
         coolProgress = sharedPreferences.getInt("coolProgress", 50); // Default value is 50
-        waterProgress = sharedPreferences.getInt("waterProgress", 50); // Default value is 50
+        directFeedTimeVal = sharedPreferences.getInt("directFeedTimeVal", 0); // Default value is 0
+
 
         lightSeekBar.setProgress(lightProgress);
         coolSeekBar.setProgress(coolProgress);
+        System.out.println("바로급수시간: " + directFeedTimeVal);
+        directFeedTime.setText(String.valueOf(directFeedTimeVal));
     }
-    public void save(int lightProgress, int coolProgress){ //값 저장
+    public void save(int lightProgress, int coolProgress, int directFeedTimeVal){ //값 저장
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("lightProgress", lightProgress);
         editor.putInt("coolProgress", coolProgress);
+        editor.putInt("directFeedTimeVal", directFeedTimeVal);
         editor.apply();
     }
     public void onClick(View v){

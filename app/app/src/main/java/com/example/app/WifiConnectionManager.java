@@ -108,7 +108,6 @@ public class WifiConnectionManager {
         this.permission = new Permission(activity);
         this.activity = activity;
         this.statusTextview = statusTextview;
-//            this.externalSocket = new DatagramSocket(12345);
 
     }
 
@@ -279,9 +278,9 @@ public class WifiConnectionManager {
      */
     public boolean listenAndACKtoUDP(int timeout) {
 
+        DatagramSocket socket = null;
         try {   //UDP 리스닝 및 ACK응답
-
-            DatagramSocket socket = new DatagramSocket(12345);
+            socket = new DatagramSocket(12345);
             socket.setSoTimeout(timeout);
 
             byte[] buffer = new byte[128];
@@ -319,6 +318,8 @@ public class WifiConnectionManager {
                 this.currentException = e;
             }
             runIfNotNull(this.onUdpError);
+        }finally {
+            if(socket != null) socket.close();
         }
 
         return false;
