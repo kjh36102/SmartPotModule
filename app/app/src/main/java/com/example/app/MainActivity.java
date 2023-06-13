@@ -116,43 +116,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (!connManager.permission.hasAll())
             connManager.permission.requestAll();
 
-        if(!popup.ssid.equals("")&& !popup.pw.equals("") && !popup.ip.equals("") && !popup.url.equals("")){
-            new Thread(()->{
-                connManager.connectToExternal(popup.ssid,popup.pw, 30000);
+        if (!popup.ssid.equals("") && !popup.pw.equals("") && !popup.ip.equals("") && !popup.url.equals("")) {
+            new Thread(() -> {
+                connManager.connectToExternal(popup.ssid, popup.pw, 30000);
             }).start();
             connManager.setOnExternalAvailable(() -> {
-                System.out.println("외부 와이파이 연결 성공");      //아두이노 접속 테스트
-                    new Thread(() -> {
-                        if (connManager.sendPing(5000, popup.ip)) {   //핑이 성공하면, rememberedAruduinoIP는 저장해둔 아이피주소
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(MainActivity.this, "서버 연결 성공", Toast.LENGTH_SHORT).show();
+                System.out.println("외부 와이파이 연결 성공"); //아두이노 접속 테스트
+                new Thread(() -> {
+                    if (connManager.sendPing(5000, popup.ip)) { //핑이 성공하면, rememberedAruduinoIP는 저장해둔 아이피주소
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "서버 연결 성공", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        System.out.println(popup.ip + " " + popup.url);
+
+                        new GetJsonDataTask().execute(popup.url);
+                        new Thread(()->{
+                            try {
+                                while(score != -1) {
+                                    Thread.sleep(100);
                                 }
-                            });
-                            System.out.println(popup.ip + " " + popup.url);
-                            new GetJsonDataTask().execute(popup.url);
-                            new Thread(()->{
-                                try {
-                                    while(score != -1) {
-                                        Thread.sleep(100);
-                                    }
-                                    setFace();
-                                } catch (InterruptedException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }).start();
-                        }
-                    }).start();
-            });
-            connManager.setOnExternalUnAvailable(() -> {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this, "제품 등록 바람", Toast.LENGTH_SHORT).show();
+                                setFace();
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).start();
                     }
-                });
-                System.out.println("제품 등록 바람");
+                }).start();
+
             });
         }
             else {  //rememberedArduinoIP를 통해 연결이 안되었으므로
@@ -288,9 +281,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             TextView humidText = findViewById(R.id.humid);
             TextView lightText = findViewById(R.id.light);
             TextView phText = findViewById(R.id.ph);
-            TextView nitroText =findViewById(R.id.nitro);
+            TextView nitroText = findViewById(R.id.nitro);
             TextView phosText = findViewById(R.id.phos);
-            TextView potaText =findViewById(R.id.pota);
+            TextView potaText = findViewById(R.id.pota);
             TextView ecText = findViewById(R.id.ec);
             TextView rTxt = findViewById(R.id.rText);
             tempText.setText(temp);
@@ -301,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             phosText.setText(phos);
             potaText.setText(pota);
             ecText.setText(ec);
-            if(ts!=null)
+            if (ts != null)
                 rTxt.setText("마지막 업데이트 시간 : " + ts);  //서버의 업데이트시간 불러오기
             AppCompatButton waterBtn = findViewById(R.id.nowWater);
             ToggleButton toggleButton = findViewById(R.id.toggleButton);
@@ -327,27 +320,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Fragment3.humid = humid;
             Fragment3.light = light;
 
-            System.out.println(temp);
-            ChatGPT chatGPT = new ChatGPT();
-            new Thread(){
-                public void run(){
-                    org.json.simple.JSONObject scoreResponse = chatGPT.score(popup.plant, Double.parseDouble(temp),  Double.parseDouble(humid),  Double.parseDouble(nitro),  Double.parseDouble(phos),  Double.parseDouble(pota),  Double.parseDouble(ph),  Double.parseDouble(ec),  Double.parseDouble(light));
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                JSONObject json = new JSONObject(scoreResponse);
-                                String scoreString = json.getString("총점");
-                                score = Float.parseFloat(scoreString);
-                                setFace();
-                            } catch (Exception e) {
-                                e.printStackTrace();
+            if (!popup.plant.equals("")) {
+                System.out.println(temp);
+                ChatGPT chatGPT = new ChatGPT();
+                new Thread() {
+                    public void run() {
+                        org.json.simple.JSONObject scoreResponse = chatGPT.score(popup.plant, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ph), Double.parseDouble(ec), Double.parseDouble(light));
+                        Handler handler = new Handler(Looper.getMainLooper());
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    JSONObject json = new JSONObject(scoreResponse);
+                                    String scoreString = json.getString("총점");
+                                    score = Float.parseFloat(scoreString);
+                                    setFace();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
-                        }
-                    });
-                }
-            }.start();
+                        });
+                    }
+                }.start();
+            }
         }
     }
     public void setBlackFace(){

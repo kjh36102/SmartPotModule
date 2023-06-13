@@ -93,8 +93,8 @@ public class Fragment1 extends Fragment{
         rBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                if (popup.url != null && !popup.url.isEmpty()) {   //아두이노 IP를 알때만 사용가능
-                new updateRequest().execute();
+                if (popup.url != null && !popup.url.isEmpty()) {//아두이노 IP를 알때만 사용가능
+                        new updateRequest().execute();
                 }
             }
         });
@@ -427,28 +427,29 @@ public class Fragment1 extends Fragment{
             Fragment3.light = light;
 
 
-
-            ChatGPT chatGPT = new ChatGPT();
-            new Thread(){
-                public void run(){
-                    org.json.simple.JSONObject scoreResponse = chatGPT.score(popup.plant, Double.parseDouble(temp),  Double.parseDouble(humid),  Double.parseDouble(nitro),  Double.parseDouble(phos),  Double.parseDouble(pota),  Double.parseDouble(ph),  Double.parseDouble(ec),  Double.parseDouble(light));
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                JSONObject json = new JSONObject(scoreResponse);
-                                String scoreString = json.getString("총점");
-                                score = Float.parseFloat(scoreString);
-                                setFace();
-                                System.out.println(score);
-                            } catch (Exception e) {
-                                e.printStackTrace();
+            if (!popup.plant.equals("")) {
+                ChatGPT chatGPT = new ChatGPT();
+                new Thread() {
+                    public void run() {
+                        org.json.simple.JSONObject scoreResponse = chatGPT.score(popup.plant, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ph), Double.parseDouble(ec), Double.parseDouble(light));
+                        Handler handler = new Handler(Looper.getMainLooper());
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    JSONObject json = new JSONObject(scoreResponse);
+                                    String scoreString = json.getString("총점");
+                                    score = Float.parseFloat(scoreString);
+                                    setFace();
+                                    System.out.println(score);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
-                        }
-                    });
-                }
-            }.start();
+                        });
+                    }
+                }.start();
+            }
 
         }
     }
