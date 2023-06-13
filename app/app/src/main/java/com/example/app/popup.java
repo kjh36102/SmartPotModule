@@ -248,59 +248,44 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
             public void onClick(View v) { //데이터 값 받는 버튼
                 new Thread(new Runnable() {
                     @Override
-                    public void run() { //http통신으로 받아옴
-                        HttpURLConnection urlConnection = null;
-                        BufferedReader reader = null;
+                    public void run() {
                         try {
-//                            URL url = new URL("http://arduino.ip:12345/getTableData?name=manage_auto"); //컬럼 다 넘겨주나보네
-                            URL url = new URL(popup.url + "read?col=temp_humid"); //sample data test
-                            urlConnection = (HttpURLConnection) url.openConnection();
+                            URL url = new URL(popup.url + "getTableData?name=manage_auto");
+                            HttpURLConnection urlConnection =urlConnection = (HttpURLConnection) url.openConnection();
                             urlConnection.setRequestMethod("GET");
                             urlConnection.connect();
 
-                            InputStream inputStream = urlConnection.getInputStream();
-                            StringBuffer buffer = new StringBuffer();
 
+                            InputStream inputStream = urlConnection.getInputStream();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                            String line;
                             if (inputStream == null) {
                                 System.out.println("inputStream null");
                                 return;
                             }
-
-                            reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                            String line;
+                            StringBuilder responseData = new StringBuilder();
                             while ((line = reader.readLine()) != null) {
-                                buffer.append(line + "\n");
+                                responseData.append(line);
                             }
+                            reader.close();
+                            inputStream.close();
+                            urlConnection.disconnect();
 
-                            if (buffer.length() == 0) {
-                                System.out.println("받은 값 길이가 0");
-                                return;
+                            String parsed[] = responseData.toString().split("\\|");
+
+                            if (parsed[0].equals("ok") && parsed[1].equals("0")) {
+                                String dataString = parsed[2];
+                                JSONArray jsonArray = new JSONArray(dataString);
+                                if (jsonArray.length() > 0) {
+                                    JSONObject jsonObject = jsonArray.getJSONObject(0);
+
+                                    lightProgress = jsonObject.getInt("ld");
+                                    coolProgress = jsonObject.getInt("cd");
+                                    System.out.println("ld: " + lightProgress);
+                                    System.out.println("cd: " + coolProgress);
+                                    save(lightProgress, coolProgress);
+                                }
                             }
-
-                            JSONArray jsonArray = new JSONArray(buffer.toString());
-                            JSONObject jsonObject = jsonArray.getJSONObject(0);
-                            System.out.println("json 상태: "+ jsonArray);
-
-                            //json 데이터 전처리
-                            lightProgress = jsonObject.getInt("ld");
-                            coolProgress = jsonObject.getInt("cd");
-                            waterProgress = jsonObject.getInt("ot");
-                            System.out.println("ld: " + lightProgress);
-                            System.out.println("cd: " + coolProgress);
-                            System.out.println("ot: " + waterProgress);
-
-                            /*
-                            //sample data test
-                            lightProgress = jsonObject.getInt("ec");
-                            coolProgress = jsonObject.getInt("lt");
-                            waterProgress = jsonObject.getInt("n");
-                            System.out.println("ec: " + lightProgress);
-                            System.out.println("lt: " + coolProgress);
-                            System.out.println("n: " + waterProgress);
-                        */
-                            //저장
-                            save(lightProgress, coolProgress, waterProgress);
 
                             runOnUiThread(new Runnable() { //받아온 데이터 값 ui 적용
                                 @Override
@@ -310,21 +295,8 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                                 }
                             });
 
-
                         } catch (IOException | JSONException e) {
                             e.printStackTrace();
-                        } finally {
-                            if (urlConnection != null) {
-                                urlConnection.disconnect();
-                            }
-
-                            if (reader != null) {
-                                try {
-                                    reader.close();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
                         }
                     }
                 }).start();
@@ -339,7 +311,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
 
                 System.out.println("lightProgress: " + lightProgress);
                 System.out.println("coolProgress: " + coolProgress);
-                System.out.println("waterProgress: " + waterProgress);
 
 
                 String sendUrlString = url + "manageAutoSet?ld=" + lightProgress + "&cd=" + coolProgress;
@@ -358,7 +329,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
 
                             if(responseCode == HttpURLConnection.HTTP_OK){
                                 System.out.println("progress bar data 보내기 성공");
-                                save(lightProgress, coolProgress, waterProgress); //이 코드는 고민
+                                save(lightProgress, coolProgress); //이 코드는 고민
 
                             }
 
@@ -392,13 +363,11 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         lightSeekBar.setProgress(lightProgress);
         coolSeekBar.setProgress(coolProgress);
     }
-    public void save(int lightProgress, int coolProgress, int waterProgress){ //값 저장
+    public void save(int lightProgress, int coolProgress){ //값 저장
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-
         editor.putInt("lightProgress", lightProgress);
         editor.putInt("coolProgress", coolProgress);
-        editor.putInt("waterProgress", waterProgress);
         editor.apply();
     }
     public void onClick(View v){
