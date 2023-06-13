@@ -246,8 +246,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
 
                         if (jsonObject2.optString("l_auto").equals("0")) {
-                                light0=true;
-                            if (jsonObject2.optString("l_on").equals("1"))   //
+                            light0=true;
+                            if (jsonObject2.optString("l_on").equals("1"))
                                 light1=true;
                             else if (jsonObject2.optString("l_on").equals("0"))
                                 light1=false;
