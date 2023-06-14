@@ -109,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         popup.pw = sharedPreferences.getString("pw", "");
         popup.ip = sharedPreferences.getString("ip", "");
         popup.url = sharedPreferences.getString("url", "");
+
         System.out.println(popup.ssid);
         //new GetJsonDataTask().execute(popup.url);
 
@@ -128,6 +129,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             @Override
                             public void run() {
                                 Toast.makeText(MainActivity.this, "서버 연결 성공", Toast.LENGTH_SHORT).show();
+                                popup.CONNECT_STATE = true;
                             }
                         });
                         System.out.println(popup.ip + " " + popup.url);

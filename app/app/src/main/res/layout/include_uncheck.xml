@@ -86,7 +86,7 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BDBDBD"
                 android:visibility="visible"
-                android:text="수동급수시간 데이터 등록"
+                android:text="데이터 등록"
                 android:textColor="@color/black" />
         </TableLayout>
 

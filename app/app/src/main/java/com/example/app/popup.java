@@ -182,6 +182,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                     System.out.println("핑 보내기 성공");
 
                     CONNECT_STATE = true;   //모든 절차가 끝났으므로 연결상태를 True로 바꿔주기
+
                     ssid = editSsid.getText().toString().trim();
                     pw = editPw.getText().toString().trim();
 

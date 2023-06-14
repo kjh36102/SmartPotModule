@@ -367,8 +367,14 @@ public class Fragment1 extends Fragment{
                             else if (jsonObject2.optString("l_on").equals("0"))
                                 light1=false;
                         }
-                        else if (jsonObject2.optString("l_auto").equals("1"))
+                        else if (jsonObject2.optString("l_auto").equals("1")){
                             light0=false;
+                            if (jsonObject2.optString("l_on").equals("1"))
+                                light1 = true;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1 = false;
+                        }
+
                     }
                 }
 

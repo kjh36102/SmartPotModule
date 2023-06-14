@@ -660,7 +660,7 @@ public class Fragment2 extends Fragment {
         TextView trash2 = (TextView)view.findViewById(R.id.trash2);
         ImageButton update_btn = (ImageButton) view.findViewById(R.id.update);//업데이트 버튼
 
-        btn.setVisibility(View.VISIBLE);//더보기 버튼 활성화
+
 
 
 
@@ -698,10 +698,12 @@ public class Fragment2 extends Fragment {
 
 
                         textView1.setText(shortExplan);// 최종 현재 설명 적용
+                        btn.setVisibility(View.VISIBLE);//더보기 버튼 활성화
 
                         if (btn.getVisibility() == View.VISIBLE) {//더보기 버튼이 있고, 클릭이 되면 닫기 버튼 활성화및 더보기 버튼 비활성화
                             btn.setOnClickListener(new View.OnClickListener() {
                                 public void onClick(View view) {
+
                                     btn2.setVisibility(View.VISIBLE);
                                     btn.setVisibility(View.GONE);
                                     textView1.setText(textExplan);

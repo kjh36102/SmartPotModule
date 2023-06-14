@@ -147,10 +147,9 @@ public class Fragment3 extends Fragment {
         value2 = includeView.findViewById(R.id.ed_value_2); //지정시간 edittext
         value3 = includeView.findViewById(R.id.ed_value_3); //급수시간 edittext
 
-
         edValue1 = includeView.findViewById(R.id.ed_input_1); //수동급수시간 edittext
         edValue2 = includeView.findViewById(R.id.ed_input_2);
-      
+
         tvLight = view.findViewById(R.id.tv_light); //태양습도 text
         tvHumid = view.findViewById(R.id.tv_humidity); //태양조도 text
 
@@ -170,6 +169,11 @@ public class Fragment3 extends Fragment {
         tvHumid.setText(getData(requireContext(), "humid"));
 
         initView(waterState);
+
+        // 수동 급수 데이터 가져오기
+        manuWaterData(() -> manuWaterArray());
+        // 자동 급수 데이터 가져오기
+        autoWaterData();
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             // Tab이 선택되었을 때
@@ -198,11 +202,10 @@ public class Fragment3 extends Fragment {
                         receiveBt4.setVisibility(View.GONE);
                         manuLayout.setVisibility(View.VISIBLE);
 
+                        tvValue1.setText(waterValue1); //희망값
+                        tvValue2.setText(waterValue2); //임계범위
+
                         // edwater1, edWater2에 값이 있는 경우 EditText에 설정
-
-                        tvValue1.setText(waterValue1);
-                        tvValue2.setText(waterValue2);
-
                         if (edWater1 != null || edWater2 != null) {
                             edValue1.setText(edWater1); // 수동급수시간
                             edValue2.setText(edWater2);
@@ -210,6 +213,7 @@ public class Fragment3 extends Fragment {
                         else {
                             edValue1.setText("");
                             edValue2.setText("");
+
                         }
 
                         // checkBoxWater의 상태에 따라 뷰 표시 여부 설정
@@ -220,11 +224,13 @@ public class Fragment3 extends Fragment {
                             receiveBt2.setVisibility(View.VISIBLE);
                             AutoWaterButton.setVisibility(View.VISIBLE);
                             AutoLightButton.setVisibility(View.GONE);
+                            edValue2.setEnabled(true);
                         } else {
                             tableCenter.setVisibility(View.GONE);
                             includeView.setVisibility(View.VISIBLE);
                             receiveBt1.setVisibility(View.VISIBLE);
                             receiveBt2.setVisibility(View.GONE);
+                            edValue2.setEnabled(false);
                         }
                         changeText("희망값", "임계범위", "1", "25", "급수시간", "수동급수시간", "");
                         dataAdapter.notifyItemRangeRemoved(0, waterDataList.size());
@@ -233,6 +239,11 @@ public class Fragment3 extends Fragment {
                         break;
                     case 1:
                         // 두 번째 탭 선택 LIGHT
+                        //수동 조명 데이터 가져오기
+                        manuLightArray();
+                        //자동 조명 데이터 가져오기
+                        autoLightData();
+
                         curType = LIGHT;
                         checkBoxWater.setVisibility(View.GONE);
                         checkBoxLight.setVisibility(View.VISIBLE);
@@ -243,11 +254,11 @@ public class Fragment3 extends Fragment {
                         receiveBt3.setVisibility(View.VISIBLE);
                         receiveBt4.setVisibility(View.GONE);
                         manuLayout.setVisibility(View.GONE);
+
+                        tvValue1.setText(lightValue1); //조도값
+                        tvValue2.setText(lightValue2); //감지시간
+
                         // edLight1, edLight2 값이 있는 경우 EditText에 설정
-
-                        tvValue1.setText(lightValue1);
-                        tvValue2.setText(lightValue2);
-
                         if (edLight1 != null || edLight2 != null) {
                             edValue1.setText(edLight1); // 수동조명시간
                             edValue2.setText(edLight2);
@@ -295,7 +306,7 @@ public class Fragment3 extends Fragment {
             boolean isNotNullOfAutoValue = isNotNullOfAutoValue(value1, value2);
 
             if (isNotNullOfAutoValue) {
-                Thread thread9 = new Thread(() -> {
+                Thread thread = new Thread(() -> {
                     try {
                         URL url = new URL(popup.url +
                                 "manageAutoSet?hm=" + value1 + "&th=" + value2
@@ -326,7 +337,7 @@ public class Fragment3 extends Fragment {
                         e.printStackTrace();
                     }
                 });
-                checkConnectAndRun(thread9);
+                checkConnectAndRun(thread);
             }
         });
 
@@ -336,7 +347,7 @@ public class Fragment3 extends Fragment {
             boolean isNotNullOfAutoValue = isNotNullOfAutoValue(value1, value2);
 
             if (isNotNullOfAutoValue) {
-                Thread thread0 = new Thread(() -> {
+                Thread thread = new Thread(() -> {
                     try {
                         URL url = new URL(popup.url +
                                 "manageAutoSet?lt=" + value1 + "&dr=" + value2
@@ -367,7 +378,7 @@ public class Fragment3 extends Fragment {
                         e.printStackTrace();
                     }
                 });
-                checkConnectAndRun(thread0);
+                checkConnectAndRun(thread);
             }
         });
 
@@ -376,7 +387,7 @@ public class Fragment3 extends Fragment {
             boolean isNotNullOfManuValue = isNotNullOfManuValue(value1);
 
             if (isNotNullOfManuValue) {
-                Thread thread5 = new Thread(() -> {
+                Thread thread = new Thread(() -> {
                     try {
                         URL url = new URL(popup.url +
                                 "manageAutoSet?ot=" + value1
@@ -407,7 +418,7 @@ public class Fragment3 extends Fragment {
                         e.printStackTrace();
                     }
                 });
-                checkConnectAndRun(thread5);
+                checkConnectAndRun(thread);
             }
         });
 
@@ -424,6 +435,10 @@ public class Fragment3 extends Fragment {
                     tableCenter.setVisibility(View.VISIBLE);
                     receiveBt1.setVisibility((View.GONE));
                     receiveBt2.setVisibility(View.VISIBLE);
+                    AutoWaterButton.setVisibility(View.VISIBLE);
+                    AutoLightButton.setVisibility(View. GONE);
+                    edValue2.setEnabled(true);
+
 
                     new Thread(() -> {
                         try {
@@ -461,6 +476,7 @@ public class Fragment3 extends Fragment {
                     tableCenter.setVisibility(View.GONE);
                     receiveBt1.setVisibility((View.VISIBLE));
                     receiveBt2.setVisibility(View.GONE);
+                    edValue2.setEnabled(false);
 
                     new Thread(() -> {
                         try {
@@ -510,6 +526,8 @@ public class Fragment3 extends Fragment {
                     tableCenter.setVisibility(View.VISIBLE);
                     receiveBt3.setVisibility((View.GONE));
                     receiveBt4.setVisibility(View.VISIBLE);
+                    AutoWaterButton.setVisibility(View.GONE);
+                    AutoLightButton.setVisibility(View.VISIBLE);
 
                     new Thread(() -> {
                         try {
@@ -603,7 +621,7 @@ public class Fragment3 extends Fragment {
                         dataValue.setTime(timeData); //지정시간
                         dataValue.setValue(valueData); //급수시간
 
-                        Thread thread1 = new Thread(() -> {
+                        Thread thread = new Thread(() -> {
                             try {
                                 System.out.println("is Nearst : " + isNearest);
                                 URL url = new URL(popup.url +
@@ -659,7 +677,7 @@ public class Fragment3 extends Fragment {
                                 e.printStackTrace();
                             }
                         });
-                        checkConnectAndRun(thread1);
+                        checkConnectAndRun(thread);
                     }
                 }
             } else {
@@ -676,7 +694,7 @@ public class Fragment3 extends Fragment {
                         dataValue.setTime(timeData); //지정시간
                         dataValue.setValue(valueData); //급수시간
 
-                        Thread thread2 = new Thread(() -> {
+                        Thread thread = new Thread(() -> {
                             try {
                                 System.out.println("is Nearst : " + isNearest);
                                 URL url = new URL(popup.url +
@@ -732,7 +750,7 @@ public class Fragment3 extends Fragment {
                                 e.printStackTrace();
                             }
                         });
-                        checkConnectAndRun(thread2);
+                        checkConnectAndRun(thread);
                     }
                 }
 
@@ -749,7 +767,7 @@ public class Fragment3 extends Fragment {
                         boolean isNotNullOfDelete = isNotNullOfDelete();
 
                         if (isNotNullOfDelete) {
-                            Thread thread3 = new Thread(() -> {
+                            Thread thread = new Thread(() -> {
                                 try {
                                     StringBuilder builder = new StringBuilder();
                                     builder.append("[");
@@ -809,7 +827,7 @@ public class Fragment3 extends Fragment {
                                     e.printStackTrace();
                                 }
                             });
-                            checkConnectAndRun(thread3);
+                            checkConnectAndRun(thread);
                         }
                     }
                 } else {
@@ -818,7 +836,7 @@ public class Fragment3 extends Fragment {
                         boolean isNotNullOfDelete = isNotNullOfDelete();
 
                         if (isNotNullOfDelete) {
-                            Thread thread4 = new Thread(() -> {
+                            Thread thread = new Thread(() -> {
                                 try {
                                     StringBuilder builder = new StringBuilder();
                                     builder.append("[");
@@ -879,7 +897,7 @@ public class Fragment3 extends Fragment {
                                     e.printStackTrace();
                                 }
                             });
-                            checkConnectAndRun(thread4);
+                            checkConnectAndRun(thread);
                         }
                     }
                 }
@@ -903,7 +921,7 @@ public class Fragment3 extends Fragment {
                     // deleteList에 클릭된 데이터가 이미 포함되어 있는 경우
                     Log.i("##INFO", "onClick(): remove");
                     deleteList.remove(list.get(position));
-                    deleteIndexList.remove(position);
+                    deleteIndexList.remove(list.get(position));
                 }
                 else {
                     // deleteList에 클릭된 데이터가 포함되어 있지 않은 경우
@@ -1018,8 +1036,6 @@ public class Fragment3 extends Fragment {
                         manuWaterArray();
                     }
                 });
-//                manuWaterData();
-//                manuWaterArray();
             }
         });
         receiveBt2.setOnClickListener(new View.OnClickListener() {
@@ -1031,7 +1047,6 @@ public class Fragment3 extends Fragment {
         receiveBt3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) { //데이터 값 받는 버튼
-//                manuLightData();
                 manuLightArray();
             }
         });
@@ -1041,7 +1056,6 @@ public class Fragment3 extends Fragment {
                 autoLightData();
             }
         });
-
     }
 
     public void manuWaterData(final Runnable callback){
@@ -1057,8 +1071,10 @@ public class Fragment3 extends Fragment {
                 try {
                     urlConnection = null;
                     reader = null;
-                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
-
+//                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
+                    URL url = new URL(popup.url +
+                            "getTableData?name=manage_auto"
+                    );
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.setConnectTimeout(30000); // 15 seconds
@@ -1086,7 +1102,6 @@ public class Fragment3 extends Fragment {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         output.append(line);
-
                     }
                     reader.close();
                     inputStream.close();
@@ -1123,7 +1138,7 @@ public class Fragment3 extends Fragment {
                     }
                     executeCallback = false;
                 } catch (JSONException jsonException) {
-                    System.out.println("JSON parsing error: DB에 값이 없습니다.");
+                    System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
                 } catch (Exception e) {
                     System.out.println("Exception error");
@@ -1161,7 +1176,9 @@ public class Fragment3 extends Fragment {
                     urlConnection = null;
                     reader = null;
 
-                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_water"); //밑에 테이블
+                    URL url = new URL(popup.url +
+                            "getTableData?name=manage_water"
+                    );
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.setConnectTimeout(15000); // 15 seconds
@@ -1238,7 +1255,7 @@ public class Fragment3 extends Fragment {
                         });
                     }
                 } catch (JSONException jsonException){
-                    System.out.println("JSON parsing error: DB에 값이 없습니다.");
+                    System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
                 } catch (Exception e){
                     System.out.println("Exception error");
@@ -1328,8 +1345,10 @@ public class Fragment3 extends Fragment {
                 try {
                     urlConnection = null;
                     reader = null;
-                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
-
+//                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
+                    URL url = new URL(popup.url +
+                            "getTableData?name=manage_auto"
+                    );
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.setConnectTimeout(15000); // 15 seconds
@@ -1393,7 +1412,7 @@ public class Fragment3 extends Fragment {
                         });
                     }
                 }catch (JSONException jsonException){
-                    System.out.println("JSON parsing error: DB에 값이 없습니다.");
+                    System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
                 }catch (Exception e){
                     System.out.println("Exception error");
@@ -1448,7 +1467,10 @@ public class Fragment3 extends Fragment {
                     urlConnection = null;
                     reader = null;
 
-                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_light"); //밑에 테이블
+//                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_light"); //밑에 테이블
+                    URL url = new URL(popup.url +
+                            "getTableData?name=manage_light"
+                    );
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.setConnectTimeout(15000); // 15 seconds
@@ -1508,10 +1530,9 @@ public class Fragment3 extends Fragment {
                         System.out.println("sts[i]: " + sts[i]);
                         System.out.println("wts[i]: " + lss[i]);
                     }
-                    waterUdsRef.set(uds);
-                    waterStsRef.set(sts);
-                    waterWtsRef.set(lss);
-
+                    lightUdsRef.set(uds);
+                    lightStsRef.set(sts);
+                    lightLssRef.set(lss);
 
                 } catch (IOException ioException) {
                     System.out.println("IO error: " + ioException.getMessage());
@@ -1526,7 +1547,7 @@ public class Fragment3 extends Fragment {
                         });
                     }
                 } catch (JSONException jsonException){
-                    System.out.println("JSON parsing error: DB에 값이 없습니다.");
+                    System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
                 } catch (Exception e){
                     System.out.println("Exception error");
@@ -1545,9 +1566,9 @@ public class Fragment3 extends Fragment {
                     }
                 }
                 if(responseCode == HttpURLConnection.HTTP_OK){
-                    int[] uds = waterUdsRef.get();
-                    String[] sts = waterStsRef.get();
-                    int[] lss = waterWtsRef.get();
+                    int[] uds = lightUdsRef.get();
+                    String[] sts = lightStsRef.get();
+                    int[] lss = lightLssRef.get();
                     JSONArray udJsonArray = new JSONArray();
                     if (uds != null) {
                         for (int ud : uds) {
@@ -1616,8 +1637,10 @@ public class Fragment3 extends Fragment {
                 try {
                     urlConnection = null;
                     reader = null;
-                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
-
+//                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
+                    URL url = new URL(popup.url +
+                            "getTableData?name=manage_auto"
+                    );
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
                     urlConnection.setConnectTimeout(15000); // 15 seconds
@@ -1681,7 +1704,7 @@ public class Fragment3 extends Fragment {
                         });
                     }
                 }catch (JSONException jsonException){
-                    System.out.println("JSON parsing error: DB에 값이 없습니다.");
+                    System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
                 }catch (Exception e){
                     System.out.println("Exception error");
@@ -1764,7 +1787,6 @@ public class Fragment3 extends Fragment {
         if (!data.equals("")) {
             deleteList.add(lightDataList.get(Integer.parseInt(data)));
         }
-
     }
 
     @Override
@@ -1782,47 +1804,6 @@ public class Fragment3 extends Fragment {
         checkBoxWater.setChecked(waterState);
         checkBoxLight.setChecked(lightState);
 
-        JSONArray waterUdJsonArray = null;
-        JSONArray waterStJsonArray = null;
-        JSONArray waterWtJsonArray = null;
-        JSONArray lightUdJsonArray = null;
-        JSONArray lightStJsonArray = null;
-        JSONArray lightLsJsonArray = null;
-        int otReference = -1, hmReference = -1, thReference= -1, ltReference= -1, drReference= -1;
-
-
-        try {
-            waterUdJsonArray = new JSONArray(sharedPreferences.getString("wateruds", "[]"));
-            waterStJsonArray = new JSONArray(sharedPreferences.getString("watersts", "[]"));
-            waterWtJsonArray = new JSONArray(sharedPreferences.getString("waterwts", "[]"));
-            lightUdJsonArray = new JSONArray(sharedPreferences.getString("lightuds", "[]"));
-            lightStJsonArray = new JSONArray(sharedPreferences.getString("lightsts", "[]"));
-            lightLsJsonArray = new JSONArray(sharedPreferences.getString("lightlss", "[]"));
-
-            otReference = sharedPreferences.getInt("otReference", -1);
-            hmReference = sharedPreferences.getInt("hmReference", -1);
-            thReference = sharedPreferences.getInt("thReference", -1);
-            ltReference = sharedPreferences.getInt("ltReference", -1);
-            drReference = sharedPreferences.getInt("drReference", -1);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-
-        //ui적용
-        System.out.println("otReference: " + otReference);
-        System.out.println("hmReference: " + hmReference);
-        System.out.println("thReference: " + thReference);
-        System.out.println("ltReference: " + ltReference);
-        System.out.println("drReference: " + drReference);
-        // System.out.println("waterUdJosnArray: " + waterUdJsonArray);
-        // System.out.println("waterStJsonArray: " + waterStJsonArray);
-        // System.out.println("waterWtJsonArray: " + waterWtJsonArray);
-        // System.out.println("lightUdJsonArray: " + lightUdJsonArray);
-        // System.out.println("lightStJsonArray: " + lightStJsonArray);
-        // System.out.println("lightLsJsonArray: " + lightLsJsonArray);
     }
 
     private void initView(boolean isChecked) {
@@ -1832,11 +1813,15 @@ public class Fragment3 extends Fragment {
                 tableCenter.setVisibility(View.VISIBLE);
                 receiveBt1.setVisibility((View.GONE));
                 receiveBt2.setVisibility(View.VISIBLE);
+                AutoWaterButton.setVisibility(View.VISIBLE);
+                AutoLightButton.setVisibility(View.GONE);
+                edValue2.setEnabled(true);
             } else {
                 includeView.setVisibility(View.VISIBLE);
                 tableCenter.setVisibility(View.GONE);
                 receiveBt1.setVisibility((View.VISIBLE));
                 receiveBt2.setVisibility(View.GONE);
+                edValue2.setEnabled(false);
             }
         }
     }
