@@ -523,8 +523,6 @@ public class Fragment2 extends Fragment {
         }
     }
 
-
-
     public void gpt_tips(View view) throws InterruptedException { //tip써주는 함수
         ChatGPT chatGPT = new ChatGPT();
         Button btn = (Button) view.findViewById(R.id.more);//더보기 버튼

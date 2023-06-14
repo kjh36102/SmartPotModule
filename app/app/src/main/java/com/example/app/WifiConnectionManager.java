@@ -278,10 +278,10 @@ public class WifiConnectionManager {
      * @return 성공시 true, 실패시 false
      */
     public boolean listenAndACKtoUDP(int timeout) {
-
+            DatagramSocket socket=null;
         try {   //UDP 리스닝 및 ACK응답
 
-            DatagramSocket socket = new DatagramSocket(12345);
+            socket = new DatagramSocket(12345);
             socket.setSoTimeout(timeout);
 
             byte[] buffer = new byte[128];
@@ -319,6 +319,9 @@ public class WifiConnectionManager {
                 this.currentException = e;
             }
             runIfNotNull(this.onUdpError);
+        } finally{
+            if(socket !=null)
+                socket.close();
         }
 
         return false;

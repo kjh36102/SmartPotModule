@@ -16,6 +16,7 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.Printer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,8 +38,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
-import android.content.SharedPreferences;
+
 import android.preference.PreferenceManager;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -58,11 +60,11 @@ public class Fragment3 extends Fragment {
     private TabLayout tabLayout;
     private TableLayout tableCenter, manuLayout;
     private View includeView;
-    private TextView tvCheck, tvValue, tvRange, tvValue1, tvValue2, tvValue3, tvValue4, tvValue5, edValue1,edValue2, tvLight, tvHumid;
+    private TextView tvCheck, tvValue, tvRange, tvValue1, tvValue2, tvValue3, tvValue4, tvValue5, edValue1, edValue2, tvLight, tvHumid;
     private static CheckBox checkBoxWater, checkBoxLight, CheckSetNearestWater, CheckSetNearestLight;
     private String curType = WATER;
 
-    private Button btDelete, btRegister, receiveBt1, receiveBt2, receiveBt3, receiveBt4;;
+    private Button btDelete, btRegister, receiveBt1, receiveBt2, receiveBt3, receiveBt4, AutoWaterButton, AutoLightButton, manuWaterRegister;
     private DataAdapter dataAdapter;
 
     private static ArrayList<DataValue> waterDataList = null;
@@ -89,7 +91,6 @@ public class Fragment3 extends Fragment {
     private String lightValue2 = "";
     public static String humid = "";
     public static String light = "";
-    SharedViewModel viewModel;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -99,48 +100,36 @@ public class Fragment3 extends Fragment {
         return inflater.inflate(R.layout.fragment_3, container, false);
     }
 
-
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Log.i("##INFO", "onViewCreated(): Fragment3");
 
-        viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+        SharedViewModel viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean waterState = sharedPreferences.getBoolean("WaterCheckBoxState", false);
+        boolean lightState = sharedPreferences.getBoolean("LightCheckBoxState", false);
 
-        waterState = sharedPreferences.getBoolean("WaterCheckBoxState", false);
-        lightState = sharedPreferences.getBoolean("LightCheckBoxState", false);
+        receiveBt1 = view.findViewById(R.id.receiveBt1); //수동급수데이터 불러오기 버튼
+        receiveBt2 = view.findViewById(R.id.receiveBt2); //자동급수데이터 불러오기 버튼
+        receiveBt3 = view.findViewById(R.id.receiveBt3); //수동조명데이터 불러오기 버튼
+        receiveBt4 = view.findViewById(R.id.receiveBt4); //자동조명데이터 불러오기 버튼
+        AutoWaterButton = view.findViewById(R.id.autoWaterRegister); //자동급수데이터 등록버튼
+        AutoLightButton = view.findViewById(R.id.autoLightRegister); //자동조명데이터 등록버튼
+        manuWaterRegister = view.findViewById((R.id.manuWaterRegister)); //수동급수시간 등록버튼
 
-        receiveBt1 = view.findViewById(R.id.receiveBt1);
-        receiveBt2 = view.findViewById(R.id.receiveBt2);
-        receiveBt3 = view.findViewById(R.id.receiveBt3);
-        receiveBt4 = view.findViewById(R.id.receiveBt4);
-        tvCheck = view.findViewById(R.id.tv_check_name);
+        tvCheck = view.findViewById(R.id.tv_check_name);    //체크시 자동모드
         tabLayout = view.findViewById(R.id.tab_mode);
-        tableCenter = view.findViewById(R.id.tab_layout_center);
-        tvValue = view.findViewById(R.id.tv_want_value);
-        tvRange = view.findViewById(R.id.tv_range);
-        includeView = view.findViewById(R.id.in_uncheck);
-        tvValue1 = view.findViewById(R.id.tv_value_1);
-        tvValue2 = view.findViewById(R.id.tv_value_2);
+        tableCenter = view.findViewById(R.id.tab_layout_center); //자동모드 레이아웃
+        manuLayout = view.findViewById(R.id.tab_layout_center_checked); //수동모드 레이아웃
 
-        checkBoxWater = view.findViewById(R.id.check_mode_water);
-        checkBoxLight = view.findViewById(R.id.check_mode_light);
-        CheckSetNearestWater = view.findViewById(R.id.setNearest_water); //최단시간 적용 Water
-        CheckSetNearestLight = view.findViewById(R.id.setNearest_light); //최단시간 적용
-        checkBoxWater.setChecked(waterState);
-        checkBoxLight.setChecked(lightState);
-
-        tvValue3 = includeView.findViewById(R.id.tv_time_to_status);
-        btDelete = includeView.findViewById(R.id.bt_delete);
-        btRegister = includeView.findViewById(R.id.bt_register);
-        reData = includeView.findViewById(R.id.rv_center_data);
-
-        value1 = includeView.findViewById(R.id.ed_value_1);
-        value2 = includeView.findViewById(R.id.ed_value_2);
-        value3 = includeView.findViewById(R.id.ed_value_3);
-        tvValue4 = includeView.findViewById(R.id.tv_a);
+        tvValue = view.findViewById(R.id.tv_want_value);    //희망값 Text
+        tvRange = view.findViewById(R.id.tv_range);         //임계범위 Text
+        includeView = view.findViewById(R.id.in_uncheck);   //수동모드 뷰
+        tvValue1 = view.findViewById(R.id.tv_value_1);      //희망값 edittext
+        tvValue2 = view.findViewById(R.id.tv_value_2);      //임계범위 edittext
+        tvValue3 = includeView.findViewById(R.id.tv_time_to_status); //급수시간, 조명상태text
+        tvValue4 = includeView.findViewById(R.id.tv_a);     //수동급수시간 text
         tvValue5 = includeView.findViewById(R.id.tv_b);
 
         checkBoxWater = view.findViewById(R.id.check_mode_water); //Water 체크박스
@@ -158,9 +147,10 @@ public class Fragment3 extends Fragment {
         value2 = includeView.findViewById(R.id.ed_value_2); //지정시간 edittext
         value3 = includeView.findViewById(R.id.ed_value_3); //급수시간 edittext
 
+
         edValue1 = includeView.findViewById(R.id.ed_input_1); //수동급수시간 edittext
         edValue2 = includeView.findViewById(R.id.ed_input_2);
-
+      
         tvLight = view.findViewById(R.id.tv_light); //태양습도 text
         tvHumid = view.findViewById(R.id.tv_humidity); //태양조도 text
 
@@ -179,9 +169,7 @@ public class Fragment3 extends Fragment {
         tvLight.setText(getData(requireContext(), "light"));
         tvHumid.setText(getData(requireContext(), "humid"));
 
-        //저장되어 있는 값 가져오기
-
-
+        initView(waterState);
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             // Tab이 선택되었을 때
@@ -208,9 +196,13 @@ public class Fragment3 extends Fragment {
                         receiveBt2.setVisibility(View.GONE);
                         receiveBt3.setVisibility(View.GONE);
                         receiveBt4.setVisibility(View.GONE);
+                        manuLayout.setVisibility(View.VISIBLE);
+
+                        // edwater1, edWater2에 값이 있는 경우 EditText에 설정
 
                         tvValue1.setText(waterValue1);
                         tvValue2.setText(waterValue2);
+
                         if (edWater1 != null || edWater2 != null) {
                             edValue1.setText(edWater1); // 수동급수시간
                             edValue2.setText(edWater2);
@@ -250,8 +242,12 @@ public class Fragment3 extends Fragment {
                         receiveBt2.setVisibility(View.GONE);
                         receiveBt3.setVisibility(View.VISIBLE);
                         receiveBt4.setVisibility(View.GONE);
+                        manuLayout.setVisibility(View.GONE);
+                        // edLight1, edLight2 값이 있는 경우 EditText에 설정
+
                         tvValue1.setText(lightValue1);
                         tvValue2.setText(lightValue2);
+
                         if (edLight1 != null || edLight2 != null) {
                             edValue1.setText(edLight1); // 수동조명시간
                             edValue2.setText(edLight2);
@@ -285,13 +281,93 @@ public class Fragment3 extends Fragment {
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
                 // Tab이 선택 해제될 때 호출되는 메서드
-
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
                 // 이미 선택된 Tab이 다시 선택될 때 호출되는 메서드
+            }
+        });
 
+        AutoWaterButton.setOnClickListener(v -> {
+            String value1 = tvValue1.getText().toString();
+            String value2 = tvValue2.getText().toString();
+            boolean isNotNullOfAutoValue = isNotNullOfAutoValue(value1, value2);
+
+            if (isNotNullOfAutoValue) {
+                Thread thread9 = new Thread(() -> {
+                    try {
+                        URL url = new URL(popup.url +
+                                "manageAutoSet?hm=" + value1 + "&th=" + value2
+                        );
+                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                        connection.setRequestMethod("GET");
+                        connection.setConnectTimeout(30000);
+                        connection.connect();
+
+                        InputStream inputStream = connection.getInputStream();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                        StringBuilder responseData = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            responseData.append(line);
+                        }
+                        reader.close();
+                        String parsed[] = responseData.toString().split("\\|");
+
+                        getActivity().runOnUiThread(() -> {
+                            if (parsed[0].equals("ok")) {
+                                Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "업데이트 sql 실패", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+                checkConnectAndRun(thread9);
+            }
+        });
+
+        AutoLightButton.setOnClickListener(v -> {
+            String value1 = tvValue1.getText().toString();
+            String value2 = tvValue2.getText().toString();
+            boolean isNotNullOfAutoValue = isNotNullOfAutoValue(value1, value2);
+
+            if (isNotNullOfAutoValue) {
+                Thread thread0 = new Thread(() -> {
+                    try {
+                        URL url = new URL(popup.url +
+                                "manageAutoSet?lt=" + value1 + "&dr=" + value2
+                        );
+                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                        connection.setRequestMethod("GET");
+                        connection.setConnectTimeout(30000);
+                        connection.connect();
+
+                        InputStream inputStream = connection.getInputStream();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                        StringBuilder responseData = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            responseData.append(line);
+                        }
+                        reader.close();
+                        String parsed[] = responseData.toString().split("\\|");
+
+                        getActivity().runOnUiThread(() -> {
+                            if (parsed[0].equals("ok")) {
+                                Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "업데이트 sql 실패", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+                checkConnectAndRun(thread0);
             }
         });
 
@@ -348,11 +424,75 @@ public class Fragment3 extends Fragment {
                     tableCenter.setVisibility(View.VISIBLE);
                     receiveBt1.setVisibility((View.GONE));
                     receiveBt2.setVisibility(View.VISIBLE);
+
+                    new Thread(() -> {
+                        try {
+                            URL url = new URL(popup.url +
+                                    "plantManageSet?w_auto=1"
+                            );
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            connection.setRequestMethod("GET");
+                            connection.setConnectTimeout(30000);
+                            connection.connect();
+
+                            InputStream inputStream = connection.getInputStream();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                            StringBuilder responseData = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                responseData.append(line);
+                            }
+                            reader.close();
+                            String parsed[] = responseData.toString().split("\\|");
+
+                            getActivity().runOnUiThread(() -> {
+                                if (parsed[0].equals("ok")) {
+                                    Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(getContext(), "업데이트 sql 실패", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
                 } else {
                     includeView.setVisibility(View.VISIBLE);
                     tableCenter.setVisibility(View.GONE);
                     receiveBt1.setVisibility((View.VISIBLE));
                     receiveBt2.setVisibility(View.GONE);
+
+                    new Thread(() -> {
+                        try {
+                            URL url = new URL(popup.url +
+                                    "plantManageSet?w_auto=0"
+                            );
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            connection.setRequestMethod("GET");
+                            connection.setConnectTimeout(30000);
+                            connection.connect();
+
+                            InputStream inputStream = connection.getInputStream();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                            StringBuilder responseData = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                responseData.append(line);
+                            }
+                            reader.close();
+                            String parsed[] = responseData.toString().split("\\|");
+
+                            getActivity().runOnUiThread(() -> {
+                                if (parsed[0].equals("ok")) {
+                                    Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(getContext(), "업데이트 sql 실패", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
                 }
             }
         });
@@ -370,11 +510,75 @@ public class Fragment3 extends Fragment {
                     tableCenter.setVisibility(View.VISIBLE);
                     receiveBt3.setVisibility((View.GONE));
                     receiveBt4.setVisibility(View.VISIBLE);
+
+                    new Thread(() -> {
+                        try {
+                            URL url = new URL(popup.url +
+                                    "plantManageSet?l_auto=1"
+                            );
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            connection.setRequestMethod("GET");
+                            connection.setConnectTimeout(30000);
+                            connection.connect();
+
+                            InputStream inputStream = connection.getInputStream();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                            StringBuilder responseData = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                responseData.append(line);
+                            }
+                            reader.close();
+                            String parsed[] = responseData.toString().split("\\|");
+
+                            getActivity().runOnUiThread(() -> {
+                                if (parsed[0].equals("ok")) {
+                                    Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(getContext(), "업데이트 sql 실패", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
                 } else {
                     includeView.setVisibility(View.VISIBLE);
                     tableCenter.setVisibility(View.GONE);
                     receiveBt3.setVisibility((View.VISIBLE));
                     receiveBt4.setVisibility(View.GONE);
+
+                    new Thread(() -> {
+                        try {
+                            URL url = new URL(popup.url +
+                                    "plantManageSet?l_auto=0"
+                            );
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            connection.setRequestMethod("GET");
+                            connection.setConnectTimeout(30000);
+                            connection.connect();
+
+                            InputStream inputStream = connection.getInputStream();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                            StringBuilder responseData = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                responseData.append(line);
+                            }
+                            reader.close();
+                            String parsed[] = responseData.toString().split("\\|");
+
+                            getActivity().runOnUiThread(() -> {
+                                if (parsed[0].equals("ok")) {
+                                    Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(getContext(), "업데이트 sql 실패", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
                 }
             }
         });
@@ -804,6 +1008,7 @@ public class Fragment3 extends Fragment {
                 Log.i("##INFO", "afterTextChanged(): editable = " + editable);
             }
         });
+
         receiveBt1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) { //데이터 값 받는 버튼
@@ -846,6 +1051,8 @@ public class Fragment3 extends Fragment {
                 System.out.println("manuWaterData시작 -----------------------");
                 HttpURLConnection urlConnection = null;
                 BufferedReader reader = null;
+                int responseCode = 0;
+                boolean executeCallback = true;
 
                 try {
                     urlConnection = null;
@@ -860,7 +1067,7 @@ public class Fragment3 extends Fragment {
 
                     urlConnection.connect();
                     // HTTP 상태 코드 확인
-                    int responseCode = urlConnection.getResponseCode();
+                    responseCode = urlConnection.getResponseCode();
                     if (responseCode != HttpURLConnection.HTTP_OK) {
                         System.out.println("HTTP error code: " + responseCode);
                         return;
@@ -869,7 +1076,7 @@ public class Fragment3 extends Fragment {
                     InputStream inputStream = urlConnection.getInputStream();
 
                     if (inputStream == null) {
-                        System.out.println("inputStream ㅜull");
+                        System.out.println("inputStream null");
                         return;
                     }
 
@@ -905,6 +1112,16 @@ public class Fragment3 extends Fragment {
                 } catch (IOException ioException) {
                     System.out.println("IO error: " + ioException.getMessage());
                     ioException.printStackTrace();
+                    responseCode = 0;
+                    if (getContext() != null) {
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getContext(), "다시 시도", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                    executeCallback = false;
                 } catch (JSONException jsonException) {
                     System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
@@ -924,7 +1141,7 @@ public class Fragment3 extends Fragment {
                             e.printStackTrace();
                         }
                     }
-                    if (callback != null) {
+                    if (callback != null && executeCallback == true) {
                         new Thread(callback).start();
                     }
                 }
@@ -938,6 +1155,7 @@ public class Fragment3 extends Fragment {
                 System.out.println("manuWaterArray 시작 -----------------------");
                 HttpURLConnection urlConnection = null;
                 BufferedReader reader = null;
+                int responseCode = 0;
 
                 try {
                     urlConnection = null;
@@ -951,7 +1169,7 @@ public class Fragment3 extends Fragment {
                     urlConnection.setRequestProperty("Connection", "close");
 
                     urlConnection.connect();
-                    int responseCode = urlConnection.getResponseCode();
+                    responseCode = urlConnection.getResponseCode();
                     if (responseCode != HttpURLConnection.HTTP_OK) {
                         System.out.println("HTTP error code: " + responseCode);
                         return;
@@ -960,7 +1178,7 @@ public class Fragment3 extends Fragment {
                     InputStream inputStream = urlConnection.getInputStream();
 
                     if (inputStream == null) {
-                        System.out.println("inputStream ㅜull");
+                        System.out.println("inputStream null");
                         return;
                     }
 
@@ -1007,11 +1225,18 @@ public class Fragment3 extends Fragment {
                     waterStsRef.set(sts);
                     waterWtsRef.set(wts);
 
-
                 } catch (IOException ioException) {
                     System.out.println("IO error: " + ioException.getMessage());
                     ioException.printStackTrace();
-
+                    responseCode = 0;
+                    if (getContext() != null) {
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getContext(), "다시 시도", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
                 } catch (JSONException jsonException){
                     System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
@@ -1031,67 +1256,63 @@ public class Fragment3 extends Fragment {
                         }
                     }
                 }
-                int[] uds = waterUdsRef.get();
-                String[] sts = waterStsRef.get();
-                int[] wts = waterWtsRef.get();
-
-                JSONArray udJsonArray = new JSONArray();
-                if (uds != null) {
-                    for (int ud : uds) {
-                        udJsonArray.put(ud);
-                    }
-                }
-
-                JSONArray stJsonArray = new JSONArray();
-                if (sts != null) {
-                    for (String st : sts) {
-                        stJsonArray.put(st);
-                    }
-                }
-
-                JSONArray wtJsonArray = new JSONArray();
-                if (wts != null) {
-                    for (int wt : wts) {
-                        wtJsonArray.put(wt);
-                    }
-                }
-                System.out.println("udJsonArray: " + udJsonArray);
-                System.out.println("stJsonArray: " + stJsonArray);
-                System.out.println("wtJsonArray: " + wtJsonArray);
-
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putInt("otReference", otReference);
-                //배열을 저장해야함
-                editor.putString("wateruds", udJsonArray.toString());
-                editor.putString("watersts", stJsonArray.toString());
-                editor.putString("waterwts", wtJsonArray.toString());
-                editor.apply();
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        edWater1 = Integer.toString(otReference);
-                        if (!edWater1.equals("")) {
-                            edValue1.setText(edWater1);
+                if(responseCode == HttpURLConnection.HTTP_OK){
+                    int[] uds = waterUdsRef.get();
+                    String[] sts = waterStsRef.get();
+                    int[] wts = waterWtsRef.get();
+                    JSONArray udJsonArray = new JSONArray();
+                    if (uds != null) {
+                        for (int ud : uds) {
+                            udJsonArray.put(ud);
                         }
-                        for (int i = 0; i < udJsonArray.length(); i++) {
-                            try {
-                                DataValue dataValue = new DataValue();
-                                dataValue.setDate(udJsonArray.get(i).toString());
-                                dataValue.setTime(stJsonArray.get(i).toString());
-                                dataValue.setValue(wtJsonArray.get(i).toString());
-                                waterDataList.add(dataValue);
-                            } catch (Exception e) {
-                                e.printStackTrace();
+                    }
+                    JSONArray stJsonArray = new JSONArray();
+                    if (sts != null) {
+                        for (String st : sts) {
+                            stJsonArray.put(st);
+                        }
+                    }
+                    JSONArray wtJsonArray = new JSONArray();
+                    if (wts != null) {
+                        for (int wt : wts) {
+                            wtJsonArray.put(wt);
+                        }
+                    }
+                    System.out.println("udJsonArray: " + udJsonArray);
+                    System.out.println("stJsonArray: " + stJsonArray);
+                    System.out.println("wtJsonArray: " + wtJsonArray);
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putInt("otReference", otReference);
+                    //배열을 저장해야함
+                    editor.putString("wateruds", udJsonArray.toString());
+                    editor.putString("watersts", stJsonArray.toString());
+                    editor.putString("waterwts", wtJsonArray.toString());
+                    editor.apply();
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            waterDataList.clear();
+                            edWater1 = Integer.toString(otReference);
+                            if (!edWater1.equals("")) {
+                                edValue1.setText(edWater1);
                             }
+                            for (int i = 0; i < udJsonArray.length(); i++) {
+                                try {
+                                    DataValue dataValue = new DataValue();
+                                    dataValue.setDate(udJsonArray.get(i).toString());
+                                    dataValue.setTime(stJsonArray.get(i).toString());
+                                    dataValue.setValue(wtJsonArray.get(i).toString());
+                                    waterDataList.add(dataValue);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            dataAdapter.setDataList(waterDataList);
+                            dataAdapter.notifyDataSetChanged();
                         }
-                        dataAdapter.setDataList(waterDataList);
-                        dataAdapter.notifyDataSetChanged();
-
-                        //이후 ui적용
-
-                    }
-                });
+                    });
+                }
             }
         }).start();
     }
@@ -1126,7 +1347,7 @@ public class Fragment3 extends Fragment {
                     InputStream inputStream = urlConnection.getInputStream();
 
                     if (inputStream == null) {
-                        System.out.println("inputStream ㅜull");
+                        System.out.println("inputStream null");
                         return;
                     }
 
@@ -1162,6 +1383,15 @@ public class Fragment3 extends Fragment {
                 } catch (IOException ioException) {
                     System.out.println("IO error: " + ioException.getMessage());
                     ioException.printStackTrace();
+                    responseCode = 0;
+                    if (getContext() != null) {
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getContext(), "다시 시도", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
                 }catch (JSONException jsonException){
                     System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
@@ -1187,24 +1417,22 @@ public class Fragment3 extends Fragment {
                         editor.putInt("hmReference", hmReference);
                         editor.putInt("thReference", thReference);
                         editor.apply();
+
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                waterValue1 = Integer.toString(hmReference);
+                                if (!waterValue1.equals("")) {
+                                    tvValue1.setText(waterValue1);
+                                }
+                                waterValue2 = Integer.toString(thReference);
+                                if (!waterValue2.equals("")) {
+                                    tvValue2.setText(waterValue2);
+                                }
+                            }
+                        });
                     }
                 }
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        waterValue1 = Integer.toString(hmReference);
-                        if (!waterValue1.equals("")) {
-                            tvValue1.setText(waterValue1);
-                        }
-                        waterValue2 = Integer.toString(thReference);
-                        if (!waterValue2.equals("")) {
-                            tvValue2.setText(waterValue2);
-                        }
-
-                        //이후 ui적용
-
-                    }
-                });
             }
         }).start();
     }
@@ -1237,7 +1465,7 @@ public class Fragment3 extends Fragment {
                     InputStream inputStream = urlConnection.getInputStream();
 
                     if (inputStream == null) {
-                        System.out.println("inputStream ㅜull");
+                        System.out.println("inputStream null");
                         return;
                     }
 
@@ -1288,6 +1516,15 @@ public class Fragment3 extends Fragment {
                 } catch (IOException ioException) {
                     System.out.println("IO error: " + ioException.getMessage());
                     ioException.printStackTrace();
+                    responseCode = 0;
+                    if (getContext() != null) {
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getContext(), "다시 시도", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
                 } catch (JSONException jsonException){
                     System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
@@ -1307,67 +1544,64 @@ public class Fragment3 extends Fragment {
                         }
                     }
                 }
-                int[] uds = waterUdsRef.get();
-                String[] sts = waterStsRef.get();
-                int[] lss = waterWtsRef.get();
-
-                JSONArray udJsonArray = new JSONArray();
-                if (uds != null) {
-                    for (int ud : uds) {
-                        udJsonArray.put(ud);
-                    }
-                }
-
-                JSONArray stJsonArray = new JSONArray();
-                if (sts != null) {
-                    for (String st : sts) {
-                        stJsonArray.put(st);
-                    }
-                }
-
-                JSONArray lsJsonArray = new JSONArray();
-                if (lss != null) {
-                    for (int ls : lss) {
-                        lsJsonArray.put(ls);
-                    }
-                }
-                System.out.println("udJsonArray: " + udJsonArray);
-                System.out.println("stJsonArray: " + stJsonArray);
-                System.out.println("lsJsonArray: " + lsJsonArray);
-
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putInt("otReference", otReference);
-                //배열을 저장해야함
-                editor.putString("lightuds", udJsonArray.toString());
-                editor.putString("lightsts", stJsonArray.toString());
-                editor.putString("lightlss", lsJsonArray.toString());
-                editor.apply();
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        edLight1 = Integer.toString(otReference);
-                        if (!edLight1.equals("")) {
-                            edValue1.setText(edLight1);
+                if(responseCode == HttpURLConnection.HTTP_OK){
+                    int[] uds = waterUdsRef.get();
+                    String[] sts = waterStsRef.get();
+                    int[] lss = waterWtsRef.get();
+                    JSONArray udJsonArray = new JSONArray();
+                    if (uds != null) {
+                        for (int ud : uds) {
+                            udJsonArray.put(ud);
                         }
-                        for (int i = 0; i < udJsonArray.length(); i++) {
-                            try {
-                                DataValue dataValue = new DataValue();
-                                dataValue.setDate(udJsonArray.get(i).toString());
-                                dataValue.setTime(stJsonArray.get(i).toString());
-                                dataValue.setValue(lsJsonArray.get(i).toString());
-                                lightDataList.add(dataValue);
-                            } catch (Exception e) {
-                                e.printStackTrace();
+                    }
+                    JSONArray stJsonArray = new JSONArray();
+                    if (sts != null) {
+                        for (String st : sts) {
+                            stJsonArray.put(st);
+                        }
+                    }
+                    JSONArray lsJsonArray = new JSONArray();
+                    if (lss != null) {
+                        for (int ls : lss) {
+                            lsJsonArray.put(ls);
+                        }
+                    }
+                    System.out.println("udJsonArray: " + udJsonArray);
+                    System.out.println("stJsonArray: " + stJsonArray);
+                    System.out.println("lsJsonArray: " + lsJsonArray);
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putInt("otReference", otReference);
+                    //배열을 저장해야함
+                    editor.putString("lightuds", udJsonArray.toString());
+                    editor.putString("lightsts", stJsonArray.toString());
+                    editor.putString("lightlss", lsJsonArray.toString());
+                    editor.apply();
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            lightDataList.clear();
+                            edLight1 = Integer.toString(otReference);
+                            if (!edLight1.equals("")) {
+                                edValue1.setText(edLight1);
                             }
+                            for (int i = 0; i < udJsonArray.length(); i++) {
+                                try {
+                                    DataValue dataValue = new DataValue();
+                                    dataValue.setDate(udJsonArray.get(i).toString());
+                                    dataValue.setTime(stJsonArray.get(i).toString());
+                                    dataValue.setValue(lsJsonArray.get(i).toString());
+                                    lightDataList.add(dataValue);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            dataAdapter.setDataList(lightDataList);
+                            dataAdapter.notifyDataSetChanged();
+                            //이후 ui적용
                         }
-                        dataAdapter.setDataList(lightDataList);
-                        dataAdapter.notifyDataSetChanged();
-
-                        //이후 ui적용
-
-                    }
-                });
+                    });
+                }
             }
         }).start();
     }
@@ -1401,7 +1635,7 @@ public class Fragment3 extends Fragment {
                     InputStream inputStream = urlConnection.getInputStream();
 
                     if (inputStream == null) {
-                        System.out.println("inputStream ㅜull");
+                        System.out.println("inputStream null");
                         return;
                     }
 
@@ -1429,14 +1663,23 @@ public class Fragment3 extends Fragment {
                     JSONObject jsonObject = jsonArray.getJSONObject(0);
                     System.out.println("첫번째 jsonObject: " + jsonObject);
                     //sample data test
-                    hmReference = jsonObject.getInt("lt");
-                    thReference = jsonObject.getInt("dr");
+                    ltReference = jsonObject.getInt("lt");
+                    drReference = jsonObject.getInt("dr");
                     System.out.println("lt: " + ltReference);
                     System.out.println("dr: " + drReference);
 
                 } catch (IOException ioException) {
                     System.out.println("IO error: " + ioException.getMessage());
                     ioException.printStackTrace();
+                    responseCode = 0;
+                    if (getContext() != null) {
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getContext(), "다시 시도", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
                 }catch (JSONException jsonException){
                     System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
@@ -1462,30 +1705,26 @@ public class Fragment3 extends Fragment {
                         editor.putInt("ltReference", ltReference);
                         editor.putInt("drReference", drReference);
                         editor.apply();
+
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                lightValue1 = Integer.toString(ltReference);
+                                if (!lightValue1.equals("")) {
+                                    tvValue1.setText(lightValue1);
+                                }
+                                lightValue2 = Integer.toString(drReference);
+                                if (!lightValue2.equals("")) {
+                                    tvValue2.setText(lightValue2);
+                                }
+                                //이후 ui적용
+                            }
+                        });
                     }
                 }
-
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        lightValue1 = Integer.toString(ltReference);
-                        if (!lightValue1.equals("")) {
-                            tvValue1.setText(lightValue1);
-                        }
-                        lightValue2 = Integer.toString(drReference);
-                        if (!lightValue2.equals("")) {
-                            tvValue2.setText(lightValue2);
-                        }
-
-
-                    }
-                });
             }
         }).start();
     }
-
-
-
 
     private void changeText(String value, String range, String value1, String value2, String value3, String value4, String value5) {
         tvValue.setText(value);
@@ -1505,18 +1744,40 @@ public class Fragment3 extends Fragment {
         return !value1.equals("") && !value2.equals("") && !value3.equals("");
     }
 
+    private boolean isNotNullOfDelete() {
+        return !deleteIndexList.isEmpty();
+    }
+
+    private void clearValue() {
+        value1.setText("");
+        value2.setText("");
+        value3.setText("");
+    }
+
+    private void deleteWaterRecord(String data) {
+        if (!data.equals("")) {
+            deleteList.add(waterDataList.get(Integer.parseInt(data)));
+        }
+    }
+
+    private void deleteLightRecord(String data) {
+        if (!data.equals("")) {
+            deleteList.add(lightDataList.get(Integer.parseInt(data)));
+        }
+
+    }
+
     @Override
     public void onResume() {
         super.onResume();
         tvHumid.setText(humid);
         tvLight.setText(light);
-//        //배열을 저장해야함
+        //배열을 저장해야함
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         waterState = sharedPreferences.getBoolean("WaterCheckBoxState", false);
         lightState = sharedPreferences.getBoolean("LightCheckBoxState", false);
-
 
         checkBoxWater.setChecked(waterState);
         checkBoxLight.setChecked(lightState);
@@ -1527,112 +1788,71 @@ public class Fragment3 extends Fragment {
         JSONArray lightUdJsonArray = null;
         JSONArray lightStJsonArray = null;
         JSONArray lightLsJsonArray = null;
+        int otReference = -1, hmReference = -1, thReference= -1, ltReference= -1, drReference= -1;
 
-//        try {
-//
-//            waterUdJsonArray = new JSONArray(sharedPreferences.getString("wateruds", "[]"));
-//            waterStJsonArray = new JSONArray(sharedPreferences.getString("watersts", "[]"));
-//            waterWtJsonArray = new JSONArray(sharedPreferences.getString("waterwts", "[]"));
-//            lightUdJsonArray = new JSONArray(sharedPreferences.getString("lightuds", "[]"));
-//            lightStJsonArray = new JSONArray(sharedPreferences.getString("lightsts", "[]"));
-//            lightLsJsonArray = new JSONArray(sharedPreferences.getString("lightlss", "[]"));
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+
+        try {
+            waterUdJsonArray = new JSONArray(sharedPreferences.getString("wateruds", "[]"));
+            waterStJsonArray = new JSONArray(sharedPreferences.getString("watersts", "[]"));
+            waterWtJsonArray = new JSONArray(sharedPreferences.getString("waterwts", "[]"));
+            lightUdJsonArray = new JSONArray(sharedPreferences.getString("lightuds", "[]"));
+            lightStJsonArray = new JSONArray(sharedPreferences.getString("lightsts", "[]"));
+            lightLsJsonArray = new JSONArray(sharedPreferences.getString("lightlss", "[]"));
+
+            otReference = sharedPreferences.getInt("otReference", -1);
+            hmReference = sharedPreferences.getInt("hmReference", -1);
+            thReference = sharedPreferences.getInt("thReference", -1);
+            ltReference = sharedPreferences.getInt("ltReference", -1);
+            drReference = sharedPreferences.getInt("drReference", -1);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
         //ui적용
-//        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-        // Tab이 선택되었을 때
-//            @Override
-//            public void onTabSelected(TabLayout.Tab tab) {
-//                // 선택된 Tab의 위치를 가져옴
-//                int position = tab.getPosition();
-//                value1.setText("");
-//                value2.setText("");
-//                value3.setText("");
-//
-////                switch (position) {
-////                    case 0:
-////                        curType = WATER;
-////                        checkBoxLight.setVisibility(View.GONE);
-////                        checkBoxWater.setVisibility(View.VISIBLE);
-////                        CheckSetNearestWater.setVisibility(View.VISIBLE);
-////                        CheckSetNearestLight.setVisibility(View.GONE);
-////                        receiveBt1.setVisibility(View.VISIBLE);
-////                        receiveBt2.setVisibility(View.GONE);
-////                        receiveBt3.setVisibility(View.GONE);
-////                        receiveBt4.setVisibility(View.GONE);
-////
-////                        tvValue1.setText(waterValue1);
-////                        tvValue2.setText(waterValue2);
-////
-////                        if (edWater1 != null || edWater2 != null) {
-////                            edValue1.setText(edWater1);
-////                            edValue2.setText(edWater2);
-////                        } else {
-////                            edValue1.setText("");
-////                            edValue2.setText("");
-////                        }
-////
-////                        if (checkBoxWater.isChecked()) {
-////                            tableCenter.setVisibility(View.VISIBLE);
-////                            includeView.setVisibility(View.GONE);
-////                        } else {
-////                            tableCenter.setVisibility(View.GONE);
-////                            includeView.setVisibility(View.VISIBLE);
-////                        }
-////                        changeText("희망값", "임계범위", "1", "25", "급수시간", "수동급수시간", "");
-////                        dataAdapter.notifyItemRangeRemoved(0, waterDataList.size());
-////                        dataAdapter.setDataList(waterDataList);
-////
-////                        break;
-////                    case 1:
-////                        curType = LIGHT;
-////                        checkBoxWater.setVisibility(View.GONE);
-////                        checkBoxLight.setVisibility(View.VISIBLE);
-////                        CheckSetNearestWater.setVisibility(View.GONE);
-////                        CheckSetNearestLight.setVisibility(View.VISIBLE);
-////                        receiveBt1.setVisibility(View.GONE);
-////                        receiveBt2.setVisibility(View.GONE);
-////                        receiveBt3.setVisibility(View.VISIBLE);
-////                        receiveBt4.setVisibility(View.GONE);
-////                        tvValue1.setText(lightValue1);
-////                        tvValue2.setText(lightValue2);
-////
-////                        if (edLight1 != null || edLight2 != null) {
-////                            edValue1.setText(edLight1);
-////                            edValue2.setText(edLight2);
-////                        } else {
-////                            edValue1.setText("");
-////                            edValue2.setText("");
-////                        }
-////
-////                        if (checkBoxLight.isChecked()) {
-////                            tableCenter.setVisibility(View.VISIBLE);
-////                            includeView.setVisibility(View.GONE);
-////                        } else {
-////                            tableCenter.setVisibility(View.GONE);
-////                            includeView.setVisibility(View.VISIBLE);
-////                        }
-////                        changeText("조도값", "감지시간", "600", "60", "조명상태", "수동조명시간", "");
-////                        dataAdapter.setDataList(lightDataList);
-////                        break;
-////
-////                }
-////            }
-////
-////            @Override
-////            public void onTabUnselected(TabLayout.Tab tab) {
-////
-////            }
-////
-////            @Override
-////            public void onTabReselected(TabLayout.Tab tab) {
-////
-////            }
-////
-////        });
+        System.out.println("otReference: " + otReference);
+        System.out.println("hmReference: " + hmReference);
+        System.out.println("thReference: " + thReference);
+        System.out.println("ltReference: " + ltReference);
+        System.out.println("drReference: " + drReference);
+        // System.out.println("waterUdJosnArray: " + waterUdJsonArray);
+        // System.out.println("waterStJsonArray: " + waterStJsonArray);
+        // System.out.println("waterWtJsonArray: " + waterWtJsonArray);
+        // System.out.println("lightUdJsonArray: " + lightUdJsonArray);
+        // System.out.println("lightStJsonArray: " + lightStJsonArray);
+        // System.out.println("lightLsJsonArray: " + lightLsJsonArray);
+    }
+
+    private void initView(boolean isChecked) {
+        if (Objects.equals(curType, WATER)) {
+            if (isChecked) {
+                includeView.setVisibility(View.GONE);
+                tableCenter.setVisibility(View.VISIBLE);
+                receiveBt1.setVisibility((View.GONE));
+                receiveBt2.setVisibility(View.VISIBLE);
+            } else {
+                includeView.setVisibility(View.VISIBLE);
+                tableCenter.setVisibility(View.GONE);
+                receiveBt1.setVisibility((View.VISIBLE));
+                receiveBt2.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private boolean isNotNullOfAutoValue(String value1, String value2) {
+        return !value1.equals("") && !value2.equals("");
+    }
+
+    private boolean isNotNullOfManuValue(String value1) {
+        return !value1.equals("");
+    }
+
+    private void checkConnectAndRun( Thread targetThread ){
+        if(popup.CONNECT_STATE)
+            targetThread.start();
+        else
+            Toast.makeText(getContext(), "연결되어있지 않음", Toast.LENGTH_SHORT).show();
     }
 }
