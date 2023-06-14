@@ -5,12 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-
-
 
         <TableLayout
             android:id="@+id/tab_layout_center_checked"
@@ -35,6 +32,7 @@
                     android:text="수동급수시간"
                     android:textColor="@color/black"
                     android:textSize="20sp" />
+
 
                 <TextView
                     android:id="@+id/tv_b"
@@ -81,7 +79,6 @@
                     android:textColor="@color/black"
                     android:textSize="20sp" />
 
-
             </TableRow>
         </TableLayout>
 
@@ -120,7 +117,6 @@
                     android:text="지정시간"
                     android:textColor="@color/black"
                     android:textSize="20sp" />
-
 
                 <TextView
                     android:id="@+id/tv_time_to_status"
@@ -212,18 +208,50 @@
 
             </LinearLayout>
 
-            <Button
-                android:id="@+id/bt_delete"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:backgroundTint="#BDBDBD"
-                android:text="삭제"
-                android:textColor="@color/black" />
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/setNearest_water"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"/>
+
+                <CheckBox
+                    android:id="@+id/setNearest_light"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <TextView
+                    android:id="@+id/setNearest_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:text="최단시간 적용"
+                    android:textSize="18sp" />
+
+                <View
+                    android:layout_width="wrap_content"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+                <Button
+                    android:id="@+id/bt_delete"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#BDBDBD"
+                    android:text="삭제"
+                    android:textColor="@color/black" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,40 +1,90 @@
 package com.example.app;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.json.JSONException;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 public class ChatGPT {
+    static JSONObject userMessage;
+    static JSONArray messagesArray;
+    static JSONObject input;
     URL url;
     HttpURLConnection con;
-    JSONObject input;
     String key;
     public ChatGPT(){
         try {
-            url = new URL("https://api.openai.com/v1/completions");
-            input = new JSONObject();
-            input.put("model", "text-davinci-003");
-            input.put("prompt", "");
-            input.put("max_tokens", 2048);
-            this.key = "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";
+            this.url = new URL("https://api.openai.com/v1/chat/completions");
+            this.key = "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";
         }catch (Exception e) {
             e.printStackTrace();
         }
     }
+    public void promptSet(String prompt){
+        userMessage = new JSONObject();
+        userMessage.put("content", prompt);
+        userMessage.put("role", "user");
+
+        messagesArray = new JSONArray();
+        messagesArray.add(userMessage);
+
+        input = new JSONObject();
+        input.put("model", "gpt-3.5-turbo");
+        input.put("messages", messagesArray);
+    }
+    public JSONObject score(String name, double temperature, double humidity, double nitrogen, double phosphorus, double potassium, double ph, double ec, double lux){
+//        this.input.put("prompt", "식물 "+name+"의 토양 온도는 "+temperature+"℃, 토양 습도는 "+humidity+"%, 질소가 "+nitrogen+"mg/kg, 인이 "+phosphorus+"mg/kg, 칼륨이 "+potassium+" mg/kg, 토양 ph가 "+ph+" 전기 전도도는 "+ec+"μS/cm, 광량은 "+lux+"lux이다. 이 식물의 상태를 보고 아래 json 데이터 형태로 총 100점 만점에 점수를 매겨줘.\n" +
+//                "{\"총점\":\"...\"}");
+        String prompt = "식물 "+name+"의 토양 온도(℃):"+temperature+", 수분부피/토양부피(%): "+humidity+", N(mg/kg):"+nitrogen+", P(mg/kg): "+phosphorus+", K(mg/kg):"+potassium+", 토양ph:"+ph+", 전기 전도도(μS/cm):"+ec+", 광량(lux):"+lux+"인데 이 식물의 상태를 보고 아래 json 데이터 형태로 총 100점 만점에 점수를 매겨줘. 부연설명 빼고 json데이터만 주면 돼.\n" +
+                "{\"총점\":...}";
+        String response = "";
+        promptSet(prompt);
+        try{
+            response = process();
+//            System.out.println(response);
+            JSONParser parser = new JSONParser();
+            Object obj = parser.parse(response);
+            JSONObject scoreResponse = (JSONObject) obj;
+            System.out.println(scoreResponse);
+            return scoreResponse;
+        }catch (ParseException e){
+            e.printStackTrace();
+            System.out.println(response);
+            System.out.println("json형태로 안줘서 에러");
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("다시 시도해주세요");
+        }
+        System.out.println("error");
+        return new JSONObject();
+    }
     public String feedback(String name, double temperature, double humidity, double nitrogen, double phosphorus, double potassium, double ph, double ec, double lux) {
-        this.input.put("prompt", "식물 "+name+"의 토양 온도는 "+temperature+"도, 토양 습도는 "+humidity+"%, 질소가 "+nitrogen+"mg/kg, 인이 "+phosphorus+"mg/kg, 칼륨이 "+potassium+" mg/kg, 토양 ph가 "+ph+" 전기 전도도는 "+ec+"us/cm, 광량은 "+lux+"lux이다. 문제가 있는 것을 분석해주고, 개선방안을 제안해줘.");
-        return process();
+        String prompt = "식물 "+name+"의 토양 온도(℃):"+temperature+", 수분부피/토양부피(%): "+humidity+", N(mg/kg):"+nitrogen+", P(mg/kg): "+phosphorus+", K(mg/kg):"+potassium+", 토양ph:"+ph+", 전기 전도도(μS/cm):"+ec+", 광량(lux):"+lux+"인데 문제가 있는 것만 100자 이내로 요약 분석 및 개선방안을 제안, 100점만점으로 총점, 결과는 json으로 \n" +
+                "{\"요약\":\"\",\"분석\":\"\",\"점수\":\"\",\"개선방안\":\"\"} 형태로 만들어줘.";
+        promptSet(prompt);
+        String text = process();
+        System.out.println(text);
+        return text;
     }
     public String recommand(String name){
-        this.input.put("prompt", "식물 "+name+"의 추천 토양 온도(섭씨), 추천 토양 습도(%), 추천 N(mg/kg), 추천 P(mg/kg), 추천 K(mg/kg), 추천 토양산화도(ph), 추천 토양전기전도도(us/cm), 추천 광량(lux)의 각 수치를 범위로 만들어서 아래처럼 json을 만들어줘\n" +
+        this.input.put("prompt", "식물 "+name+"의 추천 토양 온도(℃), 추천 토양 습도(%), 추천 N(mg/kg), 추천 P(mg/kg), 추천 K(mg/kg), 추천 토양산화도(ph), 추천 토양전기전도도(μS/cm), 추천 광량(lux)의 각 수치를 범위로 만들어서 아래처럼 json을 만들어줘\n" +
                 "{\"추천_토양온도\": {\"최소값\": xx,\"최대값\": xx,\"단위\": \"℃\"}, \"추천_토양습도\": {...}, \"추천_N\": {...}, \"추천_P\": {...}, \"추천_K\": {...}, \"추천_토양산화도\": {...}, \"추천_토양전기전도도\": {...},  \"추천_광량\": {...}}");
+
         return process();
+    }
+    public String tips(String name){
+        //this.input.put("prompt", "식물 "+name+"을 잘 키울 수 있는 팁을 알려줘");
+        String prompt = "식물 "+name+"을 잘 키울 수 있는 팁을 알려줘";
+        promptSet(prompt);
+        String text = process();
+        System.out.println(text);
+        return text;
     }
     public String process(){
         try {
@@ -56,8 +106,10 @@ public class ChatGPT {
 
             int responseCode = con.getResponseCode();
             if (responseCode != 200) {
-                return "error";
+                System.out.println("Response Code : " + responseCode);
+                return "error 응답 코드 200x";
             } else {
+
                 System.out.println("Response Code : " + responseCode);
             }
 
@@ -69,23 +121,27 @@ public class ChatGPT {
                     //공백제거
                     response.append(responseLine.trim());
                 }
-                System.out.println(response.toString());
                 //String 데이터를 Object로 변환
                 JSONParser parser = new JSONParser();
                 Object obj = parser.parse(response.toString());
                 // Object 데이터를 JSONObject로 변환
                 JSONObject jsonResponse = (JSONObject) obj;
+                System.out.println(jsonResponse);
                 //jsonResponse에서 text 부분만 추출하기 위한 과정
                 JSONArray choices = (JSONArray) jsonResponse.get("choices");
                 // choices 부분 추출하여 [] 배열 벗기기
                 JSONObject choice = (JSONObject) choices.get(0);
-                // text 필드 추출
-                String text = (String) choice.get("text");
+                // 첫 번째 선택지에서 "message" 부분 추출하기
+                JSONObject message = (JSONObject) choice.get("message");
+
+                // "message" 부분에서 "content" 추출하기
+                String content = (String) message.get("content");
                 con.disconnect();
-                return text;
+                return content;
             }
         } catch (Exception e){
             e.printStackTrace();
+            System.out.println("다시 시도");
             return "error";
         }
     }

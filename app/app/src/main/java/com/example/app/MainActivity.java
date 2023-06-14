@@ -1,12 +1,14 @@
 package com.example.app;
 
-
-
+import static com.example.app.Fragment1.angryface;
+import static com.example.app.Fragment1.noface;
+import static com.example.app.Fragment1.score;
+import static com.example.app.Fragment1.smileface;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager2.widget.ViewPager2;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -17,20 +19,19 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,19 +39,16 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.HashMap;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Bundle;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -58,11 +56,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TabLayout tabLayout;
     ViewPager2 viewPager;
     TabPagerAdapter adapter;
+    boolean water,light0, light1;
+
+
+
     String[] tabName = new String[]{"대시보드", "상세분석", "식물관리"};
-    public static final String URL = "http://cofon.xyz:9090/read?col=temp_humid_light_ph_nitro_phos_pota_ec";
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
-    private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final int PERMISSION_REQUEST_CODE = 0;
+    public static SharedPreferences sharedPreferences_fragment2;
+
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,17 +74,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // 앱 권한 동의 요청
         requestPermissions();
 
+        sharedPreferences_fragment2 = getSharedPreferences("myPreferences", Context.MODE_PRIVATE);
+
         toolbar = (Toolbar) findViewById(R.id.toolbar);           // actionbar에서 toolbar로 변경
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         //getSupportActionBar().setTitle("SmartPotModule");
-
-        //xml 연결
+        //xml 연결ㅜ
         tabLayout = findViewById(R.id.tabs);
-        viewPager = findViewById(R.id.pager);
+        viewPager = findViewById(R.id.viewPager);
         //adapter 준비 및 연결
         adapter = new TabPagerAdapter(this);
         viewPager.setAdapter(adapter);
+
+
         // TabLayout, ViewPager 연결
         new TabLayoutMediator(tabLayout, viewPager, new TabLayoutMediator.TabConfigurationStrategy() {
             @Override
@@ -93,9 +99,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 tab.setCustomView(textView);
             }
         }).attach();
+
         findViewById(R.id.wifi_button).setOnClickListener(this);
-        //JSON서버 연결
-        new GetJsonDataTask().execute(URL);
         //조명상태 불러오는 코드 추가해야함
 
         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
@@ -103,33 +108,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         popup.ssid = sharedPreferences.getString("ssid", "");
         popup.pw = sharedPreferences.getString("pw", "");
         popup.ip = sharedPreferences.getString("ip", "");
+        popup.url = sharedPreferences.getString("url", "");
+        System.out.println(popup.ssid);
+        //new GetJsonDataTask().execute(popup.url);
 
-        if(popup.ip != null && !popup.ip.isEmpty()){        //아두이노 접속 테스트
-            try {
-                // URL 생성
-                String urlString = "http://" + popup.ip + ":12345/?action=hello";
-                URL url = new URL(urlString);
+        WifiConnectionManager connManager = new WifiConnectionManager(this, popup.connText);
+        if (!connManager.permission.hasAll())
+            connManager.permission.requestAll();
 
-                // HTTP GET 요청 설정
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(10000); // 10초 동안 연결 시도
+        if (!popup.ssid.equals("") && !popup.pw.equals("") && !popup.ip.equals("") && !popup.url.equals("")) {
+            new Thread(() -> {
+                connManager.connectToExternal(popup.ssid, popup.pw, 30000);
+            }).start();
+            connManager.setOnExternalAvailable(() -> {
+                System.out.println("외부 와이파이 연결 성공"); //아두이노 접속 테스트
+                new Thread(() -> {
+                    if (connManager.sendPing(5000, popup.ip)) { //핑이 성공하면, rememberedAruduinoIP는 저장해둔 아이피주소
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "서버 연결 성공", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        System.out.println(popup.ip + " " + popup.url);
 
-                // 응답 코드 확인
-                int responseCode = connection.getResponseCode();
-                if(responseCode==200)
-                    Toast.makeText(getApplicationContext(), "서버 연결 성공", Toast.LENGTH_LONG).show(); //토스트메시지 표시
-                else
-                    Toast.makeText(getApplicationContext(), "서버 연결 실패", Toast.LENGTH_LONG).show(); //토스트메시지 표시
-                connection.disconnect();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                        new GetJsonDataTask().execute(popup.url);
+                        new Thread(()->{
+                            try {
+                                while(score != -1) {
+                                    Thread.sleep(100);
+                                }
+                                setFace();
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).start();
+                    }
+                }).start();
+
+            });
         }
-        else
-            Toast.makeText(getApplicationContext(), "서버 연결 필요", Toast.LENGTH_LONG).show(); //토스트메시지 표시
+            else {  //rememberedArduinoIP를 통해 연결이 안되었으므로
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "재등록 바람", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                setBlackFace();
+            }
+
     }
-     
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -145,27 +175,81 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                URL url = new URL(urls[0]);
+                //URL url = new URL(urls[0]);
+                URL url = new URL(urls[0]+"getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
                 InputStream inputStream = httpURLConnection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder responseData = new StringBuilder();
                 while ((line = bufferedReader.readLine()) != null) {
-                    stringBuilder.append(line);
+                    responseData.append(line);
                 }
                 bufferedReader.close();
                 inputStream.close();
                 httpURLConnection.disconnect();
-                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                resultHashMap.put("temp", jsonObject.getString("temp"));
-                resultHashMap.put("humid", jsonObject.getString("humid"));
-                resultHashMap.put("light", jsonObject.getString("light"));
-                resultHashMap.put("ph", jsonObject.getString("ph"));
-                resultHashMap.put("nitro", jsonObject.getString("nitro"));
-                resultHashMap.put("phos", jsonObject.getString("phos"));
-                resultHashMap.put("pota", jsonObject.getString("pota"));
-                resultHashMap.put("ec", jsonObject.getString("ec"));
+
+                String parsed[] = responseData.toString().split("\\|");
+                if (parsed[0].equals("ok") && parsed[1].equals("0")) {
+                    String dataString = parsed[2];
+                    JSONArray jsonArray = new JSONArray(dataString);
+                    if (jsonArray.length() > 0) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(0);
+                        resultHashMap.put("temp", jsonObject.getString("tm"));
+                        resultHashMap.put("humid", jsonObject.getString("hm"));
+                        resultHashMap.put("light", jsonObject.getString("lt"));
+                        resultHashMap.put("ph", jsonObject.getString("ph"));
+                        resultHashMap.put("nitro", jsonObject.getString("n"));
+                        resultHashMap.put("phos", jsonObject.getString("p"));
+                        resultHashMap.put("pota", jsonObject.getString("k"));
+                        resultHashMap.put("ec", jsonObject.getString("ec"));
+                        resultHashMap.put("ts", jsonObject.getString("ts"));
+                    }
+                }
+
+                URL url2 = new URL(urls[0]+"getTableData?name=plant_manage");
+                HttpURLConnection httpURLConnection2 = (HttpURLConnection) url2.openConnection();
+
+                InputStream inputStream2 = httpURLConnection2.getInputStream();
+                BufferedReader bufferedReader2 = new BufferedReader(new InputStreamReader(inputStream2));
+                String line2;
+                StringBuilder responseData2 = new StringBuilder();
+                while ((line2 = bufferedReader2.readLine()) != null) {
+                    responseData2.append(line2);
+                }
+                bufferedReader2.close();
+                inputStream2.close();
+                httpURLConnection2.disconnect();
+
+                String parsed2[] = responseData2.toString().split("\\|");
+                if (parsed2[0].equals("ok") && parsed2[1].equals("0")) {
+                    String dataString2 = parsed2[2];
+                    JSONArray jsonArray2 = new JSONArray(dataString2);
+                    if (jsonArray2.length() > 0) {
+                        JSONObject jsonObject2 = jsonArray2.getJSONObject(0);
+                        System.out.println(jsonObject2);
+                        if (jsonObject2.optString("w_auto").equals("0")) {   //자동=1, 수동=0
+                            water = true;  //수동
+                            System.out.println("버튼 활성화");
+                        }
+                        else if (jsonObject2.optString("w_auto").equals("1")){
+                            water = false;
+                            System.out.println("버튼 비활성화");
+                        }
+
+                        if (jsonObject2.optString("l_auto").equals("0")) {
+                            light0=true;
+                            if (jsonObject2.optString("l_on").equals("1"))
+                                light1=true;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1=false;
+                        }
+                        else if (jsonObject2.optString("l_auto").equals("1"))
+                            light0=false;
+                    }
+                }
+
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -192,13 +276,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String phos = mDataHashMap.get("phos");
             String pota = mDataHashMap.get("pota");
             String ec = mDataHashMap.get("ec");
+            String ts = mDataHashMap.get("ts");
             TextView tempText = findViewById(R.id.temp);
             TextView humidText = findViewById(R.id.humid);
             TextView lightText = findViewById(R.id.light);
             TextView phText = findViewById(R.id.ph);
-            TextView nitroText =findViewById(R.id.nitro);
+            TextView nitroText = findViewById(R.id.nitro);
             TextView phosText = findViewById(R.id.phos);
-            TextView potaText =findViewById(R.id.pota);
+            TextView potaText = findViewById(R.id.pota);
             TextView ecText = findViewById(R.id.ec);
             TextView rTxt = findViewById(R.id.rText);
             tempText.setText(temp);
@@ -209,22 +294,111 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             phosText.setText(phos);
             potaText.setText(pota);
             ecText.setText(ec);
+            if (ts != null)
+                rTxt.setText("마지막 업데이트 시간 : " + ts);  //서버의 업데이트시간 불러오기
+            AppCompatButton waterBtn = findViewById(R.id.nowWater);
+            ToggleButton toggleButton = findViewById(R.id.toggleButton);
+            waterBtn.setEnabled(water);
+            toggleButton.setEnabled(light0);
+            toggleButton.setChecked(light1);
+            /*
             Calendar calendar = Calendar.getInstance();
             SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
             String dateTime = dateFormat.format(calendar.getTime());
-            rTxt.setText(dateTime);
+            rTxt.setText(dateTime);*/
+
+            Fragment2.temp = temp;
+            Fragment2.humid = humid;
+            Fragment2.light = light;
+            Fragment2.nitro = nitro;
+            Fragment2.phos = phos;
+            Fragment2.pota = pota;
+            Fragment2.ec = ec;
+            Fragment2.ph = ph;
+
 
             Fragment3.humid = humid;
             Fragment3.light = light;
+
+            if (!popup.plant.equals("")) {
+                System.out.println(temp);
+                ChatGPT chatGPT = new ChatGPT();
+                new Thread() {
+                    public void run() {
+                        org.json.simple.JSONObject scoreResponse = chatGPT.score(popup.plant, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ph), Double.parseDouble(ec), Double.parseDouble(light));
+                        Handler handler = new Handler(Looper.getMainLooper());
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    JSONObject json = new JSONObject(scoreResponse);
+                                    String scoreString = json.getString("총점");
+                                    score = Float.parseFloat(scoreString);
+                                    setFace();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                    }
+                }.start();
+            }
+            else{
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "식물이름 등록바람", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         }
     }
+    public void setBlackFace(){
+        setBlackImage(smileface, R.drawable.smileface1);
+        setBlackImage(noface, R.drawable.noface1);
+        setBlackImage(angryface, R.drawable.angryface1);
+    }
+    public void setFace(){
+        setBlackFace();
+        try{
+            if(score >=80)
+                setColorImage(smileface, R.drawable.smileface);
+            else if(score >=50)
+                setColorImage(noface, R.drawable.noface);
+            else if(score >1)
+                setColorImage(angryface, R.drawable.angryface);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setBlackImage(ImageView imageView, int resourceId) {
+        if (imageView != null) {
+            Resources resources = getResources();
+            Bitmap bitmap = BitmapFactory.decodeResource(resources, resourceId);
+            BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
+            imageView.setImageDrawable(drawable);
+            System.out.println(imageView);
+        }
+    }
+
+    public void setColorImage(ImageView imageView, int resourceId) {
+        if (imageView != null) {
+            Resources resources = getResources();
+            Bitmap bitmap = BitmapFactory.decodeResource(resources, resourceId);
+            BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
+            imageView.setImageDrawable(drawable);
+        }
+    }
+
 
     private void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             String[] permissions = {
                     Manifest.permission.INTERNET,
                     Manifest.permission.ACCESS_WIFI_STATE,
-                    Manifest.permission.CHANGE_WIFI_STATE
+                    Manifest.permission.CHANGE_WIFI_STATE,
+                    Manifest.permission.ACCESS_FINE_LOCATION
             };
 
             boolean allPermissionsGranted = true;
