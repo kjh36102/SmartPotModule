@@ -174,7 +174,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BDBDBD"
-                android:text="데이터 불러오기"
+                android:text="수동 급수 데이터"
                 android:textColor="@color/black" />
 
             <Button
@@ -183,7 +183,7 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BDBDBD"
                 android:visibility="gone"
-                android:text="데이터 불러오기"
+                android:text="자동 급수 데이터"
                 android:textColor="@color/black" />
 
             <Button
@@ -192,7 +192,7 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BDBDBD"
                 android:visibility="gone"
-                android:text="데이터 불러오기"
+                android:text="수동 조명 데이터"
                 android:textColor="@color/black" />
 
             <Button
@@ -201,7 +201,7 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BDBDBD"
                 android:visibility="gone"
-                android:text="데이터 불러오기"
+                android:text="자동 조명 데이터"
                 android:textColor="@color/black" />
 
             <View
