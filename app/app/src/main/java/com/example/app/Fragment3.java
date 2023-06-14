@@ -28,13 +28,13 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import java.util.concurrent.CountDownLatch;
 import com.google.android.material.tabs.TabLayout;
-
+/*
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import com.google.android.material.tabs.TabLayout;
-
+*/
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,9 +44,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+/*
 import java.util.function.ObjIntConsumer;
 
 import android.content.SharedPreferences;
+ */
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
