@@ -16,7 +16,6 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.util.Printer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -932,6 +931,561 @@ public class Fragment3 extends Fragment {
             }
         }).start();
     }
+    public void manuWaterArray() {
+        new Thread(new Runnable(){
+            @Override
+            public void run() { //http통신으로 받아옴
+                System.out.println("manuWaterArray 시작 -----------------------");
+                HttpURLConnection urlConnection = null;
+                BufferedReader reader = null;
+
+                try {
+                    urlConnection = null;
+                    reader = null;
+
+                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_water"); //밑에 테이블
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setConnectTimeout(15000); // 15 seconds
+                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setRequestProperty("Connection", "close");
+
+                    urlConnection.connect();
+                    int responseCode = urlConnection.getResponseCode();
+                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                        System.out.println("HTTP error code: " + responseCode);
+                        return;
+                    }
+
+                    InputStream inputStream = urlConnection.getInputStream();
+
+                    if (inputStream == null) {
+                        System.out.println("inputStream ㅜull");
+                        return;
+                    }
+
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder output = new StringBuilder();
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line);
+                    }
+                    reader.close();
+                    inputStream.close();
+                    urlConnection.disconnect();
+
+                    if (output.length() == 0) {
+                        System.out.println("받은 값 길이가 0");
+                        return;
+                    }
+                    String[] parts = output.toString().split("\\|");
+                    if(parts[0].equals("err")) {
+                        System.out.println("error받음");
+                    }
+                    JSONArray jsonArray = new JSONArray(parts[2]);
+
+                    int[] uds = new int[jsonArray.length()];
+                    String[] sts = new String[jsonArray.length()];
+                    int[] wts = new int[jsonArray.length()];
+
+
+                    //sample data test
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        System.out.println("두 번째 jsonObject: " + jsonObject);
+
+                        uds[i] = jsonObject.getInt("ud");
+                        sts[i] = jsonObject.getString("st");
+                        wts[i] = jsonObject.getInt("wt");
+
+                        System.out.println("uds[i]: " + uds[i]);
+                        System.out.println("sts[i]: " + sts[i]);
+                        System.out.println("wts[i]: " + wts[i]);
+                    }
+                    waterUdsRef.set(uds);
+                    waterStsRef.set(sts);
+                    waterWtsRef.set(wts);
+
+
+                } catch (IOException ioException) {
+                    System.out.println("IO error: " + ioException.getMessage());
+                    ioException.printStackTrace();
+
+                } catch (JSONException jsonException){
+                    System.out.println("JSON parsing error");
+                    jsonException.printStackTrace();
+                } catch (Exception e){
+                    System.out.println("Exception error");
+                    e.printStackTrace();
+                } finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                int[] uds = waterUdsRef.get();
+                String[] sts = waterStsRef.get();
+                int[] wts = waterWtsRef.get();
+
+                JSONArray udJsonArray = new JSONArray();
+                if (uds != null) {
+                    for (int ud : uds) {
+                        udJsonArray.put(ud);
+                    }
+                }
+
+                JSONArray stJsonArray = new JSONArray();
+                if (sts != null) {
+                    for (String st : sts) {
+                        stJsonArray.put(st);
+                    }
+                }
+
+                JSONArray wtJsonArray = new JSONArray();
+                if (wts != null) {
+                    for (int wt : wts) {
+                        wtJsonArray.put(wt);
+                    }
+                }
+                System.out.println("udJsonArray: " + udJsonArray);
+                System.out.println("stJsonArray: " + stJsonArray);
+                System.out.println("wtJsonArray: " + wtJsonArray);
+
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("otReference", otReference);
+                //배열을 저장해야함
+                editor.putString("wateruds", udJsonArray.toString());
+                editor.putString("watersts", stJsonArray.toString());
+                editor.putString("waterwts", wtJsonArray.toString());
+                editor.apply();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        edWater1 = Integer.toString(otReference);
+                        if (!edWater1.equals("")) {
+                            edValue1.setText(edWater1);
+                        }
+                        for (int i = 0; i < udJsonArray.length(); i++) {
+                            try {
+                                DataValue dataValue = new DataValue();
+                                dataValue.setDate(udJsonArray.get(i).toString());
+                                dataValue.setTime(stJsonArray.get(i).toString());
+                                dataValue.setValue(wtJsonArray.get(i).toString());
+                                waterDataList.add(dataValue);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        dataAdapter.setDataList(waterDataList);
+                        dataAdapter.notifyDataSetChanged();
+
+                        //이후 ui적용
+
+                    }
+                });
+            }
+        }).start();
+    }
+    public void autoWaterData(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() { //http통신으로 받아옴
+                System.out.println("autoWaterData시작 -----------------------");
+                HttpURLConnection urlConnection = null;
+                BufferedReader reader = null;
+                int responseCode = 0;
+
+                try {
+                    urlConnection = null;
+                    reader = null;
+                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
+
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setConnectTimeout(15000); // 15 seconds
+                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setRequestProperty("Connection", "close");
+
+                    urlConnection.connect();
+                    // HTTP 상태 코드 확인
+                    responseCode = urlConnection.getResponseCode();
+                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                        System.out.println("HTTP error code: " + responseCode);
+                        return;
+                    }
+
+                    InputStream inputStream = urlConnection.getInputStream();
+
+                    if (inputStream == null) {
+                        System.out.println("inputStream ㅜull");
+                        return;
+                    }
+
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder output = new StringBuilder();
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line);
+
+                    }
+                    reader.close();
+                    inputStream.close();
+                    urlConnection.disconnect();
+                    if (output.length() == 0) {
+                        System.out.println("받은 값 길이가 0");
+                        return;
+                    }
+                    String[] parts = output.toString().split("\\|");
+                    if(parts[0].equals("err")) {
+                        System.out.println("error받음");
+                    }
+
+                    JSONArray jsonArray = new JSONArray(parts[2]);
+                    JSONObject jsonObject = jsonArray.getJSONObject(0);
+                    System.out.println("첫번째 jsonObject: " + jsonObject);
+                    //sample data test
+                    hmReference = jsonObject.getInt("hm");
+                    thReference = jsonObject.getInt("th");
+                    System.out.println("hm: " + hmReference);
+                    System.out.println("th: " + thReference);
+
+                } catch (IOException ioException) {
+                    System.out.println("IO error: " + ioException.getMessage());
+                    ioException.printStackTrace();
+                }catch (JSONException jsonException){
+                    System.out.println("JSON parsing error");
+                    jsonException.printStackTrace();
+                }catch (Exception e){
+                    System.out.println("Exception error");
+                    e.printStackTrace();
+                }
+                finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if(responseCode == HttpURLConnection.HTTP_OK){
+                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putInt("hmReference", hmReference);
+                        editor.putInt("thReference", thReference);
+                        editor.apply();
+                    }
+                }
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        waterValue1 = Integer.toString(hmReference);
+                        if (!waterValue1.equals("")) {
+                            tvValue1.setText(waterValue1);
+                        }
+                        waterValue2 = Integer.toString(thReference);
+                        if (!waterValue2.equals("")) {
+                            tvValue2.setText(waterValue2);
+                        }
+
+                        //이후 ui적용
+
+                    }
+                });
+            }
+        }).start();
+    }
+    public void manuLightArray(){
+        new Thread(new Runnable(){
+            @Override
+            public void run() { //http통신으로 받아옴
+                System.out.println("manuLightArray시작 -----------------------");
+                HttpURLConnection urlConnection = null;
+                BufferedReader reader = null;
+                int responseCode = 0;
+                try {
+                    urlConnection = null;
+                    reader = null;
+
+                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_light"); //밑에 테이블
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setConnectTimeout(15000); // 15 seconds
+                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setRequestProperty("Connection", "close");
+
+                    urlConnection.connect();
+                    responseCode = urlConnection.getResponseCode();
+                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                        System.out.println("HTTP error code: " + responseCode);
+                        return;
+                    }
+
+                    InputStream inputStream = urlConnection.getInputStream();
+
+                    if (inputStream == null) {
+                        System.out.println("inputStream ㅜull");
+                        return;
+                    }
+
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder output = new StringBuilder();
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line);
+                    }
+                    reader.close();
+                    inputStream.close();
+                    urlConnection.disconnect();
+
+                    if (output.length() == 0) {
+                        System.out.println("받은 값 길이가 0");
+                        return;
+                    }
+                    String[] parts = output.toString().split("\\|");
+                    if(parts[0].equals("err")) {
+                        System.out.println("error받음");
+                    }
+                    JSONArray jsonArray = new JSONArray(parts[2]);
+
+                    int[] uds = new int[jsonArray.length()];
+                    String[] sts = new String[jsonArray.length()];
+                    int[] lss = new int[jsonArray.length()];
+
+
+                    //sample data test
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        System.out.println("두 번째 jsonObject: " + jsonObject);
+
+                        uds[i] = jsonObject.getInt("ud");
+                        sts[i] = jsonObject.getString("st");
+                        lss[i] = jsonObject.getInt("ls");
+
+                        System.out.println("uds[i]: " + uds[i]);
+                        System.out.println("sts[i]: " + sts[i]);
+                        System.out.println("wts[i]: " + lss[i]);
+                    }
+                    waterUdsRef.set(uds);
+                    waterStsRef.set(sts);
+                    waterWtsRef.set(lss);
+
+
+                } catch (IOException ioException) {
+                    System.out.println("IO error: " + ioException.getMessage());
+                    ioException.printStackTrace();
+                } catch (JSONException jsonException){
+                    System.out.println("JSON parsing error");
+                    jsonException.printStackTrace();
+                } catch (Exception e){
+                    System.out.println("Exception error");
+                    e.printStackTrace();
+                } finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                int[] uds = waterUdsRef.get();
+                String[] sts = waterStsRef.get();
+                int[] lss = waterWtsRef.get();
+
+                JSONArray udJsonArray = new JSONArray();
+                if (uds != null) {
+                    for (int ud : uds) {
+                        udJsonArray.put(ud);
+                    }
+                }
+
+                JSONArray stJsonArray = new JSONArray();
+                if (sts != null) {
+                    for (String st : sts) {
+                        stJsonArray.put(st);
+                    }
+                }
+
+                JSONArray lsJsonArray = new JSONArray();
+                if (lss != null) {
+                    for (int ls : lss) {
+                        lsJsonArray.put(ls);
+                    }
+                }
+                System.out.println("udJsonArray: " + udJsonArray);
+                System.out.println("stJsonArray: " + stJsonArray);
+                System.out.println("lsJsonArray: " + lsJsonArray);
+
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("otReference", otReference);
+                //배열을 저장해야함
+                editor.putString("lightuds", udJsonArray.toString());
+                editor.putString("lightsts", stJsonArray.toString());
+                editor.putString("lightlss", lsJsonArray.toString());
+                editor.apply();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        edLight1 = Integer.toString(otReference);
+                        if (!edLight1.equals("")) {
+                            edValue1.setText(edLight1);
+                        }
+                        for (int i = 0; i < udJsonArray.length(); i++) {
+                            try {
+                                DataValue dataValue = new DataValue();
+                                dataValue.setDate(udJsonArray.get(i).toString());
+                                dataValue.setTime(stJsonArray.get(i).toString());
+                                dataValue.setValue(lsJsonArray.get(i).toString());
+                                lightDataList.add(dataValue);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        dataAdapter.setDataList(lightDataList);
+                        dataAdapter.notifyDataSetChanged();
+
+                        //이후 ui적용
+
+                    }
+                });
+            }
+        }).start();
+    }
+    public void autoLightData(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() { //http통신으로 받아옴
+                System.out.println("autoLightData시작 -----------------------");
+                HttpURLConnection urlConnection = null;
+                BufferedReader reader = null;
+                int responseCode = 0;
+                try {
+                    urlConnection = null;
+                    reader = null;
+                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
+
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setConnectTimeout(15000); // 15 seconds
+                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setRequestProperty("Connection", "close");
+
+                    urlConnection.connect();
+                    // HTTP 상태 코드 확인
+                    responseCode = urlConnection.getResponseCode();
+                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                        System.out.println("HTTP error code: " + responseCode);
+                        return;
+                    }
+
+                    InputStream inputStream = urlConnection.getInputStream();
+
+                    if (inputStream == null) {
+                        System.out.println("inputStream ㅜull");
+                        return;
+                    }
+
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder output = new StringBuilder();
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line);
+
+                    }
+                    reader.close();
+                    inputStream.close();
+                    urlConnection.disconnect();
+                    if (output.length() == 0) {
+                        System.out.println("받은 값 길이가 0");
+                        return;
+                    }
+                    String[] parts = output.toString().split("\\|");
+                    if(parts[0].equals("err")) {
+                        System.out.println("error받음");
+                    }
+
+                    JSONArray jsonArray = new JSONArray(parts[2]);
+                    JSONObject jsonObject = jsonArray.getJSONObject(0);
+                    System.out.println("첫번째 jsonObject: " + jsonObject);
+                    //sample data test
+                    hmReference = jsonObject.getInt("lt");
+                    thReference = jsonObject.getInt("dr");
+                    System.out.println("lt: " + ltReference);
+                    System.out.println("dr: " + drReference);
+
+                } catch (IOException ioException) {
+                    System.out.println("IO error: " + ioException.getMessage());
+                    ioException.printStackTrace();
+                }catch (JSONException jsonException){
+                    System.out.println("JSON parsing error");
+                    jsonException.printStackTrace();
+                }catch (Exception e){
+                    System.out.println("Exception error");
+                    e.printStackTrace();
+                }
+                finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
+
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if(responseCode == HttpURLConnection.HTTP_OK){
+                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putInt("ltReference", ltReference);
+                        editor.putInt("drReference", drReference);
+                        editor.apply();
+                    }
+                }
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        lightValue1 = Integer.toString(ltReference);
+                        if (!lightValue1.equals("")) {
+                            tvValue1.setText(lightValue1);
+                        }
+                        lightValue2 = Integer.toString(drReference);
+                        if (!lightValue2.equals("")) {
+                            tvValue2.setText(lightValue2);
+                        }
+
+
+                    }
+                });
+            }
+        }).start();
+    }
+
+
+
 
     private void changeText(String value, String range, String value1, String value2, String value3, String value4, String value5) {
         tvValue.setText(value);
