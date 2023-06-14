@@ -292,45 +292,7 @@ public class Fragment3 extends Fragment {
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
                 // 이미 선택된 Tab이 다시 선택될 때 호출되는 메서드
-            
-        AutoLightButton.setOnClickListener(v -> {
-            String value1 = tvValue1.getText().toString();
-            String value2 = tvValue2.getText().toString();
-            boolean isNotNullOfAutoValue = isNotNullOfAutoValue(value1, value2);
-
-            if (isNotNullOfAutoValue) {
-                Thread thread0 = new Thread(() -> {
-                    try {
-                        URL url = new URL(popup.url +
-                                "manageAutoSet?lt=" + value1 + "&dr=" + value2
-                        );
-                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                        connection.setRequestMethod("GET");
-                        connection.setConnectTimeout(30000);
-                        connection.connect();
-
-                        InputStream inputStream = connection.getInputStream();
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                        StringBuilder responseData = new StringBuilder();
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            responseData.append(line);
-                        }
-                        reader.close();
-                        String parsed[] = responseData.toString().split("\\|");
-
-                        getActivity().runOnUiThread(() -> {
-                            if (parsed[0].equals("ok")) {
-                                Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(getContext(), "업데이트 sql 실패", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-                checkConnectAndRun(thread0);
+         
             }
         });
 
@@ -391,7 +353,7 @@ public class Fragment3 extends Fragment {
                     includeView.setVisibility(View.VISIBLE);
                     tableCenter.setVisibility(View.GONE);
                     receiveBt1.setVisibility((View.VISIBLE));
-                    receiveBt2.setVisibility(View.GONE); 
+                    receiveBt2.setVisibility(View.GONE);
                 }
             }
         });
@@ -408,12 +370,12 @@ public class Fragment3 extends Fragment {
                     includeView.setVisibility(View.GONE);
                     tableCenter.setVisibility(View.VISIBLE);
                     receiveBt3.setVisibility((View.GONE));
-                    receiveBt4.setVisibility(View.VISIBLE); 
+                    receiveBt4.setVisibility(View.VISIBLE);
                 } else {
                     includeView.setVisibility(View.VISIBLE);
                     tableCenter.setVisibility(View.GONE);
                     receiveBt3.setVisibility((View.VISIBLE));
-                    receiveBt4.setVisibility(View.GONE);   
+                    receiveBt4.setVisibility(View.GONE);
                 }
             }
         });
@@ -1016,64 +978,7 @@ public class Fragment3 extends Fragment {
         super.onResume();
         tvHumid.setText(humid);
         tvLight.setText(light);
-        //배열을 저장해야함
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-
-        waterState = sharedPreferences.getBoolean("WaterCheckBoxState", false);
-        lightState = sharedPreferences.getBoolean("LightCheckBoxState", false);
-
-        checkBoxWater.setChecked(waterState);
-        checkBoxLight.setChecked(lightState);
-
-        JSONArray waterUdJsonArray = null;
-        JSONArray waterStJsonArray = null;
-        JSONArray waterWtJsonArray = null;
-        JSONArray lightUdJsonArray = null;
-        JSONArray lightStJsonArray = null;
-        JSONArray lightLsJsonArray = null;
-        int otReference = -1, hmReference = -1, thReference= -1, ltReference= -1, drReference= -1;
-
-
-        try {
-            waterUdJsonArray = new JSONArray(sharedPreferences.getString("wateruds", "[]"));
-            waterStJsonArray = new JSONArray(sharedPreferences.getString("watersts", "[]"));
-            waterWtJsonArray = new JSONArray(sharedPreferences.getString("waterwts", "[]"));
-            lightUdJsonArray = new JSONArray(sharedPreferences.getString("lightuds", "[]"));
-            lightStJsonArray = new JSONArray(sharedPreferences.getString("lightsts", "[]"));
-            lightLsJsonArray = new JSONArray(sharedPreferences.getString("lightlss", "[]"));
-
-            otReference = sharedPreferences.getInt("otReference", -1);
-            hmReference = sharedPreferences.getInt("hmReference", -1);
-            thReference = sharedPreferences.getInt("thReference", -1);
-            ltReference = sharedPreferences.getInt("ltReference", -1);
-            drReference = sharedPreferences.getInt("drReference", -1);
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-
-        //ui적용
-        System.out.println("otReference: " + otReference);
-        System.out.println("hmReference: " + hmReference);
-        System.out.println("thReference: " + thReference);
-        System.out.println("ltReference: " + ltReference);
-        System.out.println("drReference: " + drReference);
-        // System.out.println("waterUdJosnArray: " + waterUdJsonArray);
-        // System.out.println("waterStJsonArray: " + waterStJsonArray);
-        // System.out.println("waterWtJsonArray: " + waterWtJsonArray);
-        // System.out.println("lightUdJsonArray: " + lightUdJsonArray);
-        // System.out.println("lightStJsonArray: " + lightStJsonArray);
-        // System.out.println("lightLsJsonArray: " + lightLsJsonArray);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        tvHumid.setText(humid);
-        tvLight.setText(light);
+        
 //        //배열을 저장해야함
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
