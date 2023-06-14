@@ -147,9 +147,10 @@ public class Fragment3 extends Fragment {
         value2 = includeView.findViewById(R.id.ed_value_2); //지정시간 edittext
         value3 = includeView.findViewById(R.id.ed_value_3); //급수시간 edittext
 
+
         edValue1 = includeView.findViewById(R.id.ed_input_1); //수동급수시간 edittext
         edValue2 = includeView.findViewById(R.id.ed_input_2);
-
+      
         tvLight = view.findViewById(R.id.tv_light); //태양습도 text
         tvHumid = view.findViewById(R.id.tv_humidity); //태양조도 text
 
@@ -197,10 +198,11 @@ public class Fragment3 extends Fragment {
                         receiveBt4.setVisibility(View.GONE);
                         manuLayout.setVisibility(View.VISIBLE);
 
-                        tvValue1.setText(waterValue1); //희망값
-                        tvValue2.setText(waterValue2); //임계범위
-
                         // edwater1, edWater2에 값이 있는 경우 EditText에 설정
+
+                        tvValue1.setText(waterValue1);
+                        tvValue2.setText(waterValue2);
+
                         if (edWater1 != null || edWater2 != null) {
                             edValue1.setText(edWater1); // 수동급수시간
                             edValue2.setText(edWater2);
@@ -241,11 +243,11 @@ public class Fragment3 extends Fragment {
                         receiveBt3.setVisibility(View.VISIBLE);
                         receiveBt4.setVisibility(View.GONE);
                         manuLayout.setVisibility(View.GONE);
-
-                        tvValue1.setText(lightValue1); //조도값
-                        tvValue2.setText(lightValue2); //감지시간
-
                         // edLight1, edLight2 값이 있는 경우 EditText에 설정
+
+                        tvValue1.setText(lightValue1);
+                        tvValue2.setText(lightValue2);
+
                         if (edLight1 != null || edLight2 != null) {
                             edValue1.setText(edLight1); // 수동조명시간
                             edValue2.setText(edLight2);
@@ -1762,6 +1764,7 @@ public class Fragment3 extends Fragment {
         if (!data.equals("")) {
             deleteList.add(lightDataList.get(Integer.parseInt(data)));
         }
+
     }
 
     @Override
