@@ -292,7 +292,7 @@ public class Fragment3 extends Fragment {
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
                 // 이미 선택된 Tab이 다시 선택될 때 호출되는 메서드
-         
+
             }
         });
 
@@ -949,10 +949,6 @@ public class Fragment3 extends Fragment {
 
     private boolean isNotNullOfValue(String value1, String value2, String value3) {
         return !value1.equals("") && !value2.equals("") && !value3.equals("");
-    }
-
-    private boolean isNotNullOfDelete() {
-        return !deleteIndexList.isEmpty();
     }
 
     @Override
