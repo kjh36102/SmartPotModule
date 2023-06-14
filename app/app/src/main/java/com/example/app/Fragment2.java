@@ -1,63 +1,33 @@
 package com.example.app;
 
-import static com.example.app.Fragment1.score;
-
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
-import com.github.mikephil.charting.data.BarEntry;
-import com.google.android.material.tabs.TabLayout;
-
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Locale;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-
-import org.json.simple.parser.JSONParser;
-import org.w3c.dom.Text;
-
 
 /**
  * A simple {@link Fragment} subclass.
@@ -146,17 +116,34 @@ public class Fragment2 extends Fragment {
             textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
             textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
             btn.setVisibility(View.GONE);
+            btn2.setVisibility(View.GONE);
             btn3.setVisibility(View.GONE);
+            btn4.setVisibility(View.GONE);
+            rTxt.setVisibility(View.GONE);
 
         }
         else {
+            rTxt.setVisibility(View.VISIBLE);
+
             if (!MainActivity.sharedPreferences_fragment2.contains(FEEDBACK)) {//저장된 피드백이 없다면 새로 실행시켜 받아오기
 
-                new updateRequest().execute();//데이터 받기
-                textView1.setText("...로딩중...");
-                btn.setVisibility(View.GONE);//피드백 더보기, 닫기 버튼 비활성화
-                btn2.setVisibility(View.GONE);
+                if (popup.url != null && !popup.url.isEmpty()) {//아두이노 IP를 알때만 사용가능
+                    new updateRequest().execute();
 
+                    textView1.setText("...로딩중...");
+                    btn.setVisibility(View.GONE);//피드백 더보기, 닫기 버튼 비활성화
+                    btn2.setVisibility(View.GONE);
+                }
+                else{
+                    update_btn.setVisibility(View.VISIBLE);
+                    textView2.setText("불러오기 실패, 등록을 다시한번 확인 해주세요");
+                    btn.setVisibility(View.GONE);
+                    btn2.setVisibility(View.GONE);
+
+                    rTxt.setVisibility(View.GONE);
+
+
+                }
 
             } else {//저장된 피드백이 있다면 받아오기
                 rTxt.setText(MainActivity.sharedPreferences_fragment2.getString("datetime", ""));//마지막 업데이트일자 받아오기
@@ -213,10 +200,22 @@ public class Fragment2 extends Fragment {
                 editor.putString(NAME_KEY, popup.plant);
                 editor.apply();
 
-                new updateRequest().execute();
-                textView1.setText("...로딩중...");
-                btn.setVisibility(View.GONE);
-                btn2.setVisibility(View.GONE);
+                if (popup.url != null && !popup.url.isEmpty()) {//아두이노 IP를 알때만 사용가능
+                    new updateRequest().execute();
+                    textView1.setText("...로딩중...");
+                    btn.setVisibility(View.GONE);
+                    btn2.setVisibility(View.GONE);
+                }
+                else{
+                    update_btn.setVisibility(View.VISIBLE);
+                    textView2.setText("불러오기 실패, 등록을 다시한번 확인 해주세요");
+                    btn.setVisibility(View.GONE);
+                    btn2.setVisibility(View.GONE);
+
+                    rTxt.setVisibility(View.GONE);
+
+                }
+
             } else if (MainActivity.sharedPreferences_fragment2.getString(NAME_KEY, "").equals(popup.plant)) {//앱내에 저장된 이름과 현재이름이 같을 경우 저장된 피드백과 팁을 가져오기
                 tips = MainActivity.sharedPreferences_fragment2.getString(TIPS, "");
                 getShortTips(btn3);
@@ -256,18 +255,35 @@ public class Fragment2 extends Fragment {
                     textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
                     textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
                     btn.setVisibility(View.GONE);
+                    btn2.setVisibility(View.GONE);
                     btn3.setVisibility(View.GONE);
+                    btn4.setVisibility(View.GONE);
+                    rTxt.setVisibility(View.GONE);
                 }
                 else {
+                    rTxt.setVisibility(View.VISIBLE);
                     textName.setText(popup.plant);
                     update_btn.setVisibility(View.INVISIBLE);//업데이트 클릭시 업데이트 버튼 사라짐, 각 함수가 실행되고 난뒤 다시 업데이트 버튼 활성화 시키기 위함
 
 
-                    new updateRequest().execute();//새로고침을 누르면 현재 데이터를 불러와 피드백을 업데이트
-                    textView1.setText("...로딩중...");
-                    btn.setVisibility(View.GONE);
-                    btn2.setVisibility(View.GONE);
+                    if (popup.url != null && !popup.url.isEmpty()) {
+                        new updateRequest().execute();
 
+                        textView1.setText("...로딩중...");
+                        btn.setVisibility(View.GONE);
+                        btn2.setVisibility(View.GONE);
+                    }
+                    else{
+                        update_btn.setVisibility(View.VISIBLE);
+                        textView1.setText("불러오기 실패, 등록을 다시한번 확인 해주세요");
+
+                        btn.setVisibility(View.GONE);
+                        btn2.setVisibility(View.GONE);
+
+                        rTxt.setVisibility(View.GONE);
+
+
+                    }
                     if (!MainActivity.sharedPreferences_fragment2.contains(NAME_KEY)) {//앱에 저장된 이름이 없을경우 실행시켜 이름을 새로 받아와 팁을 설정
 
                         textView2.setText("...로딩중...");
@@ -290,16 +306,23 @@ public class Fragment2 extends Fragment {
                             throw new RuntimeException(e);
                         }
                         textName.setText(popup.plant);
-                        SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
-                        editor.putString(NAME_KEY, popup.plant);
 
 
-                        editor.apply();
+                        if (popup.url != null && !popup.url.isEmpty()) {
+                            new updateRequest().execute();
+                            textView1.setText("...로딩중...");
+                            btn.setVisibility(View.GONE);
+                            btn2.setVisibility(View.GONE);
+                        }
+                        else{
+                            update_btn.setVisibility(View.VISIBLE);
+                            textView2.setText("불러오기 실패, 등록을 다시한번 확인 해주세요");
+                            btn.setVisibility(View.GONE);
+                            btn2.setVisibility(View.GONE);
 
-                        new updateRequest().execute();
-                        textView1.setText("...로딩중...");
-                        btn.setVisibility(View.GONE);
-                        btn2.setVisibility(View.GONE);
+                            rTxt.setVisibility(View.GONE);
+
+                        }
                     }
 
                     else if (MainActivity.sharedPreferences_fragment2.getString(NAME_KEY, "").equals(popup.plant)) {//앱내에 저장된 이름과 현재이름이 같을 경우 저장된 팁을 가져오기
@@ -345,54 +368,6 @@ public class Fragment2 extends Fragment {
         return view;
     }
 
-    public boolean null_judge() {//혹시 식물정보가 불려지지 않았을경우 0으로 표기
-
-        int i = 0;
-        if (temp == null||temp == "0") {
-            temp = "0";
-            i++;
-        }
-        if (humid == null||humid == "0") {
-            humid = "0";
-            i++;
-        }
-        if (light == null||light == "0") {
-            light = "0";
-            i++;
-        }
-        if (nitro == null||nitro == "0") {
-            nitro = "0";
-            i++;
-        }
-        if (ph == null||ph == "0") {
-            ph = "0";
-            i++;
-        }
-        if (phos == null||phos== "0") {
-            phos = "0";
-            i++;
-        }
-        if (pota == null||pota == "0") {
-            pota = "0";
-            i++;
-        }
-        if (ec == null||ec == "0") {
-            ec = "0";
-            i++;
-        }
-        if (i == 8) {
-
-
-            return true;
-        }
-        else{
-
-            return false;
-        }
-
-
-
-    }
 
     public void getShortTips(Button btn){
         tTips = tips;
@@ -444,7 +419,7 @@ public class Fragment2 extends Fragment {
         @Override
         protected void onPostExecute(String result) {
             if (result != null) {
-                new Fragment2.GetJsonDataTask().execute(result);
+                new GetJsonDataTask().execute(result);
                 Toast.makeText(getContext(), "측정 완료", Toast.LENGTH_SHORT).show();                // 측정 완료 toast메시지 출력
             } else {
                 Toast.makeText(getContext(), "측정 실패", Toast.LENGTH_SHORT).show();                // 측정 실패 toast메시지 출력
@@ -457,7 +432,7 @@ public class Fragment2 extends Fragment {
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                //URL url = new URL(urls[0]);
+
                 URL url = new URL(urls[0]+"getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
@@ -487,7 +462,7 @@ public class Fragment2 extends Fragment {
                         resultHashMap.put("phos", jsonObject.getString("p"));
                         resultHashMap.put("pota", jsonObject.getString("k"));
                         resultHashMap.put("ec", jsonObject.getString("ec"));
-                        //resultHashMap.put("ts", jsonObject.getString("ts"));
+                        resultHashMap.put("ts", jsonObject.getString("ts"));
                     }
                 }
             } catch (MalformedURLException e) {
@@ -520,18 +495,15 @@ public class Fragment2 extends Fragment {
             phos = mDataHashMap.get("phos");
             pota = mDataHashMap.get("pota");
             ec = mDataHashMap.get("ec");
-
+            dateTime = mDataHashMap.get("ts");
+            dateTime = "마지막 업데이트 시간 :"+dateTime;
             TextView rTxt = getView().findViewById(R.id.rTxt);
             TextView textView1 = getView().findViewById(R.id.explan_text);
 
-            ImageButton update_btn = (ImageButton) getView().findViewById(R.id.update);
-            Button btn = (Button)getView().findViewById(R.id.more_2);
-            Button btn2 = (Button)getView().findViewById(R.id.close_2);
+
+            rTxt.setText(dateTime);
 
 
-            Calendar calendar = Calendar.getInstance();
-            SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
-            dateTime = dateFormat.format(calendar.getTime());
 
             SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
 
@@ -541,21 +513,9 @@ public class Fragment2 extends Fragment {
             rTxt.setText(dateTime);
             ChatGPT chatGPT = new ChatGPT();
 
-            /*if (null_judge() == true) {
-
-                textView1.setText("오류입니다 새로고침을 눌러주세요");
-                btn.setVisibility(View.GONE);
-                update_btn.setVisibility(View.VISIBLE);
-
-
-            }*/
-            //else {
 
 
             gpt_feedback(getView(),textView1, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(light), Double.parseDouble(ph), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ec));
-
-
-            //}
 
 
 
@@ -620,7 +580,9 @@ public class Fragment2 extends Fragment {
         thread.start();
         thread.join();
 
-
+        SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
+        editor.putString(NAME_KEY, popup.plant);
+        editor.apply();
         update_btn.setVisibility(View.VISIBLE);
     }//chat gpt 적용하여 피드백 가져오기
 
