@@ -955,30 +955,11 @@ public class Fragment3 extends Fragment {
         return !deleteIndexList.isEmpty();
     }
 
-    private void clearValue() {
-        value1.setText("");
-        value2.setText("");
-        value3.setText("");
-    }
-
-    private void deleteWaterRecord(String data) {
-        if (!data.equals("")) {
-            deleteList.add(waterDataList.get(Integer.parseInt(data)));
-        }
-    }
-
-    private void deleteLightRecord(String data) {
-        if (!data.equals("")) {
-            deleteList.add(lightDataList.get(Integer.parseInt(data)));
-        }
-    }
-
     @Override
     public void onResume() {
         super.onResume();
         tvHumid.setText(humid);
         tvLight.setText(light);
-        
 //        //배열을 저장해야함
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
