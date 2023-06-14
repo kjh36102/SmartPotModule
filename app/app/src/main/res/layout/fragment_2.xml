@@ -36,7 +36,7 @@
                     android:layout_height="wrap_content"
                     android:layout_centerHorizontal="true"
                     android:layout_margin="10dp"
-                    android:text="해바라기"
+                    android:text=""
                     android:textSize="40sp" />
 
                 <ImageButton
@@ -71,7 +71,7 @@
                 android:layout_gravity="center"
                 android:layout_margin="10dp"
                 android:textSize="18sp"
-                android:text="팁 입니다." />
+                android:text="불러오기 실패" />
 
 
             <Button
@@ -126,7 +126,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
                 android:textSize="18sp"
-                android:text="피드백 입니다." />
+                android:text="불러오기 실패" />
 
             <Button
                 android:id="@+id/more_2"

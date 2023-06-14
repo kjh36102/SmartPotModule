@@ -174,7 +174,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BDBDBD"
-                android:text="데이터 불러오기"
+                android:text="수동 급수 데이터"
                 android:textColor="@color/black" />
 
             <Button
@@ -183,7 +183,7 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BDBDBD"
                 android:visibility="gone"
-                android:text="데이터 불러오기"
+                android:text="자동 급수 데이터"
                 android:textColor="@color/black" />
 
             <Button
@@ -192,7 +192,7 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BDBDBD"
                 android:visibility="gone"
-                android:text="데이터 불러오기"
+                android:text="수동 조명 데이터"
                 android:textColor="@color/black" />
 
             <Button
@@ -201,7 +201,7 @@
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BDBDBD"
                 android:visibility="gone"
-                android:text="데이터 불러오기"
+                android:text="자동 조명 데이터"
                 android:textColor="@color/black" />
 
             <View
@@ -240,7 +240,6 @@
                     android:visibility="gone"
                     app:layout_constraintTop_toTopOf="parent">
 
-
                     <TableRow android:background="@drawable/backgorund_round_top">
 
                         <TextView
@@ -268,7 +267,6 @@
                             android:text="임계범위"
                             android:textColor="@color/black"
                             android:textSize="20sp" />
-
                     </TableRow>
 
                     <TableRow android:background="@drawable/backgorund_round_bottom">
@@ -303,22 +301,6 @@
                             android:textColor="@color/black"
                             android:textSize="20sp" />
                     </TableRow>
-                    <Button
-                        android:id="@+id/autoWaterRegister"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:backgroundTint="#BDBDBD"
-                        android:visibility="gone"
-                        android:text="데이터 등록"
-                        android:textColor="@color/black" />
-                    <Button
-                        android:id="@+id/autoLightRegister"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:backgroundTint="#BDBDBD"
-                        android:visibility="visible"
-                        android:text="데이터 등록"
-                        android:textColor="@color/black" />
                 </TableLayout>
             </androidx.constraintlayout.widget.ConstraintLayout>
 
