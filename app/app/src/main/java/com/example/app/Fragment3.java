@@ -27,7 +27,6 @@ import android.widget.EditText;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import java.util.concurrent.CountDownLatch;
-
 import com.google.android.material.tabs.TabLayout;
 
 import java.io.BufferedReader;
@@ -91,7 +90,6 @@ public class Fragment3 extends Fragment {
     private String lightValue2 = "";
     public static String humid = "";
     public static String light = "";
-
     SharedViewModel viewModel;
 
     @Override
@@ -182,7 +180,7 @@ public class Fragment3 extends Fragment {
         tvLight.setText(getData(requireContext(), "light"));
         tvHumid.setText(getData(requireContext(), "humid"));
 
-         //저장되어 있는 값 가져오기
+        //저장되어 있는 값 가져오기
 
 
 
@@ -211,6 +209,7 @@ public class Fragment3 extends Fragment {
                         receiveBt2.setVisibility(View.GONE);
                         receiveBt3.setVisibility(View.GONE);
                         receiveBt4.setVisibility(View.GONE);
+
                         tvValue1.setText(waterValue1);
                         tvValue2.setText(waterValue2);
                         if (edWater1 != null || edWater2 != null) {
@@ -294,47 +293,6 @@ public class Fragment3 extends Fragment {
             public void onTabReselected(TabLayout.Tab tab) {
                 // 이미 선택된 Tab이 다시 선택될 때 호출되는 메서드
             
-        AutoWaterButton.setOnClickListener(v -> {
-            String value1 = tvValue1.getText().toString();
-            String value2 = tvValue2.getText().toString();
-            boolean isNotNullOfAutoValue = isNotNullOfAutoValue(value1, value2);
-
-            if (isNotNullOfAutoValue) {
-                Thread thread9 = new Thread(() -> {
-                    try {
-                        URL url = new URL(popup.url +
-                                "manageAutoSet?hm=" + value1 + "&th=" + value2
-                        );
-                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                        connection.setRequestMethod("GET");
-                        connection.setConnectTimeout(30000);
-                        connection.connect();
-
-                        InputStream inputStream = connection.getInputStream();
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                        StringBuilder responseData = new StringBuilder();
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            responseData.append(line);
-                        }
-                        reader.close();
-                        String parsed[] = responseData.toString().split("\\|");
-
-                        getActivity().runOnUiThread(() -> {
-                            if (parsed[0].equals("ok")) {
-                                Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(getContext(), "업데이트 sql 실패", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-                checkConnectAndRun(thread9);
-            }
-        });
-
         AutoLightButton.setOnClickListener(v -> {
             String value1 = tvValue1.getText().toString();
             String value2 = tvValue2.getText().toString();
@@ -429,15 +387,11 @@ public class Fragment3 extends Fragment {
                     tableCenter.setVisibility(View.VISIBLE);
                     receiveBt1.setVisibility((View.GONE));
                     receiveBt2.setVisibility(View.VISIBLE);
-
-                    
                 } else {
                     includeView.setVisibility(View.VISIBLE);
                     tableCenter.setVisibility(View.GONE);
                     receiveBt1.setVisibility((View.VISIBLE));
-                    receiveBt2.setVisibility(View.GONE);
-
-                    
+                    receiveBt2.setVisibility(View.GONE); 
                 }
             }
         });
@@ -454,16 +408,12 @@ public class Fragment3 extends Fragment {
                     includeView.setVisibility(View.GONE);
                     tableCenter.setVisibility(View.VISIBLE);
                     receiveBt3.setVisibility((View.GONE));
-                    receiveBt4.setVisibility(View.VISIBLE);
-
-                    
+                    receiveBt4.setVisibility(View.VISIBLE); 
                 } else {
                     includeView.setVisibility(View.VISIBLE);
                     tableCenter.setVisibility(View.GONE);
                     receiveBt3.setVisibility((View.VISIBLE));
-                    receiveBt4.setVisibility(View.GONE);
-
-                    
+                    receiveBt4.setVisibility(View.GONE);   
                 }
             }
         });
@@ -936,7 +886,6 @@ public class Fragment3 extends Fragment {
                 HttpURLConnection urlConnection = null;
                 BufferedReader reader = null;
 
-
                 try {
                     urlConnection = null;
                     reader = null;
@@ -995,7 +944,6 @@ public class Fragment3 extends Fragment {
                 } catch (IOException ioException) {
                     System.out.println("IO error: " + ioException.getMessage());
                     ioException.printStackTrace();
-                    
                 } catch (JSONException jsonException) {
                     System.out.println("JSON parsing error");
                     jsonException.printStackTrace();
@@ -1017,295 +965,6 @@ public class Fragment3 extends Fragment {
                     }
                     if (callback != null) {
                         new Thread(callback).start();
-                    }
-                }
-            }
-        }).start();
-    }
-    public void manuLightArray(){
-        new Thread(new Runnable(){
-            @Override
-            public void run() { //http통신으로 받아옴
-                System.out.println("manuLightArray시작 -----------------------");
-                HttpURLConnection urlConnection = null;
-                BufferedReader reader = null;
-                int responseCode = 0;
-                try {
-                    urlConnection = null;
-                    reader = null;
-
-                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_light"); //밑에 테이블
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setRequestMethod("GET");
-                    urlConnection.setConnectTimeout(15000); // 15 seconds
-                    urlConnection.setReadTimeout(15000); // 15 seconds
-                    urlConnection.setRequestProperty("Connection", "close");
-
-                    urlConnection.connect();
-                    responseCode = urlConnection.getResponseCode();
-                    if (responseCode != HttpURLConnection.HTTP_OK) {
-                        System.out.println("HTTP error code: " + responseCode);
-                        return;
-                    }
-
-                    InputStream inputStream = urlConnection.getInputStream();
-
-                    if (inputStream == null) {
-                        System.out.println("inputStream null");
-                        return;
-                    }
-
-                    reader = new BufferedReader(new InputStreamReader(inputStream));
-                    StringBuilder output = new StringBuilder();
-
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        output.append(line);
-                    }
-                    reader.close();
-                    inputStream.close();
-                    urlConnection.disconnect();
-
-                    if (output.length() == 0) {
-                        System.out.println("받은 값 길이가 0");
-                        return;
-                    }
-                    String[] parts = output.toString().split("\\|");
-                    if(parts[0].equals("err")) {
-                        System.out.println("error받음");
-                    }
-                    JSONArray jsonArray = new JSONArray(parts[2]);
-
-                    int[] uds = new int[jsonArray.length()];
-                    String[] sts = new String[jsonArray.length()];
-                    int[] lss = new int[jsonArray.length()];
-
-
-                    //sample data test
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject jsonObject = jsonArray.getJSONObject(i);
-                        System.out.println("두 번째 jsonObject: " + jsonObject);
-
-                        uds[i] = jsonObject.getInt("ud");
-                        sts[i] = jsonObject.getString("st");
-                        lss[i] = jsonObject.getInt("ls");
-
-                        System.out.println("uds[i]: " + uds[i]);
-                        System.out.println("sts[i]: " + sts[i]);
-                        System.out.println("wts[i]: " + lss[i]);
-                    }
-                    waterUdsRef.set(uds);
-                    waterStsRef.set(sts);
-                    waterWtsRef.set(lss);
-
-
-                } catch (IOException ioException) {
-                    System.out.println("IO error: " + ioException.getMessage());
-                    ioException.printStackTrace();
-                    responseCode = 0;
-                    if (getContext() != null) {
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getContext(), "다시 시도", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                } catch (JSONException jsonException){
-                    System.out.println("JSON parsing error");
-                    jsonException.printStackTrace();
-                } catch (Exception e){
-                    System.out.println("Exception error");
-                    e.printStackTrace();
-                } finally {
-                    if (urlConnection != null) {
-                        urlConnection.disconnect();
-                    }
-
-                    if (reader != null) {
-                        try {
-                            reader.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                if(responseCode == HttpURLConnection.HTTP_OK){
-                    int[] uds = waterUdsRef.get();
-                    String[] sts = waterStsRef.get();
-                    int[] lss = waterWtsRef.get();
-                    JSONArray udJsonArray = new JSONArray();
-                    if (uds != null) {
-                        for (int ud : uds) {
-                            udJsonArray.put(ud);
-                        }
-                    }
-                    JSONArray stJsonArray = new JSONArray();
-                    if (sts != null) {
-                        for (String st : sts) {
-                            stJsonArray.put(st);
-                        }
-                    }
-                    JSONArray lsJsonArray = new JSONArray();
-                    if (lss != null) {
-                        for (int ls : lss) {
-                            lsJsonArray.put(ls);
-                        }
-                    }
-                    System.out.println("udJsonArray: " + udJsonArray);
-                    System.out.println("stJsonArray: " + stJsonArray);
-                    System.out.println("lsJsonArray: " + lsJsonArray);
-                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putInt("otReference", otReference);
-                    //배열을 저장해야함
-                    editor.putString("lightuds", udJsonArray.toString());
-                    editor.putString("lightsts", stJsonArray.toString());
-                    editor.putString("lightlss", lsJsonArray.toString());
-                    editor.apply();
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            lightDataList.clear();
-                            edLight1 = Integer.toString(otReference);
-                            if (!edLight1.equals("")) {
-                                edValue1.setText(edLight1);
-                            }
-                            for (int i = 0; i < udJsonArray.length(); i++) {
-                                try {
-                                    DataValue dataValue = new DataValue();
-                                    dataValue.setDate(udJsonArray.get(i).toString());
-                                    dataValue.setTime(stJsonArray.get(i).toString());
-                                    dataValue.setValue(lsJsonArray.get(i).toString());
-                                    lightDataList.add(dataValue);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            dataAdapter.setDataList(lightDataList);
-                            dataAdapter.notifyDataSetChanged();
-                            //이후 ui적용
-                        }
-                    });
-                }
-            }
-        }).start();
-    }
-    public void autoLightData(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() { //http통신으로 받아옴
-                System.out.println("autoLightData시작 -----------------------");
-                HttpURLConnection urlConnection = null;
-                BufferedReader reader = null;
-                int responseCode = 0;
-                try {
-                    urlConnection = null;
-                    reader = null;
-                    URL url = new URL("http://cofon.xyz:9090/getTableData?name=manage_auto");
-
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setRequestMethod("GET");
-                    urlConnection.setConnectTimeout(15000); // 15 seconds
-                    urlConnection.setReadTimeout(15000); // 15 seconds
-                    urlConnection.setRequestProperty("Connection", "close");
-
-                    urlConnection.connect();
-                    // HTTP 상태 코드 확인
-                    responseCode = urlConnection.getResponseCode();
-                    if (responseCode != HttpURLConnection.HTTP_OK) {
-                        System.out.println("HTTP error code: " + responseCode);
-                        return;
-                    }
-
-                    InputStream inputStream = urlConnection.getInputStream();
-
-                    if (inputStream == null) {
-                        System.out.println("inputStream null");
-                        return;
-                    }
-
-                    reader = new BufferedReader(new InputStreamReader(inputStream));
-                    StringBuilder output = new StringBuilder();
-
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        output.append(line);
-
-                    }
-                    reader.close();
-                    inputStream.close();
-                    urlConnection.disconnect();
-                    if (output.length() == 0) {
-                        System.out.println("받은 값 길이가 0");
-                        return;
-                    }
-                    String[] parts = output.toString().split("\\|");
-                    if(parts[0].equals("err")) {
-                        System.out.println("error받음");
-                    }
-
-                    JSONArray jsonArray = new JSONArray(parts[2]);
-                    JSONObject jsonObject = jsonArray.getJSONObject(0);
-                    System.out.println("첫번째 jsonObject: " + jsonObject);
-                    //sample data test
-                    ltReference = jsonObject.getInt("lt");
-                    drReference = jsonObject.getInt("dr");
-                    System.out.println("lt: " + ltReference);
-                    System.out.println("dr: " + drReference);
-
-                } catch (IOException ioException) {
-                    System.out.println("IO error: " + ioException.getMessage());
-                    ioException.printStackTrace();
-                    responseCode = 0;
-                    if (getContext() != null) {
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getContext(), "다시 시도", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                }catch (JSONException jsonException){
-                    System.out.println("JSON parsing error");
-                    jsonException.printStackTrace();
-                }catch (Exception e){
-                    System.out.println("Exception error");
-                    e.printStackTrace();
-                }
-                finally {
-                    if (urlConnection != null) {
-                        urlConnection.disconnect();
-                    }
-
-                    if (reader != null) {
-                        try {
-                            reader.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    if(responseCode == HttpURLConnection.HTTP_OK){
-                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putInt("ltReference", ltReference);
-                        editor.putInt("drReference", drReference);
-                        editor.apply();
-
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                lightValue1 = Integer.toString(ltReference);
-                                if (!lightValue1.equals("")) {
-                                    tvValue1.setText(lightValue1);
-                                }
-                                lightValue2 = Integer.toString(drReference);
-                                if (!lightValue2.equals("")) {
-                                    tvValue2.setText(lightValue2);
-                                }
-                                //이후 ui적용
-                            }
-                        });
                     }
                 }
             }
