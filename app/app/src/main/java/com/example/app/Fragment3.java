@@ -11,6 +11,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -54,7 +56,7 @@ public class Fragment3 extends Fragment {
     public int otReference, hmReference, thReference, ltReference, drReference;
 
     private TabLayout tabLayout;
-    private TableLayout tableCenter;
+    private TableLayout tableCenter, manuLayout;
     private View includeView;
     private TextView tvCheck, tvValue, tvRange, tvValue1, tvValue2, tvValue3, tvValue4, tvValue5, edValue1,edValue2, tvLight, tvHumid;
     private static CheckBox checkBoxWater, checkBoxLight, CheckSetNearestWater, CheckSetNearestLight;
@@ -66,6 +68,7 @@ public class Fragment3 extends Fragment {
     private static ArrayList<DataValue> waterDataList = null;
     private static ArrayList<DataValue> lightDataList = null;
     private ArrayList<DataValue> deleteList;
+    private ArrayList<Integer> deleteIndexList;
 
     private RecyclerView reData;
 
@@ -140,12 +143,26 @@ public class Fragment3 extends Fragment {
         tvValue4 = includeView.findViewById(R.id.tv_a);
         tvValue5 = includeView.findViewById(R.id.tv_b);
 
-        edValue1 = includeView.findViewById(R.id.ed_input_1);
+        checkBoxWater = view.findViewById(R.id.check_mode_water); //Water 체크박스
+        checkBoxLight = view.findViewById(R.id.check_mode_light); //Light 체크박스
+        CheckSetNearestWater = view.findViewById(R.id.setNearest_water); //최단시간 적용 Water
+        CheckSetNearestLight = view.findViewById(R.id.setNearest_light); //최단시간 적용 Light
+        checkBoxWater.setChecked(waterState); //최단시간 적용 Water 체크 여부
+        checkBoxLight.setChecked(lightState); //최단시간 적용 Light 체크 여부
+
+        btDelete = includeView.findViewById(R.id.bt_delete);    //삭제버튼
+        btRegister = includeView.findViewById(R.id.bt_register);//등록버튼
+        reData = includeView.findViewById(R.id.rv_center_data); //item 데이터
+
+        value1 = includeView.findViewById(R.id.ed_value_1); //단위일 edittext
+        value2 = includeView.findViewById(R.id.ed_value_2); //지정시간 edittext
+        value3 = includeView.findViewById(R.id.ed_value_3); //급수시간 edittext
+
+        edValue1 = includeView.findViewById(R.id.ed_input_1); //수동급수시간 edittext
         edValue2 = includeView.findViewById(R.id.ed_input_2);
 
-        tvLight = view.findViewById(R.id.tv_light);
-        tvHumid = view.findViewById(R.id.tv_humidity);
-
+        tvLight = view.findViewById(R.id.tv_light); //태양습도 text
+        tvHumid = view.findViewById(R.id.tv_humidity); //태양조도 text
 
         //리사이클러뷰를 담담하는 어댑터 초기화
         waterDataList = new ArrayList<>();
@@ -153,10 +170,11 @@ public class Fragment3 extends Fragment {
         deleteList = new ArrayList<>();
         dataAdapter = new DataAdapter(waterDataList);
 
+        deleteIndexList = new ArrayList<>();
+
         //리사이클러뷰 초기화 진행
         reData.setAdapter(dataAdapter);
         reData.setLayoutManager(new LinearLayoutManager(getContext()));
-
 
         tvLight.setText(getData(requireContext(), "light"));
         tvHumid.setText(getData(requireContext(), "humid"));
@@ -171,11 +189,15 @@ public class Fragment3 extends Fragment {
             public void onTabSelected(TabLayout.Tab tab) {
                 // 선택된 Tab의 위치를 가져옴
                 int position = tab.getPosition();
+                boolean isWaterChecked = sharedPreferences.getBoolean("WaterCheckBoxState", false);
+                boolean isLightChecked = sharedPreferences.getBoolean("LightCheckBoxState", false);
+
                 value1.setText("");
                 value2.setText("");
                 value3.setText("");
 
                 switch (position) {
+                    //첫번째 탭 선택 WATER
                     case 0:
                         curType = WATER;
                         checkBoxLight.setVisibility(View.GONE);
@@ -189,21 +211,28 @@ public class Fragment3 extends Fragment {
 
                         tvValue1.setText(waterValue1);
                         tvValue2.setText(waterValue2);
-
                         if (edWater1 != null || edWater2 != null) {
-                            edValue1.setText(edWater1);
+                            edValue1.setText(edWater1); // 수동급수시간
                             edValue2.setText(edWater2);
-                        } else {
+                        }
+                        else {
                             edValue1.setText("");
                             edValue2.setText("");
                         }
 
-                        if (checkBoxWater.isChecked()) {
+                        // checkBoxWater의 상태에 따라 뷰 표시 여부 설정
+                        if (isWaterChecked) {
                             tableCenter.setVisibility(View.VISIBLE);
                             includeView.setVisibility(View.GONE);
+                            receiveBt1.setVisibility(View.GONE);
+                            receiveBt2.setVisibility(View.VISIBLE);
+                            AutoWaterButton.setVisibility(View.VISIBLE);
+                            AutoLightButton.setVisibility(View.GONE);
                         } else {
                             tableCenter.setVisibility(View.GONE);
                             includeView.setVisibility(View.VISIBLE);
+                            receiveBt1.setVisibility(View.VISIBLE);
+                            receiveBt2.setVisibility(View.GONE);
                         }
                         changeText("희망값", "임계범위", "1", "25", "급수시간", "수동급수시간", "");
                         dataAdapter.notifyItemRangeRemoved(0, waterDataList.size());
@@ -211,6 +240,7 @@ public class Fragment3 extends Fragment {
 
                         break;
                     case 1:
+                        // 두 번째 탭 선택 LIGHT
                         curType = LIGHT;
                         checkBoxWater.setVisibility(View.GONE);
                         checkBoxLight.setVisibility(View.VISIBLE);
@@ -222,26 +252,33 @@ public class Fragment3 extends Fragment {
                         receiveBt4.setVisibility(View.GONE);
                         tvValue1.setText(lightValue1);
                         tvValue2.setText(lightValue2);
-
                         if (edLight1 != null || edLight2 != null) {
-                            edValue1.setText(edLight1);
+                            edValue1.setText(edLight1); // 수동조명시간
                             edValue2.setText(edLight2);
-                        } else {
+                        }
+                        else {
                             edValue1.setText("");
                             edValue2.setText("");
                         }
 
-                        if (checkBoxLight.isChecked()) {
+                        // checkBoxLight의 상태에 따라 뷰 표시 여부 설정
+                        if (isLightChecked) {
                             tableCenter.setVisibility(View.VISIBLE);
                             includeView.setVisibility(View.GONE);
-                        } else {
+                            receiveBt3.setVisibility(View.GONE);
+                            receiveBt4.setVisibility(View.VISIBLE);
+                            AutoWaterButton.setVisibility(View.GONE);
+                            AutoLightButton.setVisibility(View.VISIBLE);
+                        }
+                        else {
                             tableCenter.setVisibility(View.GONE);
                             includeView.setVisibility(View.VISIBLE);
+                            receiveBt3.setVisibility(View.VISIBLE);
+                            receiveBt4.setVisibility(View.GONE);
                         }
-                        changeText("조도값", "감지시간", "600", "60", "조명상태", "수동조명시간", "");
+                        changeText("조도값", "감지시간", "600", "60", "조명상태", "", "");
                         dataAdapter.setDataList(lightDataList);
                         break;
-
                 }
             }
 
@@ -258,6 +295,45 @@ public class Fragment3 extends Fragment {
             }
         });
 
+        manuWaterRegister.setOnClickListener(v -> {
+            String value1 = edValue1.getText().toString();
+            boolean isNotNullOfManuValue = isNotNullOfManuValue(value1);
+
+            if (isNotNullOfManuValue) {
+                Thread thread5 = new Thread(() -> {
+                    try {
+                        URL url = new URL(popup.url +
+                                "manageAutoSet?ot=" + value1
+                        );
+                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                        connection.setRequestMethod("GET");
+                        connection.setConnectTimeout(30000);
+                        connection.connect();
+
+                        InputStream inputStream = connection.getInputStream();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                        StringBuilder responseData = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            responseData.append(line);
+                        }
+                        reader.close();
+                        String parsed[] = responseData.toString().split("\\|");
+
+                        getActivity().runOnUiThread(() -> {
+                            if (parsed[0].equals("ok")) {
+                                Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "업데이트 sql 실패", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+                checkConnectAndRun(thread5);
+            }
+        });
 
         checkBoxWater.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -303,84 +379,351 @@ public class Fragment3 extends Fragment {
             }
         });
 
-
         //등록부분
         btRegister.setOnClickListener(v -> {
+            String dateData = value1.getText().toString();
+            String timeData = value2.getText().toString();
+            String valueData = value3.getText().toString();
+
             if (Objects.equals(curType, WATER)) {
                 //현재 타입이 WATER인 경우
                 //최대 6개까지만 입력 가능
                 if (waterDataList.size() < 7) {
                     DataValue dataValue = new DataValue();
 
-                    dataValue.setDate(value1.getText().toString());
-                    dataValue.setTime(value2.getText().toString());
-                    dataValue.setValue(value3.getText().toString());
+                    // 입력된 값으로 DataValue 객체 생성
+                    boolean isNearest = CheckSetNearestWater.isChecked();
+                    boolean isNotNullOfValue = isNotNullOfValue(dateData, timeData, valueData);
+                    if (isNotNullOfValue) {
+                        dataValue.setDate(dateData); //단위일
+                        dataValue.setTime(timeData); //지정시간
+                        dataValue.setValue(valueData); //급수시간
 
-                    waterDataList.add(dataValue);
-                    dataAdapter.setDataList(waterDataList);
+                        Thread thread1 = new Thread(() -> {
+                            try {
+                                System.out.println("is Nearst : " + isNearest);
+                                URL url = new URL(popup.url +
+                                        "manageAdd?table=manage_water&ud=" + dateData +
+                                        "&st=" + timeData +
+                                        "&ls=&wt=" + valueData +
+                                        "&setNearest=" + isNearest
+                                );
+                                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                                connection.setRequestMethod("GET");
+                                connection.setConnectTimeout(30000);
+                                connection.connect();
+
+                                InputStream inputStream = connection.getInputStream();
+                                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                                StringBuilder responseData = new StringBuilder();
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    responseData.append(line);
+                                }
+                                reader.close();
+                                String parsed[] = responseData.toString().split("\\|");
+
+                                getActivity().runOnUiThread(() -> {
+                                    if (parsed[0].equals("ok")) {
+                                        // waterDataList에 DataValue 객체 추가
+                                        waterDataList.add(dataValue);
+                                        dataAdapter.setDataList(waterDataList);
+                                        Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+
+                                        clearValue();
+                                    } else {
+                                        switch (parsed[1]) {
+                                            case "0":
+                                                Toast.makeText(getContext(), "레코드 꽉참", Toast.LENGTH_SHORT).show();
+                                                break;
+                                            case "1":
+                                                Toast.makeText(getContext(), "단위일이 0 이하임", Toast.LENGTH_SHORT).show();
+                                                break;
+                                            case "2":
+                                                Toast.makeText(getContext(), "시간 형식이 맞지 않음", Toast.LENGTH_SHORT).show();
+                                                break;
+                                            case "3":
+                                                Toast.makeText(getContext(), "Insert sql 실패", Toast.LENGTH_SHORT).show();
+                                                break;
+                                            case "4":
+                                                Toast.makeText(getContext(), "쿼리 파싱 오류", Toast.LENGTH_SHORT).show();
+                                                break;
+                                        }
+                                    }
+                                });
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
+                        checkConnectAndRun(thread1);
+                    }
                 }
             } else {
+                //현재 타입이 WATER가 아닌 경우
                 //최대 6개까지만 입력 가능
                 if (lightDataList.size() < 7) {
                     DataValue dataValue = new DataValue();
 
-                    dataValue.setDate(value1.getText().toString());
-                    dataValue.setTime(value2.getText().toString());
-                    dataValue.setValue(value3.getText().toString());
+                    // 입력된 값으로 DataValue 객체 생성
+                    boolean isNearest = CheckSetNearestWater.isChecked();
+                    boolean isNotNullOfValue = isNotNullOfValue(dateData, timeData, valueData);
+                    if (isNotNullOfValue) {
+                        dataValue.setDate(dateData); //단위일
+                        dataValue.setTime(timeData); //지정시간
+                        dataValue.setValue(valueData); //급수시간
 
-                    lightDataList.add(dataValue);
-                    dataAdapter.setDataList(lightDataList);
+                        Thread thread2 = new Thread(() -> {
+                            try {
+                                System.out.println("is Nearst : " + isNearest);
+                                URL url = new URL(popup.url +
+                                        "manageAdd?table=manage_light&ud=" + dateData +
+                                        "&st=" + timeData +
+                                        "&ls=" + valueData +
+                                        "&wt=&setNearest=" + isNearest
+                                );
+                                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                                connection.setRequestMethod("GET");
+                                connection.setConnectTimeout(30000);
+                                connection.connect();
+
+                                InputStream inputStream = connection.getInputStream();
+                                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                                StringBuilder responseData = new StringBuilder();
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    responseData.append(line);
+                                }
+                                reader.close();
+                                String parsed[] = responseData.toString().split("\\|");
+
+                                getActivity().runOnUiThread(() -> {
+                                    if (parsed[0].equals("ok")) {
+                                        // lightDataList에 DataValue 객체 추가
+                                        lightDataList.add(dataValue);
+                                        dataAdapter.setDataList(lightDataList);
+                                        Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+
+                                        clearValue();
+                                    } else {
+                                        switch (parsed[1]) {
+                                            case "0":
+                                                Toast.makeText(getContext(), "레코드 꽉참", Toast.LENGTH_SHORT).show();
+                                                break;
+                                            case "1":
+                                                Toast.makeText(getContext(), "단위일이 0 이하임", Toast.LENGTH_SHORT).show();
+                                                break;
+                                            case "2":
+                                                Toast.makeText(getContext(), "시간 형식이 맞지 않음", Toast.LENGTH_SHORT).show();
+                                                break;
+                                            case "3":
+                                                Toast.makeText(getContext(), "Insert sql 실패", Toast.LENGTH_SHORT).show();
+                                                break;
+                                            case "4":
+                                                Toast.makeText(getContext(), "쿼리 파싱 오류", Toast.LENGTH_SHORT).show();
+                                                break;
+                                        }
+                                    }
+                                });
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
+                        checkConnectAndRun(thread2);
+                    }
                 }
 
             }
         });
 
-
         //삭제버튼 클릭 이벤트 부분
         btDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                for (int i = 0; i < deleteList.size(); i++) {
-                    Log.i("##INFO", "onClick(): deleteList.get(i);"+deleteList.get(i));
+                if (Objects.equals(curType, WATER)) {
+                    //급수모드
+                    if (waterDataList.size() > 0) {
+                        boolean isNotNullOfDelete = isNotNullOfDelete();
+
+                        if (isNotNullOfDelete) {
+                            Thread thread3 = new Thread(() -> {
+                                try {
+                                    StringBuilder builder = new StringBuilder();
+                                    builder.append("[");
+                                    for (int i = 0; i < deleteIndexList.size(); i++) {
+                                        builder.append(deleteIndexList.get(i));
+                                        if (deleteIndexList.size() > 1 && i != deleteIndexList.size() - 1) {
+                                            builder.append(", ");
+                                        }
+                                    }
+                                    builder.append("]");
+                                    URL url = new URL(popup.url +
+                                            "manageDelete?table=manage_water&id=" + builder
+                                    );
+                                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                                    connection.setRequestMethod("GET");
+                                    connection.setConnectTimeout(30000);
+                                    connection.connect();
+
+                                    InputStream inputStream = connection.getInputStream();
+                                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                                    StringBuilder responseData = new StringBuilder();
+                                    String line;
+                                    while ((line = reader.readLine()) != null) {
+                                        responseData.append(line);
+                                    }
+                                    reader.close();
+                                    String parsed[] = responseData.toString().split("\\|");
+
+                                    getActivity().runOnUiThread(() -> {
+                                        if (parsed[0].equals("ok")) {
+                                            dataAdapter.removeData(deleteList);
+                                            deleteList.clear();
+                                            deleteIndexList.clear();
+
+                                            Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            switch (parsed[1]) {
+                                                case "0":
+                                                    Toast.makeText(getContext(), "테이블이 비어있음", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                                case "1":
+                                                    Toast.makeText(getContext(), "쿼리 id 리스트 형식 맞지않음", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                                case "2":
+                                                    Toast.makeText(getContext(), "쿼리 id 리스트 길이가 레코드 최대수를 넘음", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                                case "3":
+                                                    Toast.makeText(getContext(), "id 값들 중 0보다 작은값이 있음", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                                case "4":
+                                                    Toast.makeText(getContext(), "delete sql 실패", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                            }
+                                        }
+                                    });
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                            checkConnectAndRun(thread3);
+                        }
+                    }
+                } else {
+                    //조명모드
+                    if (lightDataList.size() > 0) {
+                        boolean isNotNullOfDelete = isNotNullOfDelete();
+
+                        if (isNotNullOfDelete) {
+                            Thread thread4 = new Thread(() -> {
+                                try {
+                                    StringBuilder builder = new StringBuilder();
+                                    builder.append("[");
+                                    for (int i = 0; i < deleteIndexList.size(); i++) {
+                                        builder.append(deleteIndexList.get(i));
+                                        if (deleteIndexList.size() > 1 && i != deleteIndexList.size() - 1) {
+                                            builder.append(", ");
+                                        }
+                                    }
+                                    builder.append("]");
+                                    URL url = new URL(popup.url +
+                                            "manageDelete?table=manage_light&id=" + builder
+                                    );
+                                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                                    connection.setRequestMethod("GET");
+                                    connection.setConnectTimeout(30000);
+                                    connection.connect();
+
+                                    InputStream inputStream = connection.getInputStream();
+                                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                                    StringBuilder responseData = new StringBuilder();
+                                    String line;
+                                    while ((line = reader.readLine()) != null) {
+                                        responseData.append(line);
+                                    }
+                                    reader.close();
+                                    String parsed[] = responseData.toString().split("\\|");
+
+                                    getActivity().runOnUiThread(() -> {
+                                        if (parsed[0].equals("ok")) {
+                                            dataAdapter.removeData(deleteList);
+                                            deleteList.clear();
+                                            deleteIndexList.clear();
+
+
+                                            Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            switch (parsed[1]) {
+                                                case "0":
+                                                    Toast.makeText(getContext(), "테이블이 비어있음", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                                case "1":
+                                                    Toast.makeText(getContext(), "쿼리 id 리스트 형식 맞지않음", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                                case "2":
+                                                    Toast.makeText(getContext(), "쿼리 id 리스트 길이가 레코드 최대수를 넘음", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                                case "3":
+                                                    Toast.makeText(getContext(), "id 값들 중 0보다 작은값이 있음", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                                case "4":
+                                                    Toast.makeText(getContext(), "delete sql 실패", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                            }
+                                        }
+                                    });
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                            checkConnectAndRun(thread4);
+                        }
+                    }
                 }
-                dataAdapter.removeData(deleteList);
-                deleteList = new ArrayList<>();
             }
         });
 
         dataAdapter.setItemClickCallback(new DataAdapter.ItemClickCallback() {
             @Override
             public void onClick(int position) {
-
+                // 데이터 어댑터의 아이템 클릭 콜백 설정
                 ArrayList<DataValue> list = new ArrayList<>();
+                // 현재 타입에 따라 list 변수에 해당하는 데이터 리스트 할당
                 if (curType.equals(WATER)){
                     list = waterDataList;
-                }else {
+                }
+                else {
                     list = lightDataList;
                 }
 
                 if (deleteList.contains(list.get(position))) {
+                    // deleteList에 클릭된 데이터가 이미 포함되어 있는 경우
                     Log.i("##INFO", "onClick(): remove");
                     deleteList.remove(list.get(position));
-                } else {
+                    deleteIndexList.remove(position);
+                }
+                else {
+                    // deleteList에 클릭된 데이터가 포함되어 있지 않은 경우
                     Log.i("##INFO", "onClick(): add = " + list.get(position).date);
                     deleteList.add(list.get(position));
+                    deleteIndexList.add(position);
                 }
             }
         });
 
-
         edValue1.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
+                // EditText의 텍스트가 변경되었을 때 호출되는 메서드
             }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (curType.equals(WATER)) {
+                    // 현재 타입이 WATER인 경우
+                    // edValue1의 텍스트 값을 edWater1에 저장
                     edWater1 = edValue1.getText().toString();
-                } else {
+                }
+                else {
                     edLight1 = edValue1.getText().toString();
                 }
             }
@@ -401,7 +744,8 @@ public class Fragment3 extends Fragment {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (curType.equals(WATER)) {
                     edWater2 = edValue2.getText().toString();
-                } else {
+                }
+                else {
                     edLight2 = edValue2.getText().toString();
                 }
             }
@@ -412,7 +756,6 @@ public class Fragment3 extends Fragment {
             }
         });
 
-
         tvValue1.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -421,9 +764,15 @@ public class Fragment3 extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // TextView의 텍스트가 변경되었을 때 호출되는 메서드
                 if (curType.equals(WATER)) {
+                    // 현재 타입이 WATER인 경우
+                    // tvValue1의 텍스트 값을 waterValue1에 저장
                     waterValue1 = tvValue1.getText().toString();
-                } else {
+                }
+                else {
+                    // 현재 타입이 WATER가 아닌 경우
+                    // tvValue1의 텍스트 값을 lightValue1에 저장
                     lightValue1 = tvValue1.getText().toString();
                 }
             }
@@ -444,7 +793,8 @@ public class Fragment3 extends Fragment {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (curType.equals(WATER)) {
                     waterValue2 = tvValue2.getText().toString();
-                } else {
+                }
+                else {
                     lightValue2 = tvValue2.getText().toString();
                 }
             }
@@ -1145,15 +1495,14 @@ public class Fragment3 extends Fragment {
         tvValue5.setText(value5);
     }
 
-
     private String getData(Context context, String key) {
-
         SharedPreferences prefs = requireContext().getSharedPreferences("data",Context.MODE_PRIVATE);
-
         String value = prefs.getString(key, "");
-
         return value;
+    }
 
+    private boolean isNotNullOfValue(String value1, String value2, String value3) {
+        return !value1.equals("") && !value2.equals("") && !value3.equals("");
     }
 
     @Override
