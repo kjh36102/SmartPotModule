@@ -9,6 +9,7 @@
 #include "TimeUpdater.h"
 #include "LightStandController.h"
 #include "WaterJarController.h"
+#include "SoilUpdater.h"
 #include <map>
 
 //-------------------------------------------------------------
@@ -36,10 +37,11 @@ private:
 
   int maxRecordCount = 6;
   static bool runningFlag;
+  bool prevLightAuto = false;
+  bool prevWaterAuto = false;
   char sqlBuffer[100];
 
   int lightAutoPassedMin = 0;
-  int waterAutoAccel = 0;
 
 
   // ...
@@ -88,30 +90,7 @@ public:
     while (NextOperationHandler::runningFlag) {
 
       handler.dbManager->execute("select pm.l_on, pm.w_on, pm.l_auto, pm.w_auto, ma.lt, ma.dr, ma.hm, ma.th from plant_manage pm, manage_auto ma");
-      LOGF("DB RESULT: %s\n", handler.dbManager->getResult());
-      // JsonObject row = handler.dbManager->getRowFromJsonArray(handler.dbManager->getResult(), 0);
       std::map<std::string, std::string> row = handler.dbManager->getRowFromMap(handler.dbManager->getResult(), 0);
-
-      Serial.print("JsonObjectSize: ");
-      Serial.println(row.size());
-
-      // int l_auto = row["l_auto"].as<int>();
-      // int w_auto = row["w_auto"].as<int>();
-      // int l_on = row["l_on"].as<int>();
-      // int w_on = row["w_on"].as<int>();
-      // int lt = row["lt"].as<int>();
-      // int dr = row["dr"].as<int>();
-      // float hm = row["hm"].as<float>();
-      // float th = row["th"].as<float>();
-
-      // int l_auto = row["l_auto"].toInt();
-      // int w_auto = row["w_auto"].toInt();
-      // int l_on = row["l_on"].toInt();
-      // int w_on = row["w_on"].toInt();
-      // int lt = row["lt"].toInt();
-      // int dr = row["dr"].toInt();
-      // float hm = row["hm"].toFloat();
-      // float th = row["th"].toFloat();
 
       int l_auto = atoi(row["l_auto"].c_str());
       int w_auto = atoi(row["w_auto"].c_str());
@@ -126,17 +105,21 @@ public:
 
       LOGF("%d, %d, %d, %d, %d, %d, %.2f, %.2f\n", l_auto, w_auto, l_on, w_on, lt, dr, hm, th);
 
+      if (l_on && l_auto != handler.prevLightAuto) handler.lightStand->off();
       if (l_auto == 0) {
         handler.handleLightManual();
       } else {
         handler.handleLightAuto(l_on, lt, dr);
       }
+      handler.prevLightAuto = l_auto;
 
+      if (w_on && w_auto != handler.prevWaterAuto) handler.waterJar->off();
       if (w_auto == 0) {
-        // handler.handleWaterManual();
+        handler.handleWaterManual();
       } else {
-        // handler.handleWaterAuto(w_on, hm, th);
+        handler.handleWaterAuto(w_on, hm, th);
       }
+      handler.prevWaterAuto = w_auto;
 
       // Delay until the next period
       vTaskDelayUntil(&xLastWakeTime, xDelay);
@@ -155,19 +138,15 @@ public:
 
 
     if (currentLux <= lt) {
-      LOGLN("pin1");
       lightAutoPassedMin = min(++lightAutoPassedMin, dr);
     } else if (currentLux > lt) {
-      LOGLN("pin2");
       lightAutoPassedMin = 0;
     }
 
     LOGF("lightAutoPassedMin: %d\n", lightAutoPassedMin);
     if (lightAutoPassedMin >= dr) {
-      LOGLN("pin3");
       lightStand.on();
     } else {
-      LOGLN("pin4");
       lightStand.off();
     }
   }
@@ -208,9 +187,56 @@ public:
     }
   }
 
+  bool autoWaterState = false;
+  static void tAutoWatering(void* taskParams) {
+    int threshold = *(int*)taskParams;  // taskParams를 int* 타입으로 캐스팅한 후 역참조
+
+    NextOperationHandler& handler = NextOperationHandler::getInstance();
+    handler.waterJar->on();
+
+    for (;;) {
+
+      SoilUpdater& soilUpdater = SoilUpdater::getInstance();
+      std::vector<float> received = soilUpdater.readUntilSuccess();
+
+      float currentMoistureValue = received[0];
+      LOGF("현재 토양수분: %.2f%%\n", currentMoistureValue);
+
+      if (currentMoistureValue > threshold || !handler.waterJar->isRunning()) {  // 여기서 threshold 사용
+        handler.waterJar->off();
+        handler.autoWaterState = false;
+        delete (int*)taskParams;  // 태스크 종료 전에 메모리 해제
+        vTaskDelete(NULL);
+      }
+
+      vTaskDelay(2000);
+    }
+  }
+
   void handleWaterAuto(int w_on, int hm, int th) {
     LOGLN("HANDLE WATER AUTO");
+
+    SoilUpdater& soilUpdater = SoilUpdater::getInstance();
+    std::vector<float> received = soilUpdater.readUntilSuccess();
+
+    float currentMoistureValue = received[0];
+    LOGF("현재 토양수분: %.2f%%\n", currentMoistureValue);
+
+    // If the moisture is below the threshold
+    if (currentMoistureValue <= hm - th) {
+
+      if (!autoWaterState) {
+        LOGLN("습도가 th 범위를 벗어났음.. 물 주기 시작");
+        int* threshold = new int(hm - th);
+        createAndRunTask(NextOperationHandler::tAutoWatering, "tAutoWatering", 3000, 1, threshold);
+        autoWaterState = true;
+      }
+
+    } else {
+      LOGLN("습도가 th 범위 내임. 물 줄 필요 없음.");
+    }
   }
+
 
   void handleWaterManual() {
     // Get data from the database

@@ -181,6 +181,10 @@ public:
     waterLoadTime = time;
     LOGF("WaterLoadTime %d 로 설정됨!", waterLoadTime);
   }
+
+  bool isRunning(){
+    return waterPumpOn;
+  }
 };
 
 WaterJarController* WaterJarController::instance = nullptr;  // 정적 변수 초기화

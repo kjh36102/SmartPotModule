@@ -53,40 +53,40 @@ public:
       instance = new SoilUpdater();
 
       createAndRunTask(SoilUpdater::taskFunction, "SoilUpdater", 10000, 2);
-      createAndRunTask(SoilUpdater::taskMonitorSensorValue, "taskMonitorSensorValue", 6000, 2);
+      // createAndRunTask(SoilUpdater::taskMonitorSensorValue, "taskMonitorSensorValue", 6000, 2);
     }
     return *instance;
   }
 
-  static void taskMonitorSensorValue(void* taskParams) {
-    SoilUpdater& soilUpdater = SoilUpdater::getInstance();
-    char buffer[100];
+  // static void taskMonitorSensorValue(void* taskParams) {
+  //   SoilUpdater& soilUpdater = SoilUpdater::getInstance();
+  //   char buffer[100];
 
-    for (;;) {
-      // float* received = soilUpdater.soilSensor->read();
-      std::vector<float> received = soilUpdater.soilSensor->read();
+  //   for (;;) {
+  //     // float* received = soilUpdater.soilSensor->read();
+  //     std::vector<float> received = soilUpdater.soilSensor->read();
 
-      // for (byte i = 0; i < 8; i++) {
-      //   soilUpdater.savedValue[i] = received[i];
-      // }
+  //     // for (byte i = 0; i < 8; i++) {
+  //     //   soilUpdater.savedValue[i] = received[i];
+  //     // }
 
-      sprintf(buffer, "[soil_data] hm:%.1f, tm:%.1f, ec:%.0f, ph:%.1f, n:%.0f, p:%.0f, k:%.0f, lt:%.0f, ts:%s",
-              received[0],                               //hm
-              received[1],                               //tm
-              received[2],                               //ec
-              received[3],                               //ph
-              received[4],                               //n
-              received[5],                               //p
-              received[6],                               //k
-              soilUpdater.lightStand->readLightLevel(),  //lux
-              soilUpdater.timeUpdater->getCurrentTime().c_str()
+  //     sprintf(buffer, "[soil_data] hm:%.1f, tm:%.1f, ec:%.0f, ph:%.1f, n:%.0f, p:%.0f, k:%.0f, lt:%.0f, ts:%s",
+  //             received[0],                               //hm
+  //             received[1],                               //tm
+  //             received[2],                               //ec
+  //             received[3],                               //ph
+  //             received[4],                               //n
+  //             received[5],                               //p
+  //             received[6],                               //k
+  //             soilUpdater.lightStand->readLightLevel(),  //lux
+  //             soilUpdater.timeUpdater->getCurrentTime().c_str()
 
-      );
+  //     );
 
-      LOGLN(buffer);
-      vTaskDelay(500);
-    }
-  }
+  //     LOGLN(buffer);
+  //     vTaskDelay(500);
+  //   }
+  // }
 
   static void taskFunction(void* taskParams) {
     SoilUpdater::getInstance().run();
@@ -152,9 +152,9 @@ public:
   }
 
   // bool checkValidValue(float* received) {
-    bool checkValidValue(std::vector<float> received) {
+  bool checkValidValue(std::vector<float> received) {
     // if (received == nullptr) {
-      if (received.empty()) {
+    if (received.empty()) {
       LOGLN("checkValidValue에서 nullptr받음");
       vTaskDelay(5000);
       return false;
@@ -168,6 +168,15 @@ public:
     }
 
     return true;
+  }
+
+  std::vector<float> readUntilSuccess() {
+    std::vector<float> received;
+    do {
+      received = soilSensor->read();
+    } while (!checkValidValue(received));  //값이 올바르지않으면 다시시도
+
+    return received;
   }
 };
 
