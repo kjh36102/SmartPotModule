@@ -1123,7 +1123,7 @@ public class Fragment3 extends Fragment {
                     }
                     executeCallback = false;
                 } catch (JSONException jsonException) {
-                    System.out.println("JSON parsing error");
+                    System.out.println("JSON parsing error: DB에 값이 없습니다.");
                     jsonException.printStackTrace();
                 } catch (Exception e) {
                     System.out.println("Exception error");
@@ -1238,7 +1238,7 @@ public class Fragment3 extends Fragment {
                         });
                     }
                 } catch (JSONException jsonException){
-                    System.out.println("JSON parsing error");
+                    System.out.println("JSON parsing error: DB에 값이 없습니다.");
                     jsonException.printStackTrace();
                 } catch (Exception e){
                     System.out.println("Exception error");
@@ -1393,7 +1393,7 @@ public class Fragment3 extends Fragment {
                         });
                     }
                 }catch (JSONException jsonException){
-                    System.out.println("JSON parsing error");
+                    System.out.println("JSON parsing error: DB에 값이 없습니다.");
                     jsonException.printStackTrace();
                 }catch (Exception e){
                     System.out.println("Exception error");
@@ -1526,7 +1526,7 @@ public class Fragment3 extends Fragment {
                         });
                     }
                 } catch (JSONException jsonException){
-                    System.out.println("JSON parsing error");
+                    System.out.println("JSON parsing error: DB에 값이 없습니다.");
                     jsonException.printStackTrace();
                 } catch (Exception e){
                     System.out.println("Exception error");
@@ -1681,7 +1681,7 @@ public class Fragment3 extends Fragment {
                         });
                     }
                 }catch (JSONException jsonException){
-                    System.out.println("JSON parsing error");
+                    System.out.println("JSON parsing error: DB에 값이 없습니다.");
                     jsonException.printStackTrace();
                 }catch (Exception e){
                     System.out.println("Exception error");

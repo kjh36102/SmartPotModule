@@ -65,6 +65,7 @@ public class Fragment2 extends Fragment {
     public static String nitro;
     public static String ec;
 
+    public static boolean state_judge = false;
 
 
 
@@ -125,7 +126,7 @@ public class Fragment2 extends Fragment {
         else {
             rTxt.setVisibility(View.VISIBLE);
 
-            if (!MainActivity.sharedPreferences_fragment2.contains(FEEDBACK)) {//저장된 피드백이 없다면 새로 실행시켜 받아오기
+            /*if (!MainActivity.sharedPreferences_fragment2.contains(FEEDBACK)) {//저장된 피드백이 없다면 새로 실행시켜 받아오기
 
                 if (popup.url != null && !popup.url.isEmpty()) {//아두이노 IP를 알때만 사용가능
                     new updateRequest().execute();
@@ -136,7 +137,7 @@ public class Fragment2 extends Fragment {
                 }
                 else{
                     update_btn.setVisibility(View.VISIBLE);
-                    textView2.setText("불러오기 실패, 등록을 다시한번 확인 해주세요");
+                    textView1.setText("불러오기 실패, 등록을 다시한번 확인 해주세요");
                     btn.setVisibility(View.GONE);
                     btn2.setVisibility(View.GONE);
 
@@ -145,7 +146,8 @@ public class Fragment2 extends Fragment {
 
                 }
 
-            } else {//저장된 피드백이 있다면 받아오기
+            }*/
+            if(MainActivity.sharedPreferences_fragment2.contains(FEEDBACK)) {//저장된 피드백이 있다면 받아오기
                 rTxt.setText(MainActivity.sharedPreferences_fragment2.getString("datetime", ""));//마지막 업데이트일자 받아오기
                 explan = MainActivity.sharedPreferences_fragment2.getString(FEEDBACK, "");//설명 받아오기
                 shortExplan = MainActivity.sharedPreferences_fragment2.getString(SHORT_EXPLAN, "");//짧은 설명 받아오기
@@ -177,25 +179,30 @@ public class Fragment2 extends Fragment {
             }
 
 
-            if (!MainActivity.sharedPreferences_fragment2.contains(NAME_KEY)) {//앱에 저장된 이름이 없을경우 실행시켜 이름을 새로 받아와 팁을 설정
+            /*if (!MainActivity.sharedPreferences_fragment2.contains(NAME_KEY)) {//앱에 저장된 이름이 없을경우 실행시켜 이름을 새로 받아와 팁을 설정
                 textView2.setText("...로딩중...");
                 try {
                     gpt_tips(view);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
+
                 SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
                 editor.putString(NAME_KEY, popup.plant);
                 editor.apply();
-            }//
+            }//*/
 
-            else if (!MainActivity.sharedPreferences_fragment2.getString(NAME_KEY, "").equals(popup.plant)) {//앱내에 저장된 이름과 현재 이름이 다를경우 다시 피드백과 팁 gpt에서 받아오기
-                textView2.setText("...로딩중...");
+            /*else if (!MainActivity.sharedPreferences_fragment2.getString(NAME_KEY, "").equals(popup.plant)) {//앱내에 저장된 이름과 현재 이름이 다를경우 다시 피드백과 팁 gpt에서 받아오기
+                textView2.setText("로딩중");
+
                 try {
                     gpt_tips(view);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
+
+
+
                 SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
                 editor.putString(NAME_KEY, popup.plant);
                 editor.apply();
@@ -207,8 +214,8 @@ public class Fragment2 extends Fragment {
                     btn2.setVisibility(View.GONE);
                 }
                 else{
-                    update_btn.setVisibility(View.VISIBLE);
-                    textView2.setText("불러오기 실패, 등록을 다시한번 확인 해주세요");
+
+                    textView1.setText("불러오기 실패, 등록을 다시한번 확인 해주세요");
                     btn.setVisibility(View.GONE);
                     btn2.setVisibility(View.GONE);
 
@@ -216,7 +223,8 @@ public class Fragment2 extends Fragment {
 
                 }
 
-            } else if (MainActivity.sharedPreferences_fragment2.getString(NAME_KEY, "").equals(popup.plant)) {//앱내에 저장된 이름과 현재이름이 같을 경우 저장된 피드백과 팁을 가져오기
+
+            }*/ if (MainActivity.sharedPreferences_fragment2.getString(NAME_KEY, "").equals(popup.plant)) {//앱내에 저장된 이름과 현재이름이 같을 경우 저장된 피드백과 팁을 가져오기
                 tips = MainActivity.sharedPreferences_fragment2.getString(TIPS, "");
                 getShortTips(btn3);
                 textView2.setText(tTips);
@@ -245,7 +253,7 @@ public class Fragment2 extends Fragment {
 
             }
         }
-
+        //if(state_judge == false) update_btn.setVisibility(View.VISIBLE);
         View finalView = view;
         update_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -292,6 +300,7 @@ public class Fragment2 extends Fragment {
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
+
                         SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
                         editor.putString(NAME_KEY, popup.plant);
                         editor.apply();
@@ -305,8 +314,11 @@ public class Fragment2 extends Fragment {
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
-                        textName.setText(popup.plant);
 
+                        textName.setText(popup.plant);
+                        SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
+                        editor.putString(NAME_KEY, popup.plant);
+                        editor.apply();
 
                         if (popup.url != null && !popup.url.isEmpty()) {
                             new updateRequest().execute();
@@ -315,8 +327,8 @@ public class Fragment2 extends Fragment {
                             btn2.setVisibility(View.GONE);
                         }
                         else{
-                            update_btn.setVisibility(View.VISIBLE);
-                            textView2.setText("불러오기 실패, 등록을 다시한번 확인 해주세요");
+
+                            textView1.setText("불러오기 실패, 등록을 다시한번 확인 해주세요");
                             btn.setVisibility(View.GONE);
                             btn2.setVisibility(View.GONE);
 
@@ -499,8 +511,9 @@ public class Fragment2 extends Fragment {
             dateTime = "마지막 업데이트 시간 :"+dateTime;
             TextView rTxt = getView().findViewById(R.id.rTxt);
             TextView textView1 = getView().findViewById(R.id.explan_text);
-
-
+            ImageButton update_btn = getView().findViewById(R.id.update);
+            Button btn1 = getView().findViewById(R.id.more_2);
+            Button btn2 = getView().findViewById(R.id.close_2);
             rTxt.setText(dateTime);
 
 
@@ -513,15 +526,59 @@ public class Fragment2 extends Fragment {
             rTxt.setText(dateTime);
             ChatGPT chatGPT = new ChatGPT();
 
-
-
-            gpt_feedback(getView(),textView1, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(light), Double.parseDouble(ph), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ec));
-
+            if(null_judge()==true){
+                textView1.setText("토양값이 불러와지지 않았습니다.");
+                btn1.setVisibility(View.GONE);
+                btn2.setVisibility(View.GONE);
+                rTxt.setVisibility(View.GONE);
+            }
+            else {
+                gpt_feedback(getView(), textView1, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(light), Double.parseDouble(ph), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ec));
+            }
 
 
 
         }
     }
+
+    public boolean null_judge() {
+        int i = 0;
+        if (temp == null|| temp.equals("0") ) {
+            temp = "0";
+            i++;
+        }
+        if (humid == null|| humid.equals("0")) {
+            humid = "0";
+            i++;
+        }
+        if (light == null|| light.equals("0")) {
+            light = "0";
+            i++;
+        }
+        if (nitro == null|| nitro.equals("0")) {
+            nitro = "0";
+            i++;
+        }
+        if (ph == null|| ph.equals("0")) {
+            ph = "0";
+            i++;
+        }
+        if (phos == null|| phos.equals("0")) {
+            phos = "0";
+            i++;
+        }
+        if (pota == null|| pota.equals("0")) {
+            pota = "0";
+            i++;
+        }
+        if (ec == null|| ec.equals("0")) {
+            ec = "0";
+            i++;
+        }
+        if (i == 8) return true;
+        else return false;
+
+    }//혹시 식물정보가 불려지지 않았을경우 0으로 표기
 
     public void gpt_tips(View view) throws InterruptedException { //tip써주는 함수
         ChatGPT chatGPT = new ChatGPT();
@@ -532,7 +589,9 @@ public class Fragment2 extends Fragment {
 
         Thread thread = new Thread() {
             public void run() {
-
+                getActivity().runOnUiThread(
+                        () -> update_btn.setVisibility(View.GONE)
+                );
                 tips = chatGPT.tips(popup.plant);
 
                 Handler handler = new Handler(Looper.getMainLooper());
@@ -542,6 +601,8 @@ public class Fragment2 extends Fragment {
                         SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();//팁을 따로 앱에 저장
                         editor.putString(TIPS, tips);
                         editor.apply();
+
+
 
                         btn2.setVisibility(View.GONE);//닫기 버튼 비활성화
 
@@ -572,16 +633,17 @@ public class Fragment2 extends Fragment {
                         });
                     }
                 });
+                getActivity().runOnUiThread(
+                        () -> update_btn.setVisibility(View.VISIBLE)
+                );
             }
 
         };
         thread.start();
-        thread.join();
 
-        SharedPreferences.Editor editor = MainActivity.sharedPreferences_fragment2.edit();
-        editor.putString(NAME_KEY, popup.plant);
-        editor.apply();
-        update_btn.setVisibility(View.VISIBLE);
+
+
+
     }//chat gpt 적용하여 피드백 가져오기
 
 
@@ -604,7 +666,9 @@ public class Fragment2 extends Fragment {
 
         Thread thread = new Thread() {
             public void run() {
-
+                getActivity().runOnUiThread(
+                        () -> update_btn.setVisibility(View.GONE)
+                );
                 String feedback_j = chatgpt_1.feedback(popup.plant, temp, humid, nitro, phos, pota, ph, ec, light);//gpt에서 피드백 가져오기
 
                 Handler handler = new Handler(Looper.getMainLooper());
@@ -659,16 +723,20 @@ public class Fragment2 extends Fragment {
                         });
                     }
                 });
-            };
+
+                getActivity().runOnUiThread(
+                        () -> update_btn.setVisibility(View.VISIBLE)
+                );
+            }
 
         };
 
         thread.start();
 
-        thread.join();
 
 
-        update_btn.setVisibility(View.VISIBLE);
+
+
 
     }
 }
