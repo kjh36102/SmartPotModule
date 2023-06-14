@@ -81,7 +81,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 System.out.println("SSID 및 비밀번호를 입력하세요");
                  new Thread(()->{
                      startConnect();
-
                  }).start();
                 //핫스팟이 연결되면 실행될 콜백 정의
                 connManager.setOnHotspotAvailable(() -> {
