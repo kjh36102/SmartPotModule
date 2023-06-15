@@ -27,6 +27,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.google.android.material.tabs.TabItem;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -365,6 +367,7 @@ public class Fragment1 extends Fragment{
             updateDataTextView();
         }
     }
+
 
     private void updateDataTextView() {
         if (mDataHashMap != null) {

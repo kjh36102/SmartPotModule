@@ -20,7 +20,7 @@ public class ChatGPT {
     public ChatGPT(){
         try {
             this.url = new URL("https://api.openai.com/v1/chat/completions");
-            this.key = "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";
+            this.key = "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";
         }catch (Exception e) {
             e.printStackTrace();
         }

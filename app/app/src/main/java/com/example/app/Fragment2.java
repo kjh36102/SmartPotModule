@@ -25,6 +25,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,12 +37,12 @@ public class Fragment2 extends Fragment {
     private static final String FEEDBACK = "feedbacks";
     private static final String SHORT_EXPLAN = "shortExplan";
 
-    String explan,tips,improve, dateTime;
-    String shortExplan,shortTips; // 짧은 설명
+    String explan, tips, improve, dateTime;
+    String shortExplan, shortTips; // 짧은 설명
     String textExplan = explan;  //현재 화면에 나와야할 설명
-    String tTips =  tips;
+    String tTips = tips;
 
-    public static String temp,humid,ph,light,phos,pota,nitro,ec;
+    public static String temp, humid, ph, light, phos, pota, nitro, ec;
     //현재 온도,습도,조도,산화도,n,p,k,전기 전도도 값
 
     @SuppressLint("SuspiciousIndentation")
@@ -53,15 +54,15 @@ public class Fragment2 extends Fragment {
 
         TextView textView1 = (TextView) view.findViewById(R.id.explan_text);//설명 text 적용
         TextView textView2 = (TextView) view.findViewById(R.id.Tips);//tip text 적용
-        TextView textName = (TextView) view.findViewById(R.id.textView) ;//식물 이름
-        TextView rTxt = (TextView)view.findViewById(R.id.rTxt);
+        TextView textName = (TextView) view.findViewById(R.id.textView);//식물 이름
+        TextView rTxt = (TextView) view.findViewById(R.id.rTxt);
         textName.setText(popup.plant);//식물이름 적용
 
         Button btn = (Button) view.findViewById(R.id.more_2);//더보기 버튼
         Button btn2 = (Button) view.findViewById(R.id.close_2);//닫기 버튼
         Button btn3 = (Button) view.findViewById(R.id.more);//더보기 버튼
         Button btn4 = (Button) view.findViewById(R.id.close);//닫기 버튼
-        ImageButton update_btn = (ImageButton)view.findViewById(R.id.update);//업데이트 버튼
+        ImageButton update_btn = (ImageButton) view.findViewById(R.id.update);//업데이트 버튼
 
         btn.setVisibility(View.GONE);
         btn2.setVisibility(View.GONE);
@@ -79,7 +80,7 @@ public class Fragment2 extends Fragment {
         trash3.setVisibility(View.GONE);
         button.setVisibility(View.GONE);
 
-        if(popup.plant.equals("")){//식물 이름이 정해지지 않았을 경우
+        if (popup.plant.equals("")) {//식물 이름이 정해지지 않았을 경우
             textName.setText("");
             textView1.setText("새로고침을 눌러 팁을 받아보세요!");
             textView2.setText("새로고침을 눌러 피드백을 받아보세요!");
@@ -88,11 +89,10 @@ public class Fragment2 extends Fragment {
             btn3.setVisibility(View.GONE);
             btn4.setVisibility(View.GONE);
             rTxt.setVisibility(View.GONE);
-        }
-        else {
+        } else {
             rTxt.setVisibility(View.VISIBLE);
 
-            if(MainActivity.sharedPreferences_fragment2.contains(FEEDBACK)) {//저장된 피드백이 있다면 받아오기
+            if (MainActivity.sharedPreferences_fragment2.contains(FEEDBACK)) {//저장된 피드백이 있다면 받아오기
                 rTxt.setText(MainActivity.sharedPreferences_fragment2.getString("datetime", ""));//마지막 업데이트일자 받아오기
                 explan = MainActivity.sharedPreferences_fragment2.getString(FEEDBACK, "");//설명 받아오기
                 shortExplan = MainActivity.sharedPreferences_fragment2.getString(SHORT_EXPLAN, "");//짧은 설명 받아오기
@@ -137,21 +137,14 @@ public class Fragment2 extends Fragment {
                 });
             }
         }
+
         View finalView = view;
+
         update_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {//업데이트 클릭시 실행
                 if(popup.plant.equals("")){//이름이 비어있다면 실행
-//                    textName.setText("");
-//                    textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
-//                    textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
-//                    btn.setVisibility(View.GONE);
-//                    btn2.setVisibility(View.GONE);
-//                    btn3.setVisibility(View.GONE);
-//                    btn4.setVisibility(View.GONE);
-//                    rTxt.setVisibility(View.GONE);
                     Toast.makeText(getContext(), "먼저 설정에서 식물 이름을 등록해주세요", Toast.LENGTH_SHORT).show();
-
                 }
                 else {
                     rTxt.setVisibility(View.VISIBLE);
@@ -236,14 +229,13 @@ public class Fragment2 extends Fragment {
         return view;
     }
 
-    public void getShortTips(Button btn){
+    public void getShortTips(Button btn) {
         tTips = tips;
-        if(tips.length()>95){
-            shortTips = tips.substring(0,92)+"..."; // 설명을 세줄로 자르고 뒤에 ...으로 설명을 덧붙임
+        if (tips.length() > 95) {
+            shortTips = tips.substring(0, 92) + "..."; // 설명을 세줄로 자르고 뒤에 ...으로 설명을 덧붙임
             btn.setVisibility(View.VISIBLE);//더보기 버튼 등장
             tTips = shortTips;//현재 설명에 짧은 설명으로 적용
-        }
-        else{
+        } else {
             shortTips = null;
             btn.setVisibility(View.GONE);//더보기 버튼 삭제
         }//설명이 짧을 경우 짧은 설명은 NULL
@@ -254,7 +246,7 @@ public class Fragment2 extends Fragment {
         @Override
         protected String doInBackground(Void... params) {
             try {
-                HttpURLConnection connection = (HttpURLConnection) new URL(popup.url+"measureNow").openConnection();
+                HttpURLConnection connection = (HttpURLConnection) new URL(popup.url + "measureNow").openConnection();
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(30000);
                 connection.connect();
@@ -271,7 +263,7 @@ public class Fragment2 extends Fragment {
                 String parsed[] = responseData.toString().split("\\|");
                 if (parsed[0].equals("ok"))
                     return popup.url;
-                 else if (parsed[0].equals("err"))
+                else if (parsed[0].equals("err"))
                     return null;
                 connection.disconnect();
             } catch (MalformedURLException e) {
@@ -291,13 +283,14 @@ public class Fragment2 extends Fragment {
                 Toast.makeText(getContext(), "측정 실패", Toast.LENGTH_SHORT).show();                // 측정 실패 toast메시지 출력
         }
     }
+
     public class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
         @Override
         protected HashMap<String, String> doInBackground(String... urls) {
-            mDataHashMap=null;
+            mDataHashMap = null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                URL url = new URL(urls[0]+"getTableData?name=soil_data");
+                URL url = new URL(urls[0] + "getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
                 InputStream inputStream = httpURLConnection.getInputStream();
@@ -338,6 +331,7 @@ public class Fragment2 extends Fragment {
             }
             return resultHashMap;
         }
+
         @Override
         public void onPostExecute(HashMap<String, String> resultHashMap) {
             mDataHashMap = resultHashMap;
@@ -360,7 +354,7 @@ public class Fragment2 extends Fragment {
             pota = mDataHashMap.get("pota");
             ec = mDataHashMap.get("ec");
             dateTime = mDataHashMap.get("ts");
-            dateTime = "마지막 업데이트 시간 :"+dateTime;
+            dateTime = "마지막 업데이트 시간 :" + dateTime;
             TextView rTxt = getView().findViewById(R.id.rTxt);
             TextView textView1 = getView().findViewById(R.id.explan_text);
             ImageButton update_btn = getView().findViewById(R.id.update);
@@ -372,48 +366,47 @@ public class Fragment2 extends Fragment {
             editor.putString("datetime", dateTime);
             editor.apply();
 
-            if(null_judge()==true){
+            if (null_judge() == true) {
                 textView1.setText("토양값이 불러와지지 않았습니다.");
                 btn1.setVisibility(View.GONE);
                 btn2.setVisibility(View.GONE);
                 rTxt.setVisibility(View.GONE);
-            }
-            else
+            } else
                 gpt_feedback(getView(), textView1, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(light), Double.parseDouble(ph), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ec));
         }
     }
 
     public boolean null_judge() {
         int i = 0;
-        if (temp == null|| temp.equals("0") ) {
+        if (temp == null || temp.equals("0")) {
             temp = "0";
             i++;
         }
-        if (humid == null|| humid.equals("0")) {
+        if (humid == null || humid.equals("0")) {
             humid = "0";
             i++;
         }
-        if (light == null|| light.equals("0")) {
+        if (light == null || light.equals("0")) {
             light = "0";
             i++;
         }
-        if (nitro == null|| nitro.equals("0")) {
+        if (nitro == null || nitro.equals("0")) {
             nitro = "0";
             i++;
         }
-        if (ph == null|| ph.equals("0")) {
+        if (ph == null || ph.equals("0")) {
             ph = "0";
             i++;
         }
-        if (phos == null|| phos.equals("0")) {
+        if (phos == null || phos.equals("0")) {
             phos = "0";
             i++;
         }
-        if (pota == null|| pota.equals("0")) {
+        if (pota == null || pota.equals("0")) {
             pota = "0";
             i++;
         }
-        if (ec == null|| ec.equals("0")) {
+        if (ec == null || ec.equals("0")) {
             ec = "0";
             i++;
         }
@@ -428,7 +421,7 @@ public class Fragment2 extends Fragment {
         ChatGPT chatGPT = new ChatGPT();
         Button btn = (Button) view.findViewById(R.id.more);//더보기 버튼
         Button btn2 = (Button) view.findViewById(R.id.close);//닫기 버튼
-        ImageButton update_btn = (ImageButton) view.findViewById(R.id.update) ;
+        ImageButton update_btn = (ImageButton) view.findViewById(R.id.update);
         TextView textView1 = (TextView) view.findViewById(R.id.Tips);//tip 텍스트뷰
 
         Thread thread = new Thread() {
@@ -502,7 +495,9 @@ public class Fragment2 extends Fragment {
                             shortExplan = jsonObject.getString("요약");
                             improve = jsonObject.getString("개선방안");
                         } catch (JSONException e) {
-                            throw new RuntimeException(e);
+                            Toast.makeText(getContext(), "ChatGPT 결과 받기가 실패했습니다", Toast.LENGTH_SHORT).show();   //튕기지 않게 해보려고 수정함
+                            return;
+//                            throw new RuntimeException(e);
                         }
                         textExplan = "분석: " + explan + "\n\n개선방안: " + improve; //분석+개선방안 으로 긴 피드백 설정
                         shortExplan = "요약: " + shortExplan;//요약으로 짧은 피드백 설정

@@ -607,7 +607,7 @@ public class Fragment3 extends Fragment {
                 if (lightDataList.size() < 7) {
                     DataValue dataValue = new DataValue();
                     // 입력된 값으로 DataValue 객체 생성
-                    boolean isNearest = CheckSetNearestWater.isChecked();
+                    boolean isNearest = CheckSetNearestLight.isChecked();
                     boolean isNotNullOfValue = isNotNullOfValue(dateData, timeData, valueData);
                     if (isNotNullOfValue) {
                         dataValue.setDate(dateData); //단위일
@@ -1070,9 +1070,6 @@ public class Fragment3 extends Fragment {
                     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putInt("otReference", otReference); //배열을 저장해야함
-                    editor.putString("wateruds", udJsonArray.toString());
-                    editor.putString("watersts", stJsonArray.toString());
-                    editor.putString("waterwts", wtJsonArray.toString());
                     editor.apply();
                     getActivity().runOnUiThread(new Runnable() {
                         @Override

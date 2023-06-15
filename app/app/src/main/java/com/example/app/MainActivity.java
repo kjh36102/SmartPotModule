@@ -4,11 +4,16 @@ import static com.example.app.Fragment1.angryface;
 import static com.example.app.Fragment1.noface;
 import static com.example.app.Fragment1.score;
 import static com.example.app.Fragment1.smileface;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
@@ -26,12 +31,14 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.material.tabs.TabItem;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +47,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -50,19 +58,19 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 
-
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     Toolbar toolbar;
     TabLayout tabLayout;
     ViewPager2 viewPager;
     TabPagerAdapter adapter;
-    boolean water,light0, light1;
+    boolean water, light0, light1;
 
     String[] tabName = new String[]{"대시보드", "상세분석", "식물관리"};
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
     private static final int PERMISSION_REQUEST_CODE = 0;
     public static SharedPreferences sharedPreferences_fragment2;
+
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -96,6 +104,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }).attach();
 
+        //탭 눌릴때 클릭이벤트하려면 여기다 쓰면됨
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                // 탭이 선택되었을 때 실행되는 코드
+                int position = tab.getPosition();
+
+                if (position == 0) {  // Fragment1에 대한 탭이 선택되었을 때
+                    Fragment1 fragment1 = (Fragment1) adapter.getFragment(position);
+                    if (popup.CONNECT_STATE)    //연결되어있다면
+                        new GetPlantManageDataTask().execute(popup.url); //plantmanage 데이터만 가져오는 비동기task 실행
+
+                }else if(position == 1){    //fragment2일때
+
+                }else if(position == 2){ //fragment3일떄
+                    
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+                // 탭이 선택 해제되었을 때 실행되는 코드 (필요한 경우)
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+                // 이미 선택된 탭이 다시 선택되었을 때 실행되는 코드 (필요한 경우)
+            }
+        });
+
+
         findViewById(R.id.wifi_button).setOnClickListener(this);
 
         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
@@ -123,9 +162,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             }
                         });
                         new GetJsonDataTask().execute(popup.url);
-                        new Thread(()->{
+                        new Thread(() -> {
                             try {
-                                while(score != -1) {
+                                while (score != -1) {
                                     Thread.sleep(100);
                                 }
                                 setFace();
@@ -136,16 +175,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }).start();
             });
+        } else {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, "재등록 바람", Toast.LENGTH_SHORT).show();
+                }
+            });
+            setBlackFace();
         }
-            else {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this, "재등록 바람", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                setBlackFace();
-            }
     }
 
     @Override
@@ -156,13 +194,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+
     public class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
         @Override
         protected HashMap<String, String> doInBackground(String... urls) {
-            mDataHashMap=null;
+            mDataHashMap = null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                URL url = new URL(urls[0]+"getTableData?name=soil_data");
+                URL url = new URL(urls[0] + "getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
                 InputStream inputStream = httpURLConnection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -193,6 +232,67 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
 
+                URL url2 = new URL(urls[0] + "getTableData?name=plant_manage");
+                HttpURLConnection httpURLConnection2 = (HttpURLConnection) url2.openConnection();
+
+                InputStream inputStream2 = httpURLConnection2.getInputStream();
+                BufferedReader bufferedReader2 = new BufferedReader(new InputStreamReader(inputStream2));
+                String line2;
+                StringBuilder responseData2 = new StringBuilder();
+                while ((line2 = bufferedReader2.readLine()) != null) {
+                    responseData2.append(line2);
+                }
+                bufferedReader2.close();
+                inputStream2.close();
+                httpURLConnection2.disconnect();
+
+                String parsed2[] = responseData2.toString().split("\\|");
+                if (parsed2[0].equals("ok") && parsed2[1].equals("0")) {
+                    String dataString2 = parsed2[2];
+                    JSONArray jsonArray2 = new JSONArray(dataString2);
+                    if (jsonArray2.length() > 0) {
+                        JSONObject jsonObject2 = jsonArray2.getJSONObject(0); //자동=1, 수동=0
+                        if (jsonObject2.optString("w_auto").equals("0"))
+                            water = true;   //수동
+                        else if (jsonObject2.optString("w_auto").equals("1"))
+                            water = false;
+                        if (jsonObject2.optString("l_auto").equals("0")) {
+                            light0 = true;
+                            if (jsonObject2.optString("l_on").equals("1"))
+                                light1 = true;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1 = false;
+                        } else if (jsonObject2.optString("l_auto").equals("1")) {
+                            light0 = false;
+                            if (jsonObject2.optString("l_on").equals("1"))
+                                light1 = true;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1 = false;
+                        }
+                    }
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return resultHashMap;
+        }
+
+        @Override
+        public void onPostExecute(HashMap<String, String> resultHashMap) {
+            mDataHashMap = resultHashMap;
+            updateDataTextView();
+        }
+    }
+
+
+    private class GetPlantManageDataTask extends AsyncTask<String, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... urls) {
+            try {
                 URL url2 = new URL(urls[0]+"getTableData?name=plant_manage");
                 HttpURLConnection httpURLConnection2 = (HttpURLConnection) url2.openConnection();
 
@@ -232,7 +332,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 light1 = false;
                         }
                     }
-                }
+                }else return false;
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -240,12 +340,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            return resultHashMap;
+            return true;
         }
         @Override
-        public void onPostExecute(HashMap<String, String> resultHashMap) {
-            mDataHashMap = resultHashMap;
-            updateDataTextView();
+        public void onPostExecute(Boolean resultBool) {
+            boolean result = resultBool.booleanValue();
+            if (result) updateDataTextView();
         }
     }
 
@@ -318,8 +418,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         });
                     }
                 }.start();
-            }
-            else{
+            } else {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -329,24 +428,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     }
-    public void setBlackFace(){
+
+    public void setBlackFace() {
         setBlackImage(smileface, R.drawable.smileface1);
         setBlackImage(noface, R.drawable.noface1);
         setBlackImage(angryface, R.drawable.angryface1);
     }
-    public void setFace(){
+
+    public void setFace() {
         setBlackFace();
-        try{
-            if(score >=80)
+        try {
+            if (score >= 80)
                 setColorImage(smileface, R.drawable.smileface);
-            else if(score >=50)
+            else if (score >= 50)
                 setColorImage(noface, R.drawable.noface);
-            else if(score >1)
+            else if (score > 1)
                 setColorImage(angryface, R.drawable.angryface);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
+
     public void setBlackImage(ImageView imageView, int resourceId) {
         if (imageView != null) {
             Resources resources = getResources();
@@ -355,6 +457,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             imageView.setImageDrawable(drawable);
         }
     }
+
     public void setColorImage(ImageView imageView, int resourceId) {
         if (imageView != null) {
             Resources resources = getResources();
@@ -363,6 +466,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             imageView.setImageDrawable(drawable);
         }
     }
+
     private void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             String[] permissions = {
@@ -383,6 +487,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
