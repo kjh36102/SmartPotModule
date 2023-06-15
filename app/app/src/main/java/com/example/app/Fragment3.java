@@ -16,6 +16,7 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.Printer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -107,44 +108,44 @@ public class Fragment3 extends Fragment {
         boolean waterState = sharedPreferences.getBoolean("WaterCheckBoxState", false);
         boolean lightState = sharedPreferences.getBoolean("LightCheckBoxState", false);
 
-        AutoWaterButton = view.findViewById(R.id.autoWaterRegister); //자동급수데이터 등록버튼
-        AutoLightButton = view.findViewById(R.id.autoLightRegister); //자동조명데이터 등록버튼
-        manuWaterRegister = view.findViewById((R.id.manuWaterRegister)); //수동급수시간 등록버튼
+        AutoWaterButton = view.findViewById(R.id.autoWaterRegister); 
+        AutoLightButton = view.findViewById(R.id.autoLightRegister); 
+        manuWaterRegister = view.findViewById((R.id.manuWaterRegister)); 
 
-        tvCheck = view.findViewById(R.id.tv_check_name);    //체크시 자동모드
+        tvCheck = view.findViewById(R.id.tv_check_name);    
         tabLayout = view.findViewById(R.id.tab_mode);
-        tableCenter = view.findViewById(R.id.tab_layout_center); //자동모드 레이아웃
-        manuLayout = view.findViewById(R.id.tab_layout_center_checked); //수동모드 레이아웃
+        tableCenter = view.findViewById(R.id.tab_layout_center); 
+        manuLayout = view.findViewById(R.id.tab_layout_center_checked); 
 
-        tvValue = view.findViewById(R.id.tv_want_value);    //희망값 Text
-        tvRange = view.findViewById(R.id.tv_range);         //임계범위 Text
-        includeView = view.findViewById(R.id.in_uncheck);   //수동모드 뷰
-        tvValue1 = view.findViewById(R.id.tv_value_1);      //희망값 edittext
-        tvValue2 = view.findViewById(R.id.tv_value_2);      //임계범위 edittext
-        tvValue3 = includeView.findViewById(R.id.tv_time_to_status); //급수시간, 조명상태text
-        tvValue4 = includeView.findViewById(R.id.tv_a);     //수동급수시간 text
+        tvValue = view.findViewById(R.id.tv_want_value);    
+        tvRange = view.findViewById(R.id.tv_range);         
+        includeView = view.findViewById(R.id.in_uncheck);   
+        tvValue1 = view.findViewById(R.id.tv_value_1);      
+        tvValue2 = view.findViewById(R.id.tv_value_2);      
+        tvValue3 = includeView.findViewById(R.id.tv_time_to_status); 
+        tvValue4 = includeView.findViewById(R.id.tv_a);     
         tvValue5 = includeView.findViewById(R.id.tv_b);
 
-        checkBoxWater = view.findViewById(R.id.check_mode_water); //Water 체크박스
-        checkBoxLight = view.findViewById(R.id.check_mode_light); //Light 체크박스
-        CheckSetNearestWater = view.findViewById(R.id.setNearest_water); //최단시간 적용 Water
-        CheckSetNearestLight = view.findViewById(R.id.setNearest_light); //최단시간 적용 Light
-        checkBoxWater.setChecked(waterState); //최단시간 적용 Water 체크 여부
-        checkBoxLight.setChecked(lightState); //최단시간 적용 Light 체크 여부
+        checkBoxWater = view.findViewById(R.id.check_mode_water); 
+        checkBoxLight = view.findViewById(R.id.check_mode_light); 
+        CheckSetNearestWater = view.findViewById(R.id.setNearest_water); 
+        CheckSetNearestLight = view.findViewById(R.id.setNearest_light); 
+        checkBoxWater.setChecked(waterState); 
+        checkBoxLight.setChecked(lightState); 
 
-        btDelete = includeView.findViewById(R.id.bt_delete);    //삭제버튼
-        btRegister = includeView.findViewById(R.id.bt_register);//등록버튼
-        reData = includeView.findViewById(R.id.rv_center_data); //item 데이터
+        btDelete = includeView.findViewById(R.id.bt_delete);    
+        btRegister = includeView.findViewById(R.id.bt_register);
+        reData = includeView.findViewById(R.id.rv_center_data); 
 
-        value1 = includeView.findViewById(R.id.ed_value_1); //단위일 edittext
-        value2 = includeView.findViewById(R.id.ed_value_2); //지정시간 edittext
-        value3 = includeView.findViewById(R.id.ed_value_3); //급수시간 edittext
+        value1 = includeView.findViewById(R.id.ed_value_1); 
+        value2 = includeView.findViewById(R.id.ed_value_2); 
+        value3 = includeView.findViewById(R.id.ed_value_3); 
 
-        edValue1 = includeView.findViewById(R.id.ed_input_1); //수동급수시간 edittext
+        edValue1 = includeView.findViewById(R.id.ed_input_1); 
         edValue2 = includeView.findViewById(R.id.ed_input_2);
 
-        tvLight = view.findViewById(R.id.tv_light); //태양습도 text
-        tvHumid = view.findViewById(R.id.tv_humidity); //태양조도 text
+        tvLight = view.findViewById(R.id.tv_light); 
+        tvHumid = view.findViewById(R.id.tv_humidity); 
 
         waterDataList = new ArrayList<>();
         lightDataList = new ArrayList<>();
@@ -152,21 +153,21 @@ public class Fragment3 extends Fragment {
         dataAdapter = new DataAdapter(waterDataList);
         deleteIndexList = new ArrayList<>();
 
-        reData.setAdapter(dataAdapter); //리사이클러뷰 초기화 진행
+        reData.setAdapter(dataAdapter); 
         reData.setLayoutManager(new LinearLayoutManager(getContext()));
 
         tvLight.setText(getData(requireContext(), "light"));
         tvHumid.setText(getData(requireContext(), "humid"));
 
         initView(waterState);
-        manuWaterData(() -> manuWaterArray());// 수동 급수 데이터 가져오기
-        autoWaterData(); // 자동 급수 데이터 가져오기
+        manuWaterData(() -> manuWaterArray());
+        autoWaterData(); 
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            // Tab이 선택되었을 때
+            
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                // 선택된 Tab의 위치를 가져옴
+                
                 int position = tab.getPosition();
                 boolean isWaterChecked = sharedPreferences.getBoolean("WaterCheckBoxState", false);
                 boolean isLightChecked = sharedPreferences.getBoolean("LightCheckBoxState", false);
@@ -175,10 +176,10 @@ public class Fragment3 extends Fragment {
                 value2.setText("");
                 value3.setText("");
 
-                switch (position) { //첫번째 탭 선택 WATER
+                switch (position) { 
                     case 0:
-                        manuWaterData(() -> manuWaterArray());// 수동 급수 데이터 가져오기
-                        autoWaterData(); // 자동 급수 데이터 가져오기
+                        manuWaterData(() -> manuWaterArray());
+                        autoWaterData(); 
 
                         curType = WATER;
                         checkBoxLight.setVisibility(View.GONE);
@@ -187,19 +188,19 @@ public class Fragment3 extends Fragment {
                         CheckSetNearestLight.setVisibility(View.GONE);
                         manuLayout.setVisibility(View.VISIBLE);
 
-                        tvValue1.setText(waterValue1); //희망값
-                        tvValue2.setText(waterValue2); //임계범위
+                        tvValue1.setText(waterValue1); 
+                        tvValue2.setText(waterValue2); 
 
-                        // edwater1, edWater2에 값이 있는 경우 EditText에 설정
+                        
                         if (edWater1 != null || edWater2 != null) {
-                            edValue1.setText(edWater1); // 수동급수시간
+                            edValue1.setText(edWater1); 
                             edValue2.setText(edWater2);
                         }
                         else {
                             edValue1.setText("");
                             edValue2.setText("");
                         }
-                        if (isWaterChecked) {// checkBoxWater의 상태에 따라 뷰 표시 여부 설정
+                        if (isWaterChecked) {
                             tableCenter.setVisibility(View.VISIBLE);
                             includeView.setVisibility(View.GONE);
                             AutoWaterButton.setVisibility(View.VISIBLE);
@@ -214,9 +215,10 @@ public class Fragment3 extends Fragment {
                         dataAdapter.notifyItemRangeRemoved(0, waterDataList.size());
                         dataAdapter.setDataList(waterDataList);
                         break;
-                    case 1:  // 두 번째 탭 선택 LIGHT
-                        manuLightArray();//수동 조명 데이터 가져오기
-                        autoLightData();//자동 조명 데이터 가져오기
+                    case 1:  
+                        manuLightArray();
+                        autoLightData();
+
                         curType = LIGHT;
                         checkBoxWater.setVisibility(View.GONE);
                         checkBoxLight.setVisibility(View.VISIBLE);
@@ -224,11 +226,11 @@ public class Fragment3 extends Fragment {
                         CheckSetNearestLight.setVisibility(View.VISIBLE);
                         manuLayout.setVisibility(View.GONE);
 
-                        tvValue1.setText(lightValue1); //조도값
-                        tvValue2.setText(lightValue2); //감지시간
+                        tvValue1.setText(lightValue1); 
+                        tvValue2.setText(lightValue2); 
 
                         if (edLight1 != null || edLight2 != null) {
-                            edValue1.setText(edLight1); // 수동조명시간
+                            edValue1.setText(edLight1); 
                             edValue2.setText(edLight2);
                         }
                         else {
@@ -526,24 +528,24 @@ public class Fragment3 extends Fragment {
             }
         });
 
-        //등록부분
+        
         btRegister.setOnClickListener(v -> {
             String dateData = value1.getText().toString();
             String timeData = value2.getText().toString();
             String valueData = value3.getText().toString();
 
             if (Objects.equals(curType, WATER)) {
-                //현재 타입이 WATER인 경우
-                //최대 6개까지만 입력 가능
+                
+                
                 if (waterDataList.size() < 7) {
                     DataValue dataValue = new DataValue();
-                    // 입력된 값으로 DataValue 객체 생성
+                    
                     boolean isNearest = CheckSetNearestWater.isChecked();
                     boolean isNotNullOfValue = isNotNullOfValue(dateData, timeData, valueData);
                     if (isNotNullOfValue) {
-                        dataValue.setDate(dateData); //단위일
-                        dataValue.setTime(timeData); //지정시간
-                        dataValue.setValue(valueData); //급수시간
+                        dataValue.setDate(dateData); 
+                        dataValue.setTime(timeData); 
+                        dataValue.setValue(valueData); 
                         Thread thread = new Thread(() -> {
                             try {
                                 URL url = new URL(popup.url +
@@ -569,7 +571,7 @@ public class Fragment3 extends Fragment {
 
                                 getActivity().runOnUiThread(() -> {
                                     if (parsed[0].equals("ok")) {
-                                        // waterDataList에 DataValue 객체 추가
+                                        
                                         waterDataList.add(dataValue);
                                         dataAdapter.setDataList(waterDataList);
                                         Toast.makeText(getContext(), "변경 완료", Toast.LENGTH_SHORT).show();
@@ -601,17 +603,17 @@ public class Fragment3 extends Fragment {
                     }
                 }
             } else {
-                //현재 타입이 WATER가 아닌 경우
-                //최대 6개까지만 입력 가능
+                
+                
                 if (lightDataList.size() < 7) {
                     DataValue dataValue = new DataValue();
-                    // 입력된 값으로 DataValue 객체 생성
+                    
                     boolean isNearest = CheckSetNearestLight.isChecked();
                     boolean isNotNullOfValue = isNotNullOfValue(dateData, timeData, valueData);
                     if (isNotNullOfValue) {
-                        dataValue.setDate(dateData); //단위일
-                        dataValue.setTime(timeData); //지정시간
-                        dataValue.setValue(valueData); //급수시간
+                        dataValue.setDate(dateData); 
+                        dataValue.setTime(timeData); 
+                        dataValue.setValue(valueData); 
 
                         Thread thread = new Thread(() -> {
                             try {
@@ -671,7 +673,7 @@ public class Fragment3 extends Fragment {
 
             }
         });
-        btDelete.setOnClickListener(new View.OnClickListener() {//삭제버튼 클릭 이벤트 부분
+        btDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (Objects.equals(curType, WATER)) {
@@ -690,6 +692,7 @@ public class Fragment3 extends Fragment {
                                     }
                                     builder.append("]");
                                     URL url = new URL(popup.url +"manageDelete?table=manage_water&id=" + builder);
+                                    
                                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                                     connection.setRequestMethod("GET");
                                     connection.setConnectTimeout(30000);
@@ -738,7 +741,7 @@ public class Fragment3 extends Fragment {
                         }
                     }
                 } else {
-                    //조명모드
+                    
                     if (lightDataList.size() > 0) {
                         boolean isNotNullOfDelete = isNotNullOfDelete();
 
@@ -814,12 +817,12 @@ public class Fragment3 extends Fragment {
                     list = waterDataList;
                 else
                     list = lightDataList;
-                if (deleteList.contains(list.get(position))) { // deleteList에 클릭된 데이터가 이미 포함되어 있는 경우
+                if (deleteList.contains(list.get(position))) { 
                     Log.i("##INFO", "onClick(): remove");
                     deleteList.remove(list.get(position));
                     deleteIndexList.remove(list.get(position));
                 }
-                else {                    // deleteList에 클릭된 데이터가 포함되어 있지 않은 경우
+                else {                    
                     Log.i("##INFO", "onClick(): add = " + list.get(position).date);
                     deleteList.add(list.get(position));
                     deleteIndexList.add(position);
@@ -829,11 +832,11 @@ public class Fragment3 extends Fragment {
 
         edValue1.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}// EditText의 텍스트가 변경되었을 때 호출되는 메서드
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (curType.equals(WATER))  // 현재 타입이 WATER인 경우
-                    edWater1 = edValue1.getText().toString();// edValue1의 텍스트 값을 edWater1에 저장
+                if (curType.equals(WATER))  
+                    edWater1 = edValue1.getText().toString();
                 else
                     edLight1 = edValue1.getText().toString();
             }
@@ -861,11 +864,11 @@ public class Fragment3 extends Fragment {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {// TextView의 텍스트가 변경되었을 때 호출되는 메서드
-                if (curType.equals(WATER))  // 현재 타입이 WATER인 경우
-                    waterValue1 = tvValue1.getText().toString(); // tvValue1의 텍스트 값을 waterValue1에 저장
-                else  // 현재 타입이 WATER가 아닌 경우
-                    lightValue1 = tvValue1.getText().toString();// tvValue1의 텍스트 값을 lightValue1에 저장
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (curType.equals(WATER))  
+                    waterValue1 = tvValue1.getText().toString(); 
+                else  
+                    lightValue1 = tvValue1.getText().toString();
             }
             @Override
             public void afterTextChanged(Editable editable) {
@@ -894,7 +897,7 @@ public class Fragment3 extends Fragment {
     public void manuWaterData(final Runnable callback){
         new Thread(new Runnable() {
             @Override
-            public void run() { //http통신으로 받아옴
+            public void run() { 
                 HttpURLConnection urlConnection = null;
                 BufferedReader reader = null;
                 int responseCode = 0;
@@ -905,11 +908,11 @@ public class Fragment3 extends Fragment {
                     URL url = new URL(popup.url +"getTableData?name=manage_auto");
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
-                    urlConnection.setConnectTimeout(30000); // 15 seconds
-                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setConnectTimeout(30000); 
+                    urlConnection.setReadTimeout(15000); 
                     urlConnection.setRequestProperty("Connection", "close");
                     urlConnection.connect();
-                    responseCode = urlConnection.getResponseCode(); // HTTP 상태 코드 확인
+                    responseCode = urlConnection.getResponseCode(); 
                     if (responseCode != HttpURLConnection.HTTP_OK)
                         return;
                     InputStream inputStream = urlConnection.getInputStream();
@@ -968,7 +971,7 @@ public class Fragment3 extends Fragment {
     public void manuWaterArray() {
         new Thread(new Runnable(){
             @Override
-            public void run() { //http통신으로 받아옴
+            public void run() { 
                 HttpURLConnection urlConnection = null;
                 BufferedReader reader = null;
                 int responseCode = 0;
@@ -979,8 +982,8 @@ public class Fragment3 extends Fragment {
                     URL url = new URL(popup.url + "getTableData?name=manage_water");
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
-                    urlConnection.setConnectTimeout(15000); // 15 seconds
-                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setConnectTimeout(15000); 
+                    urlConnection.setReadTimeout(15000); 
                     urlConnection.setRequestProperty("Connection", "close");
                     urlConnection.connect();
                     responseCode = urlConnection.getResponseCode();
@@ -1099,7 +1102,7 @@ public class Fragment3 extends Fragment {
     public void autoWaterData(){
         new Thread(new Runnable() {
             @Override
-            public void run() { //http통신으로 받아옴
+            public void run() { 
                 HttpURLConnection urlConnection = null;
                 BufferedReader reader = null;
                 int responseCode = 0;
@@ -1110,12 +1113,12 @@ public class Fragment3 extends Fragment {
                     URL url = new URL(popup.url +"getTableData?name=manage_auto");
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
-                    urlConnection.setConnectTimeout(15000); // 15 seconds
-                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setConnectTimeout(15000); 
+                    urlConnection.setReadTimeout(15000); 
                     urlConnection.setRequestProperty("Connection", "close");
                     urlConnection.connect();
 
-                    responseCode = urlConnection.getResponseCode(); // HTTP 상태 코드 확인
+                    responseCode = urlConnection.getResponseCode(); 
                     if (responseCode != HttpURLConnection.HTTP_OK)
                         return;
                     InputStream inputStream = urlConnection.getInputStream();
@@ -1189,7 +1192,7 @@ public class Fragment3 extends Fragment {
     public void manuLightArray(){
         new Thread(new Runnable(){
             @Override
-            public void run() { //http통신으로 받아옴
+            public void run() { 
                 HttpURLConnection urlConnection = null;
                 BufferedReader reader = null;
                 int responseCode = 0;
@@ -1199,8 +1202,8 @@ public class Fragment3 extends Fragment {
                     URL url = new URL(popup.url +"getTableData?name=manage_light");
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
-                    urlConnection.setConnectTimeout(15000); // 15 seconds
-                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setConnectTimeout(15000); 
+                    urlConnection.setReadTimeout(15000); 
                     urlConnection.setRequestProperty("Connection", "close");
                     urlConnection.connect();
                     responseCode = urlConnection.getResponseCode();
@@ -1317,7 +1320,7 @@ public class Fragment3 extends Fragment {
     public void autoLightData(){
         new Thread(new Runnable() {
             @Override
-            public void run() { //http통신으로 받아옴
+            public void run() { 
                 HttpURLConnection urlConnection = null;
                 BufferedReader reader = null;
                 int responseCode = 0;
@@ -1327,11 +1330,11 @@ public class Fragment3 extends Fragment {
                     URL url = new URL(popup.url +"getTableData?name=manage_auto");
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
-                    urlConnection.setConnectTimeout(15000); // 15 seconds
-                    urlConnection.setReadTimeout(15000); // 15 seconds
+                    urlConnection.setConnectTimeout(15000); 
+                    urlConnection.setReadTimeout(15000); 
                     urlConnection.setRequestProperty("Connection", "close");
                     urlConnection.connect();
-                    // HTTP 상태 코드 확인
+                    
                     responseCode = urlConnection.getResponseCode();
                     if (responseCode != HttpURLConnection.HTTP_OK)
                         return;

@@ -31,20 +31,27 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 
 public class popup extends AppCompatActivity implements View.OnClickListener {
-        public static boolean CONNECT_STATE = false;    //현재 아두이노와의 연결상태
-        public static String ssid,pw,ip,url,plant;
+        public static boolean CONNECT_STATE = false;    
+        public static String ssid;
+        public static String pw;
+        public static String ip;
+        public static String url;
+        public static String plant;
         public static TextView connText;
         private Context context;
         WifiConnectionManager connManager;
-        SeekBar lightSeekBar,coolSeekBar;
-        Button sendButton,receiveButton;
+        SeekBar lightSeekBar;
+        SeekBar coolSeekBar;
+        Button sendButton;
+        Button receiveButton;
         int lightProgress, coolProgress, waterProgress;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context=this;
-        requestWindowFeature(Window.FEATURE_NO_TITLE);  //타이틀 미사용
+        requestWindowFeature(Window.FEATURE_NO_TITLE);  
         setContentView(R.layout.activity_popup);
         findViewById(R.id.btnClose).setOnClickListener((View.OnClickListener) this);
         Button regiBtn = findViewById(R.id.btnregister);
@@ -59,39 +66,42 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         EditText editSsid = findViewById(R.id.in_ssid);
         EditText editPw = findViewById(R.id.in_pw);
 
-        editPlant.setText(plant); //과거에 저장된값이 있다면 실행시 보여주기
+        editPlant.setText(plant); 
         editSsid.setText(ssid);
         editPw.setText(pw);
 
-        //WifiConnectManager 객체 생성 후 activity 인스턴스와 상태표시 Textview 넘겨주기
+        
         connManager = new WifiConnectionManager(this, this.connText);
         regiBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                //처음 안내
+                
                 connManager.setStatusText("SSID 및 비밀번호를 입력하세요");
                  new Thread(()->{
                      startConnect();
                  }).start();
-                connManager.setOnHotspotAvailable(() -> {//핫스팟이 연결되면 실행될 콜백 정의
+                
+                connManager.setOnHotspotAvailable(() -> {
                     connManager.setStatusText("핫스팟 이용가능, 아두이노에게 전송 시작함...");
                     String externalSSID = editSsid.getText().toString().trim();
                     String externalPW = editPw.getText().toString().trim();
-                    connManager.sendExternalWifiInfo(//연결 성공되었으므로 외부네트워크 정보를 아두이노에 전송함
+                    
+                    connManager.sendExternalWifiInfo(
                             externalSSID,
                             externalPW,
-                            30000,  //타임아웃
-                            () -> {    // 성공시 콜백
+                            30000,  
+                            () -> {    
                                 connManager.setStatusText("아두이노가 외부네트워크에 연결됨");
-                                int externalTimeout = 30000;    //연결을 수락하고 최종적으로 연결될때까지의 시간, 따라서 넉넉히 줘야함
-                                connManager.connectToExternal(externalSSID, externalPW, externalTimeout); //외부네트워크로 변경해주기
+                                
+                                int externalTimeout = 30000;    
+                                connManager.connectToExternal(externalSSID, externalPW, externalTimeout);
                             },
-                            () -> {connManager.setStatusText("아두이노가 외부네트워크에 연결을 실패함");},// 실패시 콜백
-                            () -> {    // 에러시 콜백
-                                Exception e = connManager.getCurrentException();  //오류 가져오기
+                            () -> {connManager.setStatusText("아두이노가 외부네트워크에 연결을 실패함");},
+                            () -> {    
+                                Exception e = connManager.getCurrentException();  
                                 if (e instanceof SocketTimeoutException)
                                     connManager.setStatusText("아두이노에게 정보전송 타임아웃");
-                                else if (e instanceof SocketException)         //오류 종류에따른 처리
+                                else if (e instanceof SocketException)         
                                     connManager.setStatusText("아두이노에게 정보전송 중 연결 실패오류");
                                 else
                                     connManager.setStatusText("아두이노에게 정보전송중 오류발생");
@@ -106,7 +116,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 });
                 connManager.setOnExternalAvailable(() -> {
                     connManager.setStatusText("외부 와이파이 연결 성공");
-                    connManager.listenAndACKtoUDP(30000); //타임아웃 30초
+                    connManager.listenAndACKtoUDP(30000); 
                 });
                 connManager.setOnExternalUnAvailable(() -> {
                     connManager.setStatusText("외부 와이파이 연결 실패");
@@ -116,9 +126,9 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 });
                 connManager.setOnUdpSuccess(() -> {
                     connManager.setStatusText("UDP 프로세스 성공");
-                    ip = connManager.arduinoIP; //UDP가 성공하면 아두이노 웹서버 IP 가져올수있음
+                    ip = connManager.arduinoIP; 
                     url = "http://" + ip + ":12345/";
-                    connManager.sendPing(30000, ip);  //타임아웃 30초
+                    connManager.sendPing(30000, ip);  
                 });
                 connManager.setOnUdpTimeout(() -> {
                     connManager.setStatusText("UDP 프로세스 타임아웃");
@@ -128,14 +138,14 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 });
                 connManager.setOnPingSuccess(() -> {
                     connManager.setStatusText("핑 보내기 성공");
-                    CONNECT_STATE = true;   //모든 절차가 끝났으므로 연결상태를 True로 바꿔주기
+                    CONNECT_STATE = true;   
                     ssid = editSsid.getText().toString().trim();
                     pw = editPw.getText().toString().trim();
                     try {
                         Thread.sleep(2000);
                         connManager.setStatusText("최종 연결 성공!");
                         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedPreferences.edit(); // 값을 편집하기 위한 Editor 객체 생성
+                        SharedPreferences.Editor editor = sharedPreferences.edit(); 
                         editor.putString("ssid", ssid);
                         editor.putString("pw",pw);
                         editor.putString("ip",ip);
@@ -165,16 +175,20 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
             @Override
             public void onClick(View v) {
                 plant = editPlant.getText().toString();
-                SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);  //plant명 앱내에 저장할 SharedPreferences 객체 생성
-                SharedPreferences.Editor editor = sharedPreferences.edit();// 값을 편집하기 위한 Editor 객체 생성
-                editor.putString("plant", plant); // 값을 SharedPreferences에 저장
+                
+                
+                SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+                
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                
+                editor.putString("plant", plant);
                 editor.apply();
-                Toast.makeText(getApplicationContext(), "식물 등록 성공", Toast.LENGTH_LONG).show(); //토스트메시지 표시
+                Toast.makeText(getApplicationContext(), "식물 등록 성공", Toast.LENGTH_LONG).show(); 
             }
         });
         receiveButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) { //데이터 값 받는 버튼
+            public void onClick(View v) { 
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -206,13 +220,14 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                                     save(lightProgress, coolProgress);
                                 }
                             }
-                            runOnUiThread(new Runnable() { //받아온 데이터 값 ui 적용
+                            runOnUiThread(new Runnable() { 
                                 @Override
                                 public void run() {
                                     lightSeekBar.setProgress(lightProgress);
                                     coolSeekBar.setProgress(coolProgress);
                                 }
                             });
+
                         } catch (IOException | JSONException e) {
                             e.printStackTrace();
                         }
@@ -222,12 +237,13 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         });
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) { //설정한 progrss bar 값 읽는거
+            public void onClick(View v) {
+                
                 lightProgress = lightSeekBar.getProgress();
                 coolProgress = coolSeekBar.getProgress();
 
                 String sendUrlString = url + "manageAutoSet?ld=" + lightProgress + "&cd=" + coolProgress;
-                new Thread(new Runnable() { //http 통신 시작
+                new Thread(new Runnable() { 
                     @Override
                     public void run() {
                         HttpURLConnection urlConnection = null;
@@ -242,7 +258,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                             e.printStackTrace();
                         } finally {
                             if (urlConnection != null) {
-                                urlConnection.disconnect(); //http 연결 종료
+                                urlConnection.disconnect(); 
                             }
                         }
                     }
@@ -252,16 +268,16 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
 
     }
     @Override
-    public void onResume() { //새로고침 할 떄마다 로컬저장소에 있는 데이터 불러와서 ui 적용
+    public void onResume() { 
         super.onResume();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        lightProgress = sharedPreferences.getInt("lightProgress", 50); // Default value is 50
-        coolProgress = sharedPreferences.getInt("coolProgress", 50); // Default value is 50
-        waterProgress = sharedPreferences.getInt("waterProgress", 50); // Default value is 50
+        lightProgress = sharedPreferences.getInt("lightProgress", 50); 
+        coolProgress = sharedPreferences.getInt("coolProgress", 50); 
+        waterProgress = sharedPreferences.getInt("waterProgress", 50); 
         lightSeekBar.setProgress(lightProgress);
         coolSeekBar.setProgress(coolProgress);
     }
-    public void save(int lightProgress, int coolProgress){ //값 저장
+    public void save(int lightProgress, int coolProgress){ 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("lightProgress", lightProgress);
@@ -275,15 +291,15 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 break;
         }
     }
-    public boolean onTouchEvent(MotionEvent event){  //팝업 영역 밖 클릭시 닫힘 방지
-        if(event.getAction() == MotionEvent.ACTION_OUTSIDE)
-            return false;
+    public boolean onTouchEvent(MotionEvent event){
+        if(event.getAction() == MotionEvent.ACTION_OUTSIDE) {return false;}
         return true;
-    }
+    }  
+
     public void startConnect() {
         CONNECT_STATE = false;
         ip = null;
-        int hotspotTimeout = 30000; //연결을 수락하고 최종적으로 연결될때까지의 시간, 따라서 넉넉히 줘야함
+        int hotspotTimeout = 30000; 
         connManager.connectToHotspot("SmartPotModule", hotspotTimeout);
     }
 }
