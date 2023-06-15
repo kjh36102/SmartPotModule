@@ -58,8 +58,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TabPagerAdapter adapter;
     boolean water,light0, light1;
 
-
-
     String[] tabName = new String[]{"대시보드", "상세분석", "식물관리"};
     //습도(humid), 온도(temp), 전기전도도(ec), 산화도(ph), 질소(nitro), 인(phos), 칼륨(pota), 광량(light);
     public static HashMap<String, String> mDataHashMap;
@@ -75,18 +73,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         requestPermissions();
 
         sharedPreferences_fragment2 = getSharedPreferences("myPreferences", Context.MODE_PRIVATE);
-
         toolbar = (Toolbar) findViewById(R.id.toolbar);           // actionbar에서 toolbar로 변경
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         //getSupportActionBar().setTitle("SmartPotModule");
-        //xml 연결ㅜ
+        //xml 연결
         tabLayout = findViewById(R.id.tabs);
         viewPager = findViewById(R.id.viewPager);
         //adapter 준비 및 연결
         adapter = new TabPagerAdapter(this);
         viewPager.setAdapter(adapter);
-
 
         // TabLayout, ViewPager 연결
         new TabLayoutMediator(tabLayout, viewPager, new TabLayoutMediator.TabConfigurationStrategy() {
@@ -101,30 +97,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }).attach();
 
         findViewById(R.id.wifi_button).setOnClickListener(this);
-        //조명상태 불러오는 코드 추가해야함
 
         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
-        popup.plant = sharedPreferences.getString("plant", ""); // 두 번째 매개변수는 기본값으로 사용될 값입니다.
+        popup.plant = sharedPreferences.getString("plant", "");
         popup.ssid = sharedPreferences.getString("ssid", "");
         popup.pw = sharedPreferences.getString("pw", "");
         popup.ip = sharedPreferences.getString("ip", "");
         popup.url = sharedPreferences.getString("url", "");
 
-        System.out.println(popup.ssid);
-        //new GetJsonDataTask().execute(popup.url);
-
         WifiConnectionManager connManager = new WifiConnectionManager(this, popup.connText);
         if (!connManager.permission.hasAll())
             connManager.permission.requestAll();
-
         if (!popup.ssid.equals("") && !popup.pw.equals("") && !popup.ip.equals("") && !popup.url.equals("")) {
             new Thread(() -> {
                 connManager.connectToExternal(popup.ssid, popup.pw, 30000);
             }).start();
             connManager.setOnExternalAvailable(() -> {
-                System.out.println("외부 와이파이 연결 성공"); //아두이노 접속 테스트
                 new Thread(() -> {
-                    if (connManager.sendPing(5000, popup.ip)) { //핑이 성공하면, rememberedAruduinoIP는 저장해둔 아이피주소
+                    if (connManager.sendPing(5000, popup.ip)) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -132,8 +122,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 popup.CONNECT_STATE = true;
                             }
                         });
-                        System.out.println(popup.ip + " " + popup.url);
-
                         new GetJsonDataTask().execute(popup.url);
                         new Thread(()->{
                             try {
@@ -147,10 +135,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }).start();
                     }
                 }).start();
-
             });
         }
-            else {  //rememberedArduinoIP를 통해 연결이 안되었으므로
+            else {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -159,28 +146,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
                 setBlackFace();
             }
-
     }
 
     @Override
-    public void onClick(View v) {
+    public void onClick(View v) {   //wifi버튼-페이지 연결
         switch (v.getId()) {
             case R.id.wifi_button:
                 startActivity(new Intent(this, popup.class));
                 break;
         }
-    }   //wifi버튼-페이지 연결
-
+    }
     public class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
         @Override
         protected HashMap<String, String> doInBackground(String... urls) {
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                //URL url = new URL(urls[0]);
                 URL url = new URL(urls[0]+"getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-
                 InputStream inputStream = httpURLConnection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
@@ -229,17 +212,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     String dataString2 = parsed2[2];
                     JSONArray jsonArray2 = new JSONArray(dataString2);
                     if (jsonArray2.length() > 0) {
-                        JSONObject jsonObject2 = jsonArray2.getJSONObject(0);
-                        System.out.println(jsonObject2);
-                        if (jsonObject2.optString("w_auto").equals("0")) {   //자동=1, 수동=0
-                            water = true;  //수동
-                            System.out.println("버튼 활성화");
-                        }
-                        else if (jsonObject2.optString("w_auto").equals("1")){
+                        JSONObject jsonObject2 = jsonArray2.getJSONObject(0); //자동=1, 수동=0
+                        if (jsonObject2.optString("w_auto").equals("0"))
+                            water = true;   //수동
+                        else if (jsonObject2.optString("w_auto").equals("1"))
                             water = false;
-                            System.out.println("버튼 비활성화");
-                        }
-
                         if (jsonObject2.optString("l_auto").equals("0")) {
                             light0=true;
                             if (jsonObject2.optString("l_on").equals("1"))
@@ -247,11 +224,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             else if (jsonObject2.optString("l_on").equals("0"))
                                 light1=false;
                         }
-                        else if (jsonObject2.optString("l_auto").equals("1"))
+                        else if (jsonObject2.optString("l_auto").equals("1")){
                             light0=false;
+                            if (jsonObject2.optString("l_on").equals("1"))
+                                light1 = true;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1 = false;
+                        }
                     }
                 }
-
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -303,11 +284,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             waterBtn.setEnabled(water);
             toggleButton.setEnabled(light0);
             toggleButton.setChecked(light1);
-            /*
-            Calendar calendar = Calendar.getInstance();
-            SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
-            String dateTime = dateFormat.format(calendar.getTime());
-            rTxt.setText(dateTime);*/
 
             Fragment2.temp = temp;
             Fragment2.humid = humid;
@@ -318,12 +294,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Fragment2.ec = ec;
             Fragment2.ph = ph;
 
-
             Fragment3.humid = humid;
             Fragment3.light = light;
 
             if (!popup.plant.equals("")) {
-                System.out.println(temp);
                 ChatGPT chatGPT = new ChatGPT();
                 new Thread() {
                     public void run() {
@@ -373,17 +347,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             throw new RuntimeException(e);
         }
     }
-
     public void setBlackImage(ImageView imageView, int resourceId) {
         if (imageView != null) {
             Resources resources = getResources();
             Bitmap bitmap = BitmapFactory.decodeResource(resources, resourceId);
             BitmapDrawable drawable = new BitmapDrawable(resources, bitmap);
             imageView.setImageDrawable(drawable);
-            System.out.println(imageView);
         }
     }
-
     public void setColorImage(ImageView imageView, int resourceId) {
         if (imageView != null) {
             Resources resources = getResources();
@@ -392,8 +363,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             imageView.setImageDrawable(drawable);
         }
     }
-
-
     private void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             String[] permissions = {
@@ -402,7 +371,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Manifest.permission.CHANGE_WIFI_STATE,
                     Manifest.permission.ACCESS_FINE_LOCATION
             };
-
             boolean allPermissionsGranted = true;
             for (String permission : permissions) {
                 if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
@@ -410,17 +378,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     break;
                 }
             }
-
             if (!allPermissionsGranted) {
                 ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
             }
         }
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         if (requestCode == PERMISSION_REQUEST_CODE) {
             // 권한 동의 결과 처리
             boolean allPermissionsGranted = true;
@@ -429,12 +394,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     allPermissionsGranted = false;
                     break;
                 }
-            }
-
-            if (allPermissionsGranted) {
-                // 필요한 권한이 모두 동의됨
-            } else {
-                // 필요한 권한 중 일부 또는 모두 거부됨
             }
         }
     }

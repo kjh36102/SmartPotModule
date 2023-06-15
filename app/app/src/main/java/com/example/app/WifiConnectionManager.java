@@ -27,9 +27,6 @@ import java.net.URL;
 
 public class WifiConnectionManager {
 
-    /**
-     * 이 클래스는 네트워크 연결에 필요한 권한과 관련된 메소드만 모아놓은 것이다.
-     */
     class Permission {
         private static final int PERMISSION_REQUEST_CODE = 10;
         Activity activity;
@@ -46,113 +43,61 @@ public class WifiConnectionManager {
                 Manifest.permission.WRITE_SETTINGS
         };
 
-        /**
-         * 이 메소드는 실행에 필요한 권한이 모두 있는지 확인한다.
-         *
-         * @return 모두 있으면 true, 하나라도 없으면 false
-         */
         public boolean hasAll() {
             for (String permission : PERMISSIONS) {
-                if (ContextCompat.checkSelfPermission(activity.getApplicationContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(activity.getApplicationContext(), permission) != PackageManager.PERMISSION_GRANTED)
                     return false;
-                }
             }
             return true;
         }
 
-        /**
-         * 이 메소드는 실행에 필요한 권한을 모두 요청한다.
-         */
-        public void requestAll() {
+        public void requestAll() {//이 메소드는 실행에 필요한 권한을 모두 요청한다.
             ActivityCompat.requestPermissions(this.activity, PERMISSIONS, PERMISSION_REQUEST_CODE);
         }
     }
-
 
     private TextView statusTextview;
     private Activity activity;
     public Permission permission;
     public String arduinoIP;
 
-
-    private Runnable onHotspotAvailable;
-    private Runnable onHotspotUnAvailable;
-    private Runnable onHotspotLost;
-    private Runnable onExternalAvailable;
-    private Runnable onExternalUnAvailable;
-    private Runnable onExternalLost;
-    private Runnable onUdpSuccess;
-    private Runnable onUdpTimeout;
-    private Runnable onUdpError;
-    private Runnable onPingSuccess;
-    private Runnable onPingFailed;
-    private Runnable onPingTimeout;
-    private Runnable onPingError;
+    private Runnable onHotspotAvailable,onHotspotUnAvailable, onHotspotLost;
+    private Runnable onExternalAvailable,onExternalUnAvailable,onExternalLost;
+    private Runnable onUdpSuccess,onUdpTimeout,onUdpError;
+    private Runnable onPingSuccess,onPingFailed,onPingTimeout,onPingError;
     private Exception currentException;
 
 
     private ConnectivityManager hotspotConnManager;
     private ConnectivityManager.NetworkCallback hotspotNetworkCallback;
-
     private ConnectivityManager externalConnManager;
     private ConnectivityManager.NetworkCallback externalNetworkCallback;
 
-
-    /**
-     * 이 생성자는 WifiConnectionManager의 인스턴스를 생성한다.
-     *
-     * @param activity       넘겨받을 Activity 인스턴스
-     * @param statusTextview 상태를 표시할 TextView의 인스턴스
-     */
-    WifiConnectionManager(Activity activity, TextView statusTextview) {
+    WifiConnectionManager(Activity activity, TextView statusTextview) {//이 생성자는 WifiConnectionManager의 인스턴스를 생성한다.//이 생성자는 WifiConnectionManager의 인스턴스를 생성한다.
         this.permission = new Permission(activity);
         this.activity = activity;
         this.statusTextview = statusTextview;
-//            this.externalSocket = new DatagramSocket(12345);
-
     }
 
-    /**
-     * 이 메소드는 생성자에서 넘겨준 상태표시 TextView의 값을 업데이트 한다.
-     *
-     * @param statusText 새로운 상태 메시지
-     */
-    public void setStatusText(String statusText) {  //runOnUiThread를 통해 업데이트
+    public void setStatusText(String statusText) {  //runOnUiThread를 통해 업데이트, 이 메소드는 생성자에서 넘겨준 상태표시 TextView의 값을 업데이트 한다.
         this.activity.runOnUiThread(() -> this.statusTextview.setText(statusText));
     }
 
-    /**
-     * 이 메소드는 hotspot과 external의 ConnectivityManager와 NetworkCallback을 초기화한다. 직접 호출하지 않는다.
-     */
-    private void initConn(){
-        if (hotspotConnManager != null && hotspotNetworkCallback != null) {
+    private void initConn(){//이 메소드는 hotspot과 external의 ConnectivityManager와 NetworkCallback을 초기화한다. 직접 호출하지 않는다.
+        if (hotspotConnManager != null && hotspotNetworkCallback != null)
             hotspotConnManager.unregisterNetworkCallback(hotspotNetworkCallback);
-        }
-
-        if (externalConnManager!= null && externalNetworkCallback != null) {
+        if (externalConnManager!= null && externalNetworkCallback != null)
             externalConnManager.unregisterNetworkCallback(externalNetworkCallback);
-        }
     }
 
-    /**
-     * 이 메소드는 와이파이를 변경하고 상태에따라 다른 콜백을 호출한다. 직접 호출하지 않는다.
-     *
-     * @param ssid          와이파이의 ssid
-     * @param pw            와이파이의 pw
-     * @param timeout       타임아웃
-     * @param onSuccess     성공시 콜백
-     * @param onUnAvailable 실패시 콜백
-     * @param onLost        연결끊길시 콜백
-     */
     private void connectToNetwork(String ssid, String pw, int timeout, Runnable onSuccess, Runnable onUnAvailable, Runnable onLost) {
-
+    //이 메소드는 와이파이를 변경하고 상태에따라 다른 콜백을 호출한다. 직접 호출하지 않는다.
         WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder()
                 .setSsid(ssid);
 
-        if (pw != null) builder.setWpa2Passphrase(pw);
-
+        if (pw != null)
+            builder.setWpa2Passphrase(pw);
         WifiNetworkSpecifier specifier = builder.build();
-
         NetworkRequest networkRequest = new NetworkRequest.Builder()
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                 .setNetworkSpecifier(specifier)
@@ -171,7 +116,6 @@ public class WifiConnectionManager {
                 super.onUnavailable();
                 runIfNotNull(onUnAvailable);
             }
-
             @Override
             public void onLost(@NonNull Network network) {
                 super.onLost(network);
@@ -180,7 +124,6 @@ public class WifiConnectionManager {
         };
 
         connectivityManager.requestNetwork(networkRequest, networkCallback, timeout);
-
         if(pw == null){
             this.hotspotConnManager = connectivityManager;
             this.hotspotNetworkCallback = networkCallback;
@@ -188,46 +131,21 @@ public class WifiConnectionManager {
             this.externalConnManager = connectivityManager;
             this.externalNetworkCallback = networkCallback;
         }
-
     }
 
-    /**
-     * 이 메소드는 핫스팟에 연결하기위해 호출한다.
-     *
-     * @param ssid    핫스팟의 ssid
-     * @param timeout 타임아웃
-     */
-    public void connectToHotspot(String ssid, int timeout) {
+    public void connectToHotspot(String ssid, int timeout) { //이 메소드는 핫스팟에 연결하기위해 호출한다.
         initConn();
         connectToNetwork(ssid, null, timeout, this.onHotspotAvailable, this.onHotspotUnAvailable, this.onHotspotLost);
     }
 
-    /**
-     * 이 메소드는 외부와이파이에 연결하기위해 호출한다.
-     *
-     * @param ssid    외부와이파이의 ssid
-     * @param pw      외부와이파이의 pw
-     * @param timeout 타임아웃
-     */
-    public void connectToExternal(String ssid, String pw, int timeout) {
+    public void connectToExternal(String ssid, String pw, int timeout) {//이 메소드는 외부와이파이에 연결하기위해 호출한다.
         connectToNetwork(ssid, pw, timeout, this.onExternalAvailable, this.onExternalUnAvailable, this.onExternalLost);
     }
 
-    /**
-     * 이 메소드는 아두이노로 외부 네트워크 정보를 전송한다.
-     *
-     * @param ssid        외부네트워크의 SSID
-     * @param pw          외부네트워크의 비밀번호
-     * @param connTimeout 연결 타임아웃(ms)
-     * @param onSuccess   성공시 실행될 Runnable
-     * @param onFailed    실패시 실행될 Runnable
-     * @param onError     오류시 실행될 Runnable
-     */
     public void sendExternalWifiInfo(String ssid, String pw, int connTimeout, Runnable onSuccess, Runnable onFailed, Runnable onError) {
-        new Thread(() -> {
+        new Thread(() -> {  //이 메소드는 아두이노로 외부 네트워크 정보를 전송한다.
             try {
                 URL url = new URL("http://192.168.4.1:12344/regExtWifi?ssid=" + ssid + "&pw=" + pw);
-
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(connTimeout);
@@ -249,15 +167,12 @@ public class WifiConnectionManager {
                 }
                 else if(parsed[0].equals("err")){
                     runIfNotNull(onFailed);
-                    if(parsed[1].equals("0")){
+                    if(parsed[1].equals("0"))
                         this.statusTextview.setText("쿼리 인자 부족");
-                    }
-                    else if(parsed[1].equals("1")){
+                    else if(parsed[1].equals("1"))
                         this.statusTextview.setText("연결모드가 아님");
-                    }
-                    else if(parsed[1].equals("2")){
+                    else if(parsed[1].equals("2"))
                         this.statusTextview.setText("외부네트워크 연결 실패");
-                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -270,20 +185,12 @@ public class WifiConnectionManager {
         ).start();
     }
 
-
-    /**
-     * 이 메소드는 아두이노의 Broadcast 메시지를 파싱하고 IP를 저장, 그 후 해당 IP를 타겟으로 삼아 ACK를 전송한다.
-     *
-     * @param timeout UDP 프로세스 타임아웃(ms)
-     * @return 성공시 true, 실패시 false
-     */
-    public boolean listenAndACKtoUDP(int timeout) {
+    public boolean listenAndACKtoUDP(int timeout) { //이 메소드는 아두이노의 Broadcast 메시지를 파싱하고 IP를 저장, 그 후 해당 IP를 타겟으로 삼아 ACK를 전송한다.
             DatagramSocket socket=null;
         try {   //UDP 리스닝 및 ACK응답
 
             socket = new DatagramSocket(12345);
             socket.setSoTimeout(timeout);
-
             byte[] buffer = new byte[128];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
@@ -291,24 +198,18 @@ public class WifiConnectionManager {
             while (true) {
                 socket.receive(packet);
                 String message = new String(packet.getData(), 0, packet.getLength());
-
-                if (!message.contains("SmartPotModule")) continue;
-
+                if (!message.contains("SmartPotModule"))
+                    continue;
                 this.arduinoIP = arduinoIP = message.split(":")[1];
-                System.out.println("아두이노IP: " + arduinoIP);
                 break;
             }
-
-            //arduinoIP에게 ACK 보내기
-            byte[] sendData = "SmartPotModule:ACK".getBytes();
+            byte[] sendData = "SmartPotModule:ACK".getBytes(); //arduinoIP에게 ACK 보내기
 
             InetAddress destAddr = InetAddress.getByName(arduinoIP);
             packet = new DatagramPacket(sendData, sendData.length, destAddr, 12345);
-
-            for (int i = 0; i < 5; i++) socket.send(packet);
-
+            for (int i = 0; i < 5; i++)
+                socket.send(packet);
             socket.close();
-
             runIfNotNull(this.onUdpSuccess);
             return true;
         } catch (SocketTimeoutException e) {  //타임아웃을 먼저 예외처리해야함\
@@ -323,30 +224,13 @@ public class WifiConnectionManager {
             if(socket !=null)
                 socket.close();
         }
-
         return false;
     }
 
-
-    /**
-     * 이 메소드는 최종연결을 확인하기 위해 아두이노의 웹서버에 접속한다.
-     *
-     * @param timeout      최종연결 타임아웃(ms)
-     * @param rememberedIP 클래스 외부에 저장해놓은 아두이노의 외부네트워크 IP(즉 ping을보낼 타겟)
-     * @return 성공시 true, 실패시 false
-     */
-    public boolean sendPing(int timeout, String rememberedIP) {
-
-//        if (rememberedIP == null && this.arduinoIP == null) return false;
-
+    public boolean sendPing(int timeout, String rememberedIP) {//이 메소드는 최종연결을 확인하기 위해 아두이노의 웹서버에 접속한다.
         try {
             if (rememberedIP == null) return false;
             URL url = new URL("http://" + rememberedIP + ":12345/hello");
-//            URL url;
-//            if (rememberedIP == null) url = new URL("http://" + this.arduinoIP + ":12345/hello");
-//            else url = new URL("http://" + rememberedIP + ":12345/hello");
-
-
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(timeout);
@@ -364,18 +248,15 @@ public class WifiConnectionManager {
 
             if( parsed[0].equals("ok")) {
                 runIfNotNull(this.onPingSuccess);
-                if(parsed[1].equals("0")){
+                if(parsed[1].equals("0"))
                     if(this.statusTextview != null)
                         this.statusTextview.setText("최종 연결 성공");
-                }
-                else if(parsed[1].equals("1")){
+                else if(parsed[1].equals("1"))
                     if(this.statusTextview != null)
                         this.statusTextview.setText("최종 연결 성공, 그러나 인터넷 안됨");
-                }
-                else if(parsed[1].equals("2")){
+                else if(parsed[1].equals("2"))
                     if(this.statusTextview != null)
                         this.statusTextview.setText("핑");
-                }
             }
             else if(parsed[0].equals("err")){
                 runIfNotNull(this.onPingFailed);
@@ -393,80 +274,29 @@ public class WifiConnectionManager {
             }
             runIfNotNull(this.onPingError);
         }
-
         return false;
     }
 
-    /**
-     * runnable이 null이 아닐경우만 실행한다. 직접 호출하지 않는다.
-     *
-     * @param runnable 실행할 runnable
-     */
-    private void runIfNotNull(Runnable runnable) {
-        if (runnable != null) { runnable.run();}
+    private void runIfNotNull(Runnable runnable) {//runnable이 null이 아닐경우만 실행한다. 직접 호출하지 않는다.
+        if (runnable != null)
+            runnable.run();
     }
-
-    /**
-     * 이 메소드는 onError계열의 runnable 안에서 호출하여 현재 Exception객체를 획득한다. (MainActivity 예제 참고)
-     *
-     * @return 현재 발생한 (또는 마지막으로 발생한) Exception 객체
-     */
-    public synchronized Exception getCurrentException() {
-        return this.currentException;
+    public synchronized Exception getCurrentException() {//이 메소드는 onError계열의 runnable 안에서 호출하여 현재 Exception객체를 획득한다. (MainActivity 예제 참고)
+        return this.currentException;               //return 현재 발생한 (또는 마지막으로 발생한) Exception 객체
     }
-
     //이하부터 콜백 Runnable Setter 메소드
-    public void setOnHotspotAvailable(Runnable runnable) {
-        this.onHotspotAvailable = runnable;
-    }
-
-    public void setOnHotspotUnAvailable(Runnable runnable) {
-        this.onHotspotUnAvailable = runnable;
-    }
-
-    public void setOnHotspotLost(Runnable runnable) {
-        this.onHotspotLost = runnable;
-    }
-
-    public void setOnExternalAvailable(Runnable runnable) {
-        this.onExternalAvailable = runnable;
-    }
-
-    public void setOnExternalUnAvailable(Runnable runnable) {
-        this.onExternalUnAvailable = runnable;
-    }
-
-    public void setOnExternalLost(Runnable runnable) {
-        this.onExternalLost = runnable;
-    }
-
-    public void setOnUdpSuccess(Runnable runnable) {
-        this.onUdpSuccess = runnable;
-    }
-
-    public void setOnUdpTimeout(Runnable runnable) {
-        this.onUdpTimeout = runnable;
-    }
-
-    public void setOnUdpError(Runnable runnable) {
-        this.onUdpError = runnable;
-    }
-
-    public void setOnPingSuccess(Runnable runnable) {
-        this.onPingSuccess = runnable;
-    }
-
-    public void setOnPingFailed(Runnable runnable) {
-        this.onPingFailed = runnable;
-    }
-
-    public void setOnPingTimeout(Runnable runnable) {
-        this.onPingTimeout = runnable;
-    }
-
-    public void setOnPingError(Runnable runnable) {
-        this.onPingError = runnable;
-    }
-
+    public void setOnHotspotAvailable(Runnable runnable) {this.onHotspotAvailable = runnable;}
+    public void setOnHotspotUnAvailable(Runnable runnable) { this.onHotspotUnAvailable = runnable;}
+    public void setOnHotspotLost(Runnable runnable) {this.onHotspotLost = runnable;}
+    public void setOnExternalAvailable(Runnable runnable) {this.onExternalAvailable = runnable;}
+    public void setOnExternalUnAvailable(Runnable runnable) {this.onExternalUnAvailable = runnable;}
+    public void setOnExternalLost(Runnable runnable) {this.onExternalLost = runnable;}
+    public void setOnUdpSuccess(Runnable runnable) {this.onUdpSuccess = runnable;}
+    public void setOnUdpTimeout(Runnable runnable) {this.onUdpTimeout = runnable;}
+    public void setOnUdpError(Runnable runnable) {this.onUdpError = runnable;}
+    public void setOnPingSuccess(Runnable runnable) {this.onPingSuccess = runnable;}
+    public void setOnPingFailed(Runnable runnable) {this.onPingFailed = runnable;}
+    public void setOnPingTimeout(Runnable runnable) {this.onPingTimeout = runnable;}
+    public void setOnPingError(Runnable runnable) {this.onPingError = runnable;}
 }
 
