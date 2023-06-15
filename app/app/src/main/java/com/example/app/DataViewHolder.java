@@ -1,7 +1,6 @@
 package com.example.app;
 
-import android.graphics.Color;
-import android.util.Log;
+
 import android.view.View;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -9,7 +8,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.w3c.dom.Text;
 
 public class DataViewHolder extends RecyclerView.ViewHolder {
 

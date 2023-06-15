@@ -242,20 +242,20 @@ public class WifiConnectionManager {
                     responseData.append(line);
                 }
                 reader.close();
-                String parsed[] = line.split("|");
+                String parsed[] = responseData.toString().split("\\|");
                 if( parsed[0].equals("ok")) {
                     runIfNotNull(onSuccess);
                     this.statusTextview.setText("외부와이파이 연결 성공");
                 }
                 else if(parsed[0].equals("err")){
                     runIfNotNull(onFailed);
-                    if(parsed[1].equals(0)){
+                    if(parsed[1].equals("0")){
                         this.statusTextview.setText("쿼리 인자 부족");
                     }
-                    else if(parsed[1].equals(1)){
+                    else if(parsed[1].equals("1")){
                         this.statusTextview.setText("연결모드가 아님");
                     }
-                    else if(parsed[1].equals(2)){
+                    else if(parsed[1].equals("2")){
                         this.statusTextview.setText("외부네트워크 연결 실패");
                     }
                 }
@@ -278,10 +278,10 @@ public class WifiConnectionManager {
      * @return 성공시 true, 실패시 false
      */
     public boolean listenAndACKtoUDP(int timeout) {
-
+            DatagramSocket socket=null;
         try {   //UDP 리스닝 및 ACK응답
 
-            DatagramSocket socket = new DatagramSocket(12345);
+            socket = new DatagramSocket(12345);
             socket.setSoTimeout(timeout);
 
             byte[] buffer = new byte[128];
@@ -319,6 +319,9 @@ public class WifiConnectionManager {
                 this.currentException = e;
             }
             runIfNotNull(this.onUdpError);
+        } finally{
+            if(socket !=null)
+                socket.close();
         }
 
         return false;
@@ -338,7 +341,6 @@ public class WifiConnectionManager {
 
         try {
             if (rememberedIP == null) return false;
-
             URL url = new URL("http://" + rememberedIP + ":12345/hello");
 //            URL url;
 //            if (rememberedIP == null) url = new URL("http://" + this.arduinoIP + ":12345/hello");
@@ -358,21 +360,26 @@ public class WifiConnectionManager {
                 responseData.append(line);
             }
             reader.close();
-            String parsed[] = line.split("|");
+            String parsed[] = responseData.toString().split("\\|");
+
             if( parsed[0].equals("ok")) {
                 runIfNotNull(this.onPingSuccess);
-                if(parsed[1].equals(0)){
-                    this.statusTextview.setText("최종 연결 성공");
+                if(parsed[1].equals("0")){
+                    if(this.statusTextview != null)
+                        this.statusTextview.setText("최종 연결 성공");
                 }
-                else if(parsed[1].equals(1)){
-                    this.statusTextview.setText("최종 연결 성공, 그러나 인터넷 안됨");
+                else if(parsed[1].equals("1")){
+                    if(this.statusTextview != null)
+                        this.statusTextview.setText("최종 연결 성공, 그러나 인터넷 안됨");
                 }
-                else if(parsed[1].equals(2)){
-                    this.statusTextview.setText("핑");
+                else if(parsed[1].equals("2")){
+                    if(this.statusTextview != null)
+                        this.statusTextview.setText("핑");
                 }
             }
             else if(parsed[0].equals("err")){
                 runIfNotNull(this.onPingFailed);
+                if(this.statusTextview != null)
                     this.statusTextview.setText("아직 외부네트워크 연결 안됨");
             }
             return true;

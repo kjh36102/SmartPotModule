@@ -1,55 +1,51 @@
 package com.example.app;
 
-import static android.content.ContentValues.TAG;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
-import android.net.wifi.WifiManager;
-import android.net.wifi.WifiNetworkSpecifier;
+
 import android.os.Bundle;
-import android.os.PatternMatcher;
-import android.util.Log;
+import android.preference.PreferenceManager;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.net.URLEncoder;
 
 public class popup extends AppCompatActivity implements View.OnClickListener {
         public static boolean CONNECT_STATE = false;    //현재 아두이노와의 연결상태
         public static String ssid;
         public static String pw;
         public static String ip;
-        public static String url = "http://cofon.xyz:9090/read";
+        public static String url;
         public static String plant;
         public static TextView connText;
         private Context context;
         WifiConnectionManager connManager;
+        SeekBar lightSeekBar;
+        SeekBar coolSeekBar;
+        Button sendButton;
+        Button receiveButton;
+        int lightProgress, coolProgress, waterProgress;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +56,11 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
         findViewById(R.id.btnClose).setOnClickListener((View.OnClickListener) this);
         Button regiBtn = findViewById(R.id.btnregister);
         Button plantBtn = findViewById(R.id.btnPlant);
+        lightSeekBar = findViewById(R.id.seekBar);
+        coolSeekBar = findViewById(R.id.seekBar2);
+        receiveButton = findViewById(R.id.receivebutton);
+        sendButton = findViewById(R.id.sendbutton);
+
         connText = findViewById(R.id.show_conn);
 
         EditText editPlant = findViewById(R.id.plantName);
@@ -80,7 +81,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 System.out.println("SSID 및 비밀번호를 입력하세요");
                  new Thread(()->{
                      startConnect();
-
                  }).start();
                 //핫스팟이 연결되면 실행될 콜백 정의
                 connManager.setOnHotspotAvailable(() -> {
@@ -110,17 +110,17 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                             () -> {    // 에러시 콜백
                                 Exception e = connManager.getCurrentException();  //오류 가져오기
 
-                                if (e instanceof SocketException) {        //오류 종류에따른 처리
-                                    connManager.setStatusText("아두이노에게 정보전송 중 연결 실패오류");
-                                    System.out.println("아두이노에게 정보전송 중 연결 실패오류");
-                                } else if (e instanceof SocketTimeoutException) {
+                                if (e instanceof SocketTimeoutException) {
                                     connManager.setStatusText("아두이노에게 정보전송 타임아웃");
                                     System.out.println("아두이노에게 정보전송 타임아웃");
+                                }
+                                 else if (e instanceof SocketException) {        //오류 종류에따른 처리
+                                    connManager.setStatusText("아두이노에게 정보전송 중 연결 실패오류");
+                                    System.out.println("아두이노에게 정보전송 중 연결 실패오류");
                                 } else {
                                     connManager.setStatusText("아두이노에게 정보전송중 오류발생");
                                     System.out.println("아두이노에게 정보전송중 오류발생: " + e.getClass().getName() + ", " + e.getMessage());
                                 }
-
                             }
                     );
                 });
@@ -159,6 +159,9 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                     System.out.println("UDP 프로세스 성공");
                     ip = connManager.arduinoIP; //UDP가 성공하면 아두이노 웹서버 IP 가져올수있음
                     url = "http://" + ip + ":12345/";
+
+
+
                     connManager.sendPing(30000, ip);  //타임아웃 30초
                 });
 
@@ -179,6 +182,7 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                     System.out.println("핑 보내기 성공");
 
                     CONNECT_STATE = true;   //모든 절차가 끝났으므로 연결상태를 True로 바꿔주기
+
                     ssid = editSsid.getText().toString().trim();
                     pw = editPw.getText().toString().trim();
 
@@ -186,7 +190,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                         Thread.sleep(2000);
                         connManager.setStatusText("최종 연결 성공!");
                         System.out.println("최종 연결 성공!");
-
                         SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
                         // 값을 편집하기 위한 Editor 객체 생성
                         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -200,7 +203,6 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                     }
 
                 });
-
                 connManager.setOnPingFailed(() -> {
                     CONNECT_STATE = false;
 
@@ -241,6 +243,132 @@ public class popup extends AppCompatActivity implements View.OnClickListener {
                 Toast.makeText(getApplicationContext(), "식물 등록 성공", Toast.LENGTH_LONG).show(); //토스트메시지 표시
             }
         });
+        receiveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { //데이터 값 받는 버튼
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            URL url = new URL(popup.url + "getTableData?name=manage_auto");
+                            HttpURLConnection urlConnection =urlConnection = (HttpURLConnection) url.openConnection();
+                            urlConnection.setRequestMethod("GET");
+                            urlConnection.connect();
+
+
+                            InputStream inputStream = urlConnection.getInputStream();
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                            String line;
+                            if (inputStream == null) {
+                                System.out.println("inputStream null");
+                                return;
+                            }
+                            StringBuilder responseData = new StringBuilder();
+                            while ((line = reader.readLine()) != null) {
+                                responseData.append(line);
+                            }
+                            reader.close();
+                            inputStream.close();
+                            urlConnection.disconnect();
+
+                            String parsed[] = responseData.toString().split("\\|");
+
+                            if (parsed[0].equals("ok") && parsed[1].equals("0")) {
+                                String dataString = parsed[2];
+                                JSONArray jsonArray = new JSONArray(dataString);
+                                if (jsonArray.length() > 0) {
+                                    JSONObject jsonObject = jsonArray.getJSONObject(0);
+
+                                    lightProgress = jsonObject.getInt("ld");
+                                    coolProgress = jsonObject.getInt("cd");
+                                    System.out.println("ld: " + lightProgress);
+                                    System.out.println("cd: " + coolProgress);
+                                    save(lightProgress, coolProgress);
+                                }
+                            }
+
+                            runOnUiThread(new Runnable() { //받아온 데이터 값 ui 적용
+                                @Override
+                                public void run() {
+                                    lightSeekBar.setProgress(lightProgress);
+                                    coolSeekBar.setProgress(coolProgress);
+                                }
+                            });
+
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
+        });
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //설정한 progrss bar 값 읽는거
+                lightProgress = lightSeekBar.getProgress();
+                coolProgress = coolSeekBar.getProgress();
+
+                System.out.println("lightProgress: " + lightProgress);
+                System.out.println("coolProgress: " + coolProgress);
+
+
+                String sendUrlString = url + "manageAutoSet?ld=" + lightProgress + "&cd=" + coolProgress;
+
+                //String sendUrlString= "https://zmzlqay.request.dreamhack.games"; //sample test
+
+                new Thread(new Runnable() { //http 통신 시작
+                    @Override
+                    public void run() {
+                        HttpURLConnection urlConnection = null;
+                        try {
+                            URL url = new URL(sendUrlString);
+                            urlConnection = (HttpURLConnection) url.openConnection();
+                            urlConnection.setRequestMethod("GET");
+                            int responseCode = urlConnection.getResponseCode();
+
+                            if(responseCode == HttpURLConnection.HTTP_OK){
+                                System.out.println("progress bar data 보내기 성공");
+                                save(lightProgress, coolProgress); //이 코드는 고민
+
+                            }
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } finally {
+                            if (urlConnection != null) {
+                                urlConnection.disconnect(); //http 연결 종ㅇㅇ료
+                            }
+                        }
+                    }
+                }).start();
+            }
+        });
+
+
+
+
+
+
+
+    }
+    @Override
+    public void onResume() { //새로고침 할 떄마다 로컬저장소에 있는 데이터 불러와서 ui 적용
+        super.onResume();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        lightProgress = sharedPreferences.getInt("lightProgress", 50); // Default value is 50
+        coolProgress = sharedPreferences.getInt("coolProgress", 50); // Default value is 50
+        waterProgress = sharedPreferences.getInt("waterProgress", 50); // Default value is 50
+
+        lightSeekBar.setProgress(lightProgress);
+        coolSeekBar.setProgress(coolProgress);
+    }
+    public void save(int lightProgress, int coolProgress){ //값 저장
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("lightProgress", lightProgress);
+        editor.putInt("coolProgress", coolProgress);
+        editor.apply();
     }
     public void onClick(View v){
         switch(v.getId()){

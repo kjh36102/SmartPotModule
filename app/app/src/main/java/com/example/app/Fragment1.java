@@ -1,8 +1,6 @@
 package com.example.app;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
+
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,7 +11,6 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -24,16 +21,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,13 +37,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.ProtocolException;
+
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -61,8 +54,9 @@ public class Fragment1 extends Fragment{
     public static ImageView noface ;
     public static ImageView angryface;
     Button rBtn;
-    AppCompatButton water;
+    AppCompatButton waterBtn;
     ToggleButton toggleButton;
+    boolean water,light0, light1;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -83,11 +77,11 @@ public class Fragment1 extends Fragment{
 
 
         rBtn = view.findViewById(R.id.rButton);
-        water = view.findViewById(R.id.nowWater);
+        waterBtn = view.findViewById(R.id.nowWater);
         toggleButton = view.findViewById(R.id.toggleButton);
         viewModel.getWaterState().observe(getViewLifecycleOwner(), state -> {
             //            water.setVisibility(state ? View.GONE : View.VISIBLE);
-            water.setEnabled(state ? false : true);
+            waterBtn.setEnabled(state ? false : true);
         });
 
         viewModel.getLightState().observe(getViewLifecycleOwner(), state -> {
@@ -99,12 +93,12 @@ public class Fragment1 extends Fragment{
         rBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                //if (popup.update_url != null && !popup.update_url.isEmpty()) {   //아두이노 IP를 알때만 사용가능
-                new updateRequest().execute();
-                //}
+                if (popup.url != null && !popup.url.isEmpty()) {//아두이노 IP를 알때만 사용가능
+                        new updateRequest().execute();
+                }
             }
         });
-        water.setOnClickListener(new View.OnClickListener(){
+        waterBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 new Thread (()->{
@@ -123,12 +117,25 @@ public class Fragment1 extends Fragment{
                             responseData.append(line);
                         }
                         reader.close();
-                        String parsed[] = line.split("|");
+                        String parsed[] = responseData.toString().split("\\|");
+
                         if( parsed[0].equals("ok")) {
-                            Toast.makeText(getContext(), "급수 완료", Toast.LENGTH_SHORT).show();
+                            Handler handler = new Handler(Looper.getMainLooper());
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getContext(), "급수 완료", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                         else if(parsed[0].equals("err")){
-                            Toast.makeText(getContext(), "급수 실패", Toast.LENGTH_SHORT).show();
+                            Handler handler = new Handler(Looper.getMainLooper());
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getContext(), "급수 실패", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                     } catch (SocketTimeoutException e) {
                         e.printStackTrace();
@@ -159,12 +166,24 @@ public class Fragment1 extends Fragment{
                                 responseData.append(line);
                             }
                             reader.close();
-                            String parsed[] = line.split("|");
+                            String parsed[] = responseData.toString().split("\\|");
                             if( parsed[0].equals("ok")) {
-                                Toast.makeText(getContext(), "조명 켜기 완료", Toast.LENGTH_SHORT).show();
+                                Handler handler = new Handler(Looper.getMainLooper());
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getContext(), "조명 켜기 완료", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                             else if(parsed[0].equals("err")){
-                                Toast.makeText(getContext(), "조명 켜기 실패", Toast.LENGTH_SHORT).show();
+                                Handler handler = new Handler(Looper.getMainLooper());
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getContext(), "조명 켜기 실패", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                         } catch (SocketTimeoutException e) {
                             e.printStackTrace();
@@ -191,12 +210,24 @@ public class Fragment1 extends Fragment{
                                 responseData.append(line);
                             }
                             reader.close();
-                            String parsed[] = line.split("|");
+                            String parsed[] = responseData.toString().split("\\|");
                             if( parsed[0].equals("ok")) {
-                                Toast.makeText(getContext(), "조명 끄기 완료", Toast.LENGTH_SHORT).show();
+                                Handler handler = new Handler(Looper.getMainLooper());
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getContext(), "조명 끄기 완료", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                             else if(parsed[0].equals("err")){
-                                Toast.makeText(getContext(), "조명 끄기 실패", Toast.LENGTH_SHORT).show();
+                                Handler handler = new Handler(Looper.getMainLooper());
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getContext(), "조명 끄기 실패", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                         } catch (SocketTimeoutException e) {
                             e.printStackTrace();
@@ -235,7 +266,7 @@ public class Fragment1 extends Fragment{
                 }
                 reader.close();
 
-                String[] parsed = line.split("\\|");
+                String parsed[] = responseData.toString().split("\\|");
                 if (parsed[0].equals("ok")) {
                     return popup.url;
                 } else if (parsed[0].equals("err")) {
@@ -266,52 +297,87 @@ public class Fragment1 extends Fragment{
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
+                //URL url = new URL(urls[0]);
                 URL url = new URL(urls[0]+"getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
                 InputStream inputStream = httpURLConnection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder responseData = new StringBuilder();
                 while ((line = bufferedReader.readLine()) != null) {
-                    stringBuilder.append(line);
+                    responseData.append(line);
                 }
                 bufferedReader.close();
                 inputStream.close();
                 httpURLConnection.disconnect();
-                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                resultHashMap.put("temp", jsonObject.getString("tm"));
-                resultHashMap.put("humid", jsonObject.getString("hm"));
-                resultHashMap.put("light", jsonObject.getString("lt"));
-                resultHashMap.put("ph", jsonObject.getString("ph"));
-                resultHashMap.put("nitro", jsonObject.getString("n"));
-                resultHashMap.put("phos", jsonObject.getString("p"));
-                resultHashMap.put("pota", jsonObject.getString("k"));
-                resultHashMap.put("ec", jsonObject.getString("ec"));
-                //resultHashMap.put("ts", jsonObject.getString("ts"));
 
-                URL url2 = new URL(urls[0] + "getTableData?name=plant_manage");
+                String parsed[] = responseData.toString().split("\\|");
+                if (parsed[0].equals("ok") && parsed[1].equals("0")) {
+                    String dataString = parsed[2];
+                    JSONArray jsonArray = new JSONArray(dataString);
+                    if (jsonArray.length() > 0) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(0);
+                        resultHashMap.put("temp", jsonObject.getString("tm"));
+                        resultHashMap.put("humid", jsonObject.getString("hm"));
+                        resultHashMap.put("light", jsonObject.getString("lt"));
+                        resultHashMap.put("ph", jsonObject.getString("ph"));
+                        resultHashMap.put("nitro", jsonObject.getString("n"));
+                        resultHashMap.put("phos", jsonObject.getString("p"));
+                        resultHashMap.put("pota", jsonObject.getString("k"));
+                        resultHashMap.put("ec", jsonObject.getString("ec"));
+                        resultHashMap.put("ts", jsonObject.getString("ts"));
+                    }
+                }
+
+                URL url2 = new URL(urls[0]+"getTableData?name=plant_manage");
                 HttpURLConnection httpURLConnection2 = (HttpURLConnection) url2.openConnection();
+
                 InputStream inputStream2 = httpURLConnection2.getInputStream();
                 BufferedReader bufferedReader2 = new BufferedReader(new InputStreamReader(inputStream2));
                 String line2;
-                StringBuilder stringBuilder2 = new StringBuilder();
+                StringBuilder responseData2 = new StringBuilder();
                 while ((line2 = bufferedReader2.readLine()) != null) {
-                    stringBuilder2.append(line2);
+                    responseData2.append(line2);
                 }
                 bufferedReader2.close();
                 inputStream2.close();
                 httpURLConnection2.disconnect();
 
-                JSONObject jsonObject2 = new JSONObject(stringBuilder2.toString());
-                if(jsonObject.getInt("w_auto") == 0)
-                    water.setEnabled(false);
-                else if(jsonObject.getInt("l_auto") == 0) {
-                    water.setEnabled(false);
-                    if(jsonObject.getInt("l_on") == 1)
-                        toggleButton.setChecked(true);
-                    else if (jsonObject.getInt("l_on") == 0)
-                        toggleButton.setChecked(false);
+                String parsed2[] = responseData2.toString().split("\\|");
+                if (parsed2[0].equals("ok") && parsed2[1].equals("0")) {
+                    String dataString2 = parsed2[2];
+                    JSONArray jsonArray2 = new JSONArray(dataString2);
+                    if (jsonArray2.length() > 0) {
+                        JSONObject jsonObject2 = jsonArray2.getJSONObject(0);
+                        System.out.println(jsonObject2);
+                        if (jsonObject2.optString("w_auto").equals("0")) {   //자동=1, 수동=0
+                            water = true;  //수동
+                            System.out.println("버튼 활성화");
+                        }
+                        else if (jsonObject2.optString("w_auto").equals("1")){
+                            water = false;
+                            System.out.println("버튼 비활성화");
+                        }
+
+                        if (jsonObject2.optString("l_auto").equals("0")) {
+                            light0=true;
+                            if (jsonObject2.optString("l_on").equals("1"))
+                                light1=true;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1=false;
+                        }
+                        else if (jsonObject2.optString("l_auto").equals("1")){
+                            light0=false;
+                            if (jsonObject2.optString("l_on").equals("1"))
+                                light1 = true;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1 = false;
+                        }
+
+                    }
                 }
+
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -356,42 +422,49 @@ public class Fragment1 extends Fragment{
             phosText.setText(phos);
             potaText.setText(pota);
             ecText.setText(ec);
-            //rTxt.setText(ts);
-            Calendar calendar = Calendar.getInstance();
-            SimpleDateFormat dateFormat=new SimpleDateFormat("마지막 업데이트 시간 : yyyy-MM-dd_HH:mm");
-            String dateTime = dateFormat.format(calendar.getTime());
-            rTxt.setText(dateTime);
-
-
-
-
+            if(ts != null)
+                rTxt.setText("마지막 업데이트 시간 : " + ts);  //서버의 업데이트시간 불러오기
+            else
+                rTxt.setText("");
+            waterBtn.setEnabled(water);
+            toggleButton.setEnabled(light0);
+            toggleButton.setChecked(light1);
             Fragment3.humid = humid;
             Fragment3.light = light;
 
 
-
-            ChatGPT chatGPT = new ChatGPT();
-            new Thread(){
-                public void run(){
-                    org.json.simple.JSONObject scoreResponse = chatGPT.score(popup.plant, Double.parseDouble(temp),  Double.parseDouble(humid),  Double.parseDouble(nitro),  Double.parseDouble(phos),  Double.parseDouble(pota),  Double.parseDouble(ph),  Double.parseDouble(ec),  Double.parseDouble(light));
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                JSONObject json = new JSONObject(scoreResponse);
-                                String scoreString = json.getString("총점");
-                                score = Float.parseFloat(scoreString);
-                                setFace();
-                                System.out.println(score);
-                            } catch (Exception e) {
-                                e.printStackTrace();
+            if (!popup.plant.equals("")) {
+                ChatGPT chatGPT = new ChatGPT();
+                new Thread() {
+                    public void run() {
+                        org.json.simple.JSONObject scoreResponse = chatGPT.score(popup.plant, Double.parseDouble(temp), Double.parseDouble(humid), Double.parseDouble(nitro), Double.parseDouble(phos), Double.parseDouble(pota), Double.parseDouble(ph), Double.parseDouble(ec), Double.parseDouble(light));
+                        Handler handler = new Handler(Looper.getMainLooper());
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    JSONObject json = new JSONObject(scoreResponse);
+                                    String scoreString = json.getString("총점");
+                                    score = Float.parseFloat(scoreString);
+                                    setFace();
+                                    System.out.println(score);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
-                        }
-                    });
-                }
-            }.start();
-
+                        });
+                    }
+                }.start();
+            }
+            else{
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getContext(), "식물이름 등록바람", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         }
     }
     public void setBlack(){
