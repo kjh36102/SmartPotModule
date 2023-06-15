@@ -1,10 +1,10 @@
 package com.example.app;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,7 +20,7 @@ public class ChatGPT {
     public ChatGPT(){
         try {
             this.url = new URL("https://api.openai.com/v1/chat/completions");
-            this.key = "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";
+            this.key = "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";
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -86,11 +86,9 @@ public class ChatGPT {
                 byte[] inputBytes = jsonRequest.getBytes("utf-8");
                 os.write(inputBytes, 0, inputBytes.length);
             }
-
             int responseCode = con.getResponseCode();
-            if (responseCode != 200) { // API 서버에서 응답 코드 가져오기
+            if (responseCode != 200)  // API 서버에서 응답 코드 가져오기
                 return "error 응답 코드 200x";
-            }
             try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"))) {// API 서버에서 응답을 읽습니다.
                 StringBuilder response = new StringBuilder();
                 String responseLine = null;

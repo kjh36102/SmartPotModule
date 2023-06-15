@@ -21,7 +21,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 
@@ -44,10 +43,9 @@ public class WifiConnectionManager {
         };
 
         public boolean hasAll() {
-            for (String permission : PERMISSIONS) {
+            for (String permission : PERMISSIONS)
                 if (ContextCompat.checkSelfPermission(activity.getApplicationContext(), permission) != PackageManager.PERMISSION_GRANTED)
                     return false;
-            }
             return true;
         }
 
@@ -68,9 +66,8 @@ public class WifiConnectionManager {
     private Exception currentException;
 
 
-    private ConnectivityManager hotspotConnManager;
+    private ConnectivityManager hotspotConnManager,externalConnManager;
     private ConnectivityManager.NetworkCallback hotspotNetworkCallback;
-    private ConnectivityManager externalConnManager;
     private ConnectivityManager.NetworkCallback externalNetworkCallback;
 
     WifiConnectionManager(Activity activity, TextView statusTextview) {//이 생성자는 WifiConnectionManager의 인스턴스를 생성한다.//이 생성자는 WifiConnectionManager의 인스턴스를 생성한다.
@@ -93,7 +90,7 @@ public class WifiConnectionManager {
     private void connectToNetwork(String ssid, String pw, int timeout, Runnable onSuccess, Runnable onUnAvailable, Runnable onLost) {
         initConn();
 
-    //이 메소드는 와이파이를 변경하고 상태에따라 다른 콜백을 호출한다. 직접 호출하지 않는다.
+        //이 메소드는 와이파이를 변경하고 상태에따라 다른 콜백을 호출한다. 직접 호출하지 않는다.
         WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder()
                 .setSsid(ssid);
 
@@ -146,7 +143,7 @@ public class WifiConnectionManager {
     public void sendExternalWifiInfo(String ssid, String pw, int connTimeout, Runnable onSuccess, Runnable onFailed, Runnable onError) {
         new Thread(() -> {  //이 메소드는 아두이노로 외부 네트워크 정보를 전송한다.
             try {
-                URL url = new URL("http://192.168.4.1:12344/regExtWifi?ssid=" + ssid + "&pw=" + pw);
+                URL url = new URL("http://192.168.4.1:12344/regExtWifi?ssid=" + ssid + "&pw=" + pw);  // 192.168.4.1은 SmartPotModule의 핫스팟IP
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(connTimeout);
@@ -189,12 +186,10 @@ public class WifiConnectionManager {
     public boolean listenAndACKtoUDP(int timeout) { //이 메소드는 아두이노의 Broadcast 메시지를 파싱하고 IP를 저장, 그 후 해당 IP를 타겟으로 삼아 ACK를 전송한다.
             DatagramSocket socket=null;
         try {   //UDP 리스닝 및 ACK응답
-
             socket = new DatagramSocket(12345);
             socket.setSoTimeout(timeout);
             byte[] buffer = new byte[128];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-
             String arduinoIP;
             while (true) {
                 socket.receive(packet);
@@ -230,7 +225,8 @@ public class WifiConnectionManager {
 
     public boolean sendPing(int timeout, String rememberedIP) {//이 메소드는 최종연결을 확인하기 위해 아두이노의 웹서버에 접속한다.
         try {
-            if (rememberedIP == null) return false;
+            if (rememberedIP == null)
+                return false;
             URL url = new URL("http://" + rememberedIP + ":12345/hello");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -246,7 +242,6 @@ public class WifiConnectionManager {
             }
             reader.close();
             String parsed[] = responseData.toString().split("\\|");
-
             if( parsed[0].equals("ok")) {
                 runIfNotNull(this.onPingSuccess);
                 if(parsed[1].equals("0"))
