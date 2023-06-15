@@ -12,24 +12,20 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-
         <TableRow
             android:layout_width="wrap_content"
             android:layout_height="100dp"
             android:layout_gravity="center"
             android:layout_marginTop="15dp">
-
             <ImageView
                 android:id="@+id/face1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
-
             <ImageView
                 android:id="@+id/face2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="20dp" />
-
             <ImageView
                 android:id="@+id/face3"
                 android:layout_width="wrap_content"
@@ -200,9 +196,7 @@
             android:text="업데이트"
             android:textColor="@color/black"
             android:textSize="18dp"/>
-
     </LinearLayout>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="100dp"

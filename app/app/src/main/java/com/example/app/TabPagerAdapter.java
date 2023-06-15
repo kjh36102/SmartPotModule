@@ -7,13 +7,16 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 public class TabPagerAdapter extends FragmentStateAdapter {
 
-    Fragment[] fragments = new Fragment[] { new Fragment1(), new Fragment2(), new Fragment3(), new Fragment4() };
+    Fragment[] fragments = new Fragment[] { new Fragment1(), new Fragment2(), new Fragment3() };
+    private final Fragment[] fragments;
 
     public TabPagerAdapter(@NonNull FragmentActivity fragmentActivity) { super(fragmentActivity);}
 
     @NonNull
     @Override
-    public Fragment createFragment(int position) { return fragments[position];}
+    public Fragment createFragment(int position) {
+        return fragments[position];
+    }
 
     @Override
     public int getItemCount() {
@@ -22,4 +25,10 @@ public class TabPagerAdapter extends FragmentStateAdapter {
 
 
 
+    public Fragment getFragment(int position) {    // Get fragment by position
+        if (position < 0 || position >= fragments.length) {
+            throw new IndexOutOfBoundsException("Invalid fragment index");
+        }
+        return fragments[position];
+    }
 }
