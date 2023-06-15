@@ -91,6 +91,8 @@ public class WifiConnectionManager {
     }
 
     private void connectToNetwork(String ssid, String pw, int timeout, Runnable onSuccess, Runnable onUnAvailable, Runnable onLost) {
+        initConn();
+
     //이 메소드는 와이파이를 변경하고 상태에따라 다른 콜백을 호출한다. 직접 호출하지 않는다.
         WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder()
                 .setSsid(ssid);
@@ -134,7 +136,6 @@ public class WifiConnectionManager {
     }
 
     public void connectToHotspot(String ssid, int timeout) { //이 메소드는 핫스팟에 연결하기위해 호출한다.
-        initConn();
         connectToNetwork(ssid, null, timeout, this.onHotspotAvailable, this.onHotspotUnAvailable, this.onHotspotLost);
     }
 

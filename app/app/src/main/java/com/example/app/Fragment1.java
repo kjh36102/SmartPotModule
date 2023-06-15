@@ -231,6 +231,55 @@ public class Fragment1 extends Fragment{
         });
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        new updateToggleButtonState().execute();
+    }
+    private class updateToggleButtonState extends AsyncTask<Void, Void, String>{
+        @Override
+        protected String doInBackground(Void... voids) {
+            try{
+                URL url2 = new URL(popup.url+"getTableData?name=plant_manage");
+                HttpURLConnection httpURLConnection2 = (HttpURLConnection) url2.openConnection();
+
+                InputStream inputStream2 = httpURLConnection2.getInputStream();
+                BufferedReader bufferedReader2 = new BufferedReader(new InputStreamReader(inputStream2));
+                String line2;
+                StringBuilder responseData2 = new StringBuilder();
+                while ((line2 = bufferedReader2.readLine()) != null) {
+                    responseData2.append(line2);
+                }
+                bufferedReader2.close();
+                inputStream2.close();
+                httpURLConnection2.disconnect();
+
+                String parsed2[] = responseData2.toString().split("\\|");
+                if (parsed2[0].equals("ok") && parsed2[1].equals("0")) {
+                    String dataString2 = parsed2[2];
+                    JSONArray jsonArray2 = new JSONArray(dataString2);
+                    if (jsonArray2.length() > 0) {
+                        JSONObject jsonObject2 = jsonArray2.getJSONObject(0); //자동=1, 수동=0
+                            if (jsonObject2.optString("l_on").equals("1"))
+                                light1=true;
+                            else if (jsonObject2.optString("l_on").equals("0"))
+                                light1=false;
+                    }
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        protected void onPostExecute(String result) {
+            toggleButton.setChecked(light1);
+        }
+    }
+
     private class updateRequest extends AsyncTask<Void, Void, String> {
         @Override
         protected String doInBackground(Void... params) {

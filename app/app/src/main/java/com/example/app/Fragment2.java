@@ -81,8 +81,8 @@ public class Fragment2 extends Fragment {
 
         if(popup.plant.equals("")){//식물 이름이 정해지지 않았을 경우
             textName.setText("");
-            textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
-            textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
+            textView1.setText("새로고침을 눌러 팁을 받아보세요!");
+            textView2.setText("새로고침을 눌러 피드백을 받아보세요!");
             btn.setVisibility(View.GONE);
             btn2.setVisibility(View.GONE);
             btn3.setVisibility(View.GONE);
@@ -142,14 +142,16 @@ public class Fragment2 extends Fragment {
             @Override
             public void onClick(View v) {//업데이트 클릭시 실행
                 if(popup.plant.equals("")){//이름이 비어있다면 실행
-                    textName.setText("");
-                    textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
-                    textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
-                    btn.setVisibility(View.GONE);
-                    btn2.setVisibility(View.GONE);
-                    btn3.setVisibility(View.GONE);
-                    btn4.setVisibility(View.GONE);
-                    rTxt.setVisibility(View.GONE);
+//                    textName.setText("");
+//                    textView1.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
+//                    textView2.setText("이름이 설정이 되지 않았습니다. 이름을 먼저 설정해주세요");
+//                    btn.setVisibility(View.GONE);
+//                    btn2.setVisibility(View.GONE);
+//                    btn3.setVisibility(View.GONE);
+//                    btn4.setVisibility(View.GONE);
+//                    rTxt.setVisibility(View.GONE);
+                    Toast.makeText(getContext(), "먼저 설정에서 식물 이름을 등록해주세요", Toast.LENGTH_SHORT).show();
+
                 }
                 else {
                     rTxt.setVisibility(View.VISIBLE);

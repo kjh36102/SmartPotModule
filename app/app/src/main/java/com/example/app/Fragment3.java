@@ -178,6 +178,9 @@ public class Fragment3 extends Fragment {
 
                 switch (position) { //첫번째 탭 선택 WATER
                     case 0:
+                        manuWaterData(() -> manuWaterArray());// 수동 급수 데이터 가져오기
+                        autoWaterData(); // 자동 급수 데이터 가져오기
+
                         curType = WATER;
                         checkBoxLight.setVisibility(View.GONE);
                         checkBoxWater.setVisibility(View.VISIBLE);
