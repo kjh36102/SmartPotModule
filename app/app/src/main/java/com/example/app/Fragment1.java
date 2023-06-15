@@ -411,7 +411,12 @@ public class Fragment1 extends Fragment{
         @Override
         public void onPostExecute(HashMap<String, String> resultHashMap) {
             mDataHashMap = resultHashMap;
-            updateDataTextView();
+            try {
+                if(mDataHashMap == null) throw new NullPointerException();    //튕기지는 않게 하려고 널체크 추가함
+                updateDataTextView();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
         }
     }
 
