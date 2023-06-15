@@ -138,6 +138,7 @@ void initNetwork(bool clearAll = false) {
       delay(200);
       NextOperationHandler::startTasks();
       SoilUpdater::getInstance().on();
+      TimeUpdater::getInstance().updateCurrentTime();
       connectPhase = ConnectPhase::COMPLETE;
       return;
     } else {

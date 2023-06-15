@@ -95,7 +95,7 @@ void setupSTARouters() {
       }
 
       bool setNearest = (serverSTA.arg("setNearest").equals("true")) ? true : false;
-      Serial.printf("최단시간적용 쿼리값: %s, 쿼리데이터 길이: %d\n", serverSTA.arg("setNearest").c_str(), serverSTA.arg("setNearest").length());
+      //Serial.printf("최단시간적용 쿼리값: %s, 쿼리데이터 길이: %d\n", serverSTA.arg("setNearest").c_str(), serverSTA.arg("setNearest").length());
 
       // 예외 처리: unitDay가 0이하인 경우
       if (unitDay <= 0) {

@@ -34,7 +34,6 @@ public:
       instance = new WaterJarController();  // 인스턴스 생성
       createAndRunTask(tOffWaterPump, "TaskOffWaterPump", 4000);
       createAndRunTask(tSimulateWaterLoad, "tSimulateWaterLoad", 3000);
-      // createAndRunTask(tTestWaterLevel, "tTestWaterLevel");
     }
     return *instance;
   }
@@ -48,29 +47,17 @@ public:
       return false;
     }
 
-    createAndRunTask(tFeedWater, "TaskFeedWater", 4000, 1, &ot);
+
+    int* pOt = new int(ot);
+    createAndRunTask(tFeedWater, "TaskFeedWater", 4000, 1, pOt);
     return true;
   }
-
-  // static void tTestWaterLevel(void* taskParams) {
-  //   WaterJarController& waterJar = WaterJarController::getInstance();
-
-  //   for (;;) {
-  //     LOGF("state: %d", waterJar.readWaterLevel());
-  //     vTaskDelay(250);
-  //   }
-  // }
 
   static void tOffWaterPump(void* taskParams) {
     WaterJarController& waterJar = WaterJarController::getInstance();
 
-    // digitalWrite(PIN_WATERJAR_RELAY_SIGNAL, HIGH);
-
-    // waterJar.off();
-    // vTaskDelay(100);
     waterJar.on();
     vTaskDelay(50);
-    // digitalWrite(PIN_WATERJAR_RELAY_SIGNAL, LOW);
     waterJar.off();
 
     vTaskDelete(NULL);
@@ -144,6 +131,7 @@ public:
 
     waterJar.off();
     vTaskDelete(NULL);
+    delete (int*)taskParams;
   }
 
   void on() {
@@ -182,7 +170,7 @@ public:
     LOGF("WaterLoadTime %d 로 설정됨!", waterLoadTime);
   }
 
-  bool isRunning(){
+  bool isRunning() {
     return waterPumpOn;
   }
 };

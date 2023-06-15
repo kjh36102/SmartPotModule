@@ -18,16 +18,13 @@ class TimeUpdater {
 private:
   static TimeUpdater* instance;
 
-  // SemaphoreHandle_t mutex;
-
-  TimeUpdater() {
-    // mutex = xSemaphoreCreateMutex();  // 뮤텍스 생성
-  }
+  TimeUpdater() { }
 
 public:
   static TimeUpdater& getInstance() {
     if (!instance) {
       instance = new TimeUpdater();
+      createAndRunTask(tTimeRenewer, "tTimeRenewer");
     }
     return *instance;
   }
@@ -40,73 +37,15 @@ public:
     return connState;
   }
 
-  // static void tUpdateCurrentTime(void* taskParams) {
-  //   TimeUpdater& timeUpdater = TimeUpdater::getInstance();
+  static void tTimeRenewer(void* taskParams) {
+    LOGLN("TimeRenewer Started..");
+    for (;;) {
+      TimeUpdater& timeUpdater = TimeUpdater::getInstance();
+      timeUpdater.updateCurrentTime();
 
-  //   // xSemaphoreTake(timeUpdater.mutex, portMAX_DELAY);  // 뮤텍스 획득
-
-  //   if (!timeUpdater.isConnectedToInternet()) {
-  //     Serial.println("Not connected to internet. Cannot update time.");
-  //     // xSemaphoreGive(timeUpdater.mutex);  // 뮤텍스 반환
-  //     vTaskDelete(NULL);
-  //   }
-
-  //   configTime(9 * 3600, 0, "pool.ntp.org");  // 9 * 3600은 KST의 UTC 오프셋입니다.
-
-  //   while (!time(nullptr)) {
-  //     // Serial.println("Waiting for time synchronization...");
-  //     delay(100);
-  //   }
-
-  //   Serial.println("Current time updated.");
-
-  //   // //시간업데이트가 끝나면 db에 soil_data의 ts, manage_light, manage_water 테이블의 next opertaion칼럼도 변경해줘야함
-  //   // timeUpdater.updateTableTimestamp("soil_data", "ts");
-  //   // timeUpdater.updateTableTimestamp("manage_light", "no");
-  //   // timeUpdater.updateTableTimestamp("manage_water", "no");
-
-  //   // xSemaphoreGive(timeUpdater.mutex);  // 뮤텍스 반환
-
-  //   vTaskDelete(NULL);
-  // }
-
-  // void updateTableTimestamp(const char* tableName, const char* colName) {
-  //   DB_Manager& dbManager = DB_Manager::getInstance();
-  //   DynamicJsonDocument doc(DB_RESULT_BUFFER_SIZE);
-
-  //   char sqlBuffer[100];
-
-  //   //  업데이트
-  //   sprintf(sqlBuffer, "select id, %s from %s", colName, tableName);
-  //   dbManager.execute(sqlBuffer);
-  //   char* result = dbManager.getResult();
-
-  //   if (deserializeJson(doc, result) == DeserializationError::Ok) {
-  //     if (doc.is<JsonArray>()) {
-  //       JsonArray jsonArray = doc.as<JsonArray>();
-
-  //       for (JsonVariant value : jsonArray) {
-  //         int id = value["id"];
-  //         const char* oldTimestamp = value[colName];
-
-  //         // ts 값을 업데이트
-  //         sprintf(sqlBuffer, "update %s set ts='%s' where id=%d", tableName, getReplaceOldTime(oldTimestamp).c_str(), id);
-  //       }
-  //       if (dbManager.execute(sqlBuffer) == SQLITE_OK) {
-  //         LOGF("%s 테이블 시간 업데이트 완료\n", tableName);
-  //       }
-  //     }
-  //   } else {
-  //     LOGF("RESULT: %s\n", result);
-  //     if (result == NULL) {
-  //       LOGF("TimeUpdater json 레코드 없음, 테이블이름: %s\n", tableName);
-  //     } else {
-  //       LOGF("TimeUpdater json 파싱 오류, 테이블이름: %s\n", tableName);
-  //     }
-  //   }
-
-  //   doc.clear();  // 동적으로 할당된 메모리 해제
-  // }
+      vTaskDelay(300000); //5분마다 시간 업데이트
+    }
+  }
 
 
   bool updateCurrentTime() {
@@ -116,7 +55,7 @@ public:
       return false;
     }
 
-    configTime(9 * 3600, 0, "pool.ntp.org");  // 9 * 3600은 KST의 UTC 오프셋입니다.
+    configTime(9 * 3600, 0, "pool.ntp.org");  // 9 * 3600은 한국시간
 
     while (!time(nullptr)) {  //시간 업데이트 대기
       delay(10);

@@ -126,8 +126,6 @@ public:
         case ConnectPhase::IDLE:
           digitalWrite(PIN_CONN_LED, HIGH);
           break;
-        // case ConnectPhase::REFRESH:
-        //   blinkLedNtime(1, 100, 0);
       }
 
       vTaskDelay(1);

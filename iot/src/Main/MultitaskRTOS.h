@@ -60,10 +60,10 @@ extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskNa
   LOG("\tTask name: ");
   LOGLN(pcTaskName);
 
-  // 여기서 추가로 오류 처리를 수행할 수 있습니다.
-  // 예를 들어, 시스템을 재시작하거나 오류 로그를 저장할 수 있습니다.
+  // 여기서 추가로 오류 처리를 수행
+  // 시스템을 재시작하거나 오류 로그를 저장
 
-  for(;;); // 오류를 루프에서 알립니다.
+  for(;;); // 루프를통해 동작멈추기
 }
 
 

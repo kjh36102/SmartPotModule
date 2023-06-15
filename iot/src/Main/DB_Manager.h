@@ -109,8 +109,8 @@ private:
 
     sqlite3_free(DBErrMsg);
 
-    Serial.print(("\t소요 시간(ms):"));
-    Serial.println(millis() - start);
+    // //Serialprint(("\t소요 시간(ms):"));
+    // //Serialprintln(millis() - start);
     return rc;
   }
 
@@ -230,8 +230,8 @@ public:
 
       // 추가: 오류 체크
       if (err) {
-        Serial.print(("deserializeJson() failed with code "));
-        Serial.println(err.c_str());
+        // //Serialprint(("deserializeJson() failed with code "));
+        // //Serialprintln(err.c_str());
         doc.clear();  // 실패했더라도 사용한 메모리는 해제
         return -3;
       }
@@ -246,29 +246,7 @@ public:
     }
   }
 
-  // void prepareTable(const char* tableName, const __FlashStringHelper* tableSql, const __FlashStringHelper* dataSql, bool dataEssential = true) {
-  //   int count;
-  //   count = getTableRecordCount(tableName);
-
-  //   if (count == -2) {
-  //     LOGLN("DB가 열려있지 않아 테이블 초기화 불가능");
-  //     return;
-  //   } else if (count > 0) {
-  //     LOGF("테이블 %s 이미 초기화됨\n", tableName);
-  //     return;
-  //   }
-
-  //   if (count == -1) {  // 테이블이 없는 경우 테이블 생성 후 데이터생성
-  //     execute(reinterpret_cast<const char*>(tableSql));
-  //     if (dataEssential) execute(reinterpret_cast<const char*>(dataSql));
-  //   } else if (count == 0) {  //테이블이 있는경우는 데이터만 생성
-  //     if (dataEssential) execute(reinterpret_cast<const char*>(dataSql));
-  //   }
-
-  //   LOGF("테이블 %s 초기화 완료\n", tableName);
-  // }
-
-  void prepareTable(const char* tableName, const char* tableSql, const char* dataSql, bool dataEssential = true) {
+  void prepareTable(const char* tableName, const __FlashStringHelper* tableSql, const __FlashStringHelper* dataSql, bool dataEssential = true) {
     int count;
     count = getTableRecordCount(tableName);
 
@@ -281,10 +259,10 @@ public:
     }
 
     if (count == -1) {  // 테이블이 없는 경우 테이블 생성 후 데이터생성
-      execute(tableSql);
-      if (dataEssential) execute(dataSql);
+      execute(reinterpret_cast<const char*>(tableSql));
+      if (dataEssential) execute(reinterpret_cast<const char*>(dataSql));
     } else if (count == 0) {  //테이블이 있는경우는 데이터만 생성
-      if (dataEssential) execute(dataSql);
+      if (dataEssential) execute(reinterpret_cast<const char*>(dataSql));
     }
 
     LOGF("테이블 %s 초기화 완료\n", tableName);
@@ -313,8 +291,8 @@ public:
     DeserializationError err = deserializeJson(doc, results);
 
     if (err) {
-      Serial.print(F("deserializeJson() failed with code "));
-      Serial.println(err.c_str());
+      // //Serialprint(F("deserializeJson() failed with code "));
+      // //Serialprintln(err.c_str());
       return -3;
     }
 
@@ -345,8 +323,8 @@ public:
 
     // 에러 체크
     if (error) {
-      Serial.print(("deserializeJson() failed with code "));
-      Serial.println(error.c_str());
+      //Serialprint(("deserializeJson() failed with code "));
+      //Serialprintln(error.c_str());
       return JsonObject();
     }
 
@@ -372,8 +350,8 @@ public:
 
     // 에러 체크
     if (error) {
-      Serial.print(("deserializeJson() failed with code "));
-      Serial.println(error.c_str());
+      //Serialprint(("deserializeJson() failed with code "));
+      //Serialprintln(error.c_str());
       return std::map<std::string, std::string>();  // 실패시 빈 맵 반환
     }
 
@@ -398,55 +376,29 @@ public:
 
 
   void initTables() {
-    // prepareTable("soil_data",
-    //              F("CREATE TABLE IF NOT EXISTS soil_data (id INTEGER PRIMARY KEY AUTOINCREMENT, tm REAL, hm REAL, n REAL, p REAL, k REAL, ph REAL, ec INTEGER, lt INTEGER, ts TEXT DEFAULT (datetime('now','localtime')))"),
-    //              F("INSERT INTO soil_data(id,tm,hm,n,p,k,ph,ec,lt) VALUES (0,0,0,0,0,0,0,0,0)"));
-
-    // prepareTable("wifi_info",
-    //              F("CREATE TABLE wifi_info (id INTEGER PRIMARY KEY, ssid_ap TEXT, pw_ap TEXT, ssid_sta TEXT, pw_sta TEXT, phone_ip TEXT)"),
-    //              F("INSERT INTO wifi_info VALUES(0, 'SmartPotModule', '', '', '', '')"));
-
-    // prepareTable("plant_manage",
-    //              F("CREATE TABLE IF NOT EXISTS plant_manage (id INTEGER PRIMARY KEY, w_auto INTEGER, l_auto INTEGER, w_on INTEGER, l_on INTEGER)"),
-    //              F("INSERT INTO plant_manage VALUES(0, 0, 0, 0, 0)"));
-
-    // prepareTable("manage_auto",
-    //              F("CREATE TABLE IF NOT EXISTS manage_auto (id INTEGER PRIMARY KEY, hm REAL, th REAL, lt INTEGER, dr INTEGER, ot INTEGER, ld INTEGER, cd INTEGER)"),
-    //              F("INSERT INTO manage_auto VALUES(0, 0, 0, 0, 0, 0, 0, 0)"));
-
-    // prepareTable("manage_water",
-    //              F("CREATE TABLE IF NOT EXISTS manage_water (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, wt INTEGER, no TEXT)"),
-    //              NULL,
-    //              false);
-
-    // prepareTable("manage_light",
-    //              F("CREATE TABLE IF NOT EXISTS manage_light (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, ls INTEGER, no TEXT)"),
-    //              NULL,
-    //              false);
-
     prepareTable("soil_data",
-                 ("CREATE TABLE IF NOT EXISTS soil_data (id INTEGER PRIMARY KEY AUTOINCREMENT, tm REAL, hm REAL, n REAL, p REAL, k REAL, ph REAL, ec INTEGER, lt INTEGER, ts TEXT DEFAULT (datetime('now','localtime')))"),
-                 ("INSERT INTO soil_data(id,tm,hm,n,p,k,ph,ec,lt) VALUES (0,0,0,0,0,0,0,0,0)"));
+                 F("CREATE TABLE IF NOT EXISTS soil_data (id INTEGER PRIMARY KEY AUTOINCREMENT, tm REAL, hm REAL, n REAL, p REAL, k REAL, ph REAL, ec INTEGER, lt INTEGER, ts TEXT DEFAULT (datetime('now','localtime')))"),
+                 F("INSERT INTO soil_data(id,tm,hm,n,p,k,ph,ec,lt) VALUES (0,0,0,0,0,0,0,0,0)"));
 
     prepareTable("wifi_info",
-                 ("CREATE TABLE wifi_info (id INTEGER PRIMARY KEY, ssid_ap TEXT, pw_ap TEXT, ssid_sta TEXT, pw_sta TEXT, phone_ip TEXT)"),
-                 ("INSERT INTO wifi_info VALUES(0, 'SmartPotModule', '', '', '', '')"));
+                 F("CREATE TABLE wifi_info (id INTEGER PRIMARY KEY, ssid_ap TEXT, pw_ap TEXT, ssid_sta TEXT, pw_sta TEXT, phone_ip TEXT)"),
+                 F("INSERT INTO wifi_info VALUES(0, 'SmartPotModule', '', '', '', '')"));
 
     prepareTable("plant_manage",
-                 ("CREATE TABLE IF NOT EXISTS plant_manage (id INTEGER PRIMARY KEY, w_auto INTEGER, l_auto INTEGER, w_on INTEGER, l_on INTEGER)"),
-                 ("INSERT INTO plant_manage VALUES(0, 0, 0, 0, 0)"));
+                 F("CREATE TABLE IF NOT EXISTS plant_manage (id INTEGER PRIMARY KEY, w_auto INTEGER, l_auto INTEGER, w_on INTEGER, l_on INTEGER)"),
+                 F("INSERT INTO plant_manage VALUES(0, 0, 0, 0, 0)"));
 
     prepareTable("manage_auto",
-                 ("CREATE TABLE IF NOT EXISTS manage_auto (id INTEGER PRIMARY KEY, hm REAL, th REAL, lt INTEGER, dr INTEGER, ot INTEGER, ld INTEGER, cd INTEGER)"),
-                 ("INSERT INTO manage_auto VALUES(0, 0, 0, 0, 0, 0, 0, 0)"));
+                 F("CREATE TABLE IF NOT EXISTS manage_auto (id INTEGER PRIMARY KEY, hm REAL, th REAL, lt INTEGER, dr INTEGER, ot INTEGER, ld INTEGER, cd INTEGER)"),
+                 F("INSERT INTO manage_auto VALUES(0, 25, 5, 1000, 5, 3, 0, 0)"));
 
     prepareTable("manage_water",
-                 ("CREATE TABLE IF NOT EXISTS manage_water (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, wt INTEGER, no TEXT)"),
+                 F("CREATE TABLE IF NOT EXISTS manage_water (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, wt INTEGER, no TEXT)"),
                  NULL,
                  false);
 
     prepareTable("manage_light",
-                 ("CREATE TABLE IF NOT EXISTS manage_light (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, ls INTEGER, no TEXT)"),
+                 F("CREATE TABLE IF NOT EXISTS manage_light (id INTEGER PRIMARY KEY, ud INTEGER, st TEXT, ls INTEGER, no TEXT)"),
                  NULL,
                  false);
   }

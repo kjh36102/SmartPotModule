@@ -81,12 +81,6 @@ public:
     int secondsToNextMinute = 60 - handler.timeUpdater->getCurrentSeconds();
     vTaskDelay(secondsToNextMinute * 1000 / portTICK_PERIOD_MS);
 
-    // Get the current tick count
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-
-    // Define the delay period in ticks (1000 ticks per second, so 60000 for one minute)
-    const TickType_t xDelay = 60000 / portTICK_PERIOD_MS;
-
     while (NextOperationHandler::runningFlag) {
 
       handler.dbManager->execute("select pm.l_on, pm.w_on, pm.l_auto, pm.w_auto, ma.lt, ma.dr, ma.hm, ma.th from plant_manage pm, manage_auto ma");
@@ -121,8 +115,13 @@ public:
       }
       handler.prevWaterAuto = w_auto;
 
-      // Delay until the next period
-      vTaskDelayUntil(&xLastWakeTime, xDelay);
+      int currentSeconds = handler.timeUpdater->getCurrentSeconds();
+
+      int secondsToNextMinute = 60 - currentSeconds;
+
+      TickType_t delayTicks = secondsToNextMinute * 1000 / portTICK_PERIOD_MS;
+
+      vTaskDelay(delayTicks);
     }
 
     vTaskDelete(NULL);
@@ -152,24 +151,23 @@ public:
   }
 
   void handleLightManual() {
-    // Get data from the database
     std::vector<NextOperData> data = getDataFromDB("manage_light", "ls");
 
     if (!data.empty()) {
-      // Get the current timestamp
       String currentTimestamp = timeUpdater->getCurrentTimeNoSecond();
 
       LOGF("Handling Light Manual... CurrentTime: %s\n", currentTimestamp.c_str());
 
-      // Go through each record and check if the timestamp matches the current time
+      bool foundRecord = false;  
+      bool shouldTurnOn = false;  
+
       for (NextOperData& record : data) {
         if (strcmp(record.no, currentTimestamp.c_str()) == 0) {
-          // If the timestamp matches, control the light based on the value
+          foundRecord = true;
           LOGF("\tHandling Light Manual founds same time: %s\n", record.no);
+
           if (record.val == 1) {
-            lightStand->on();
-          } else {
-            lightStand->off();
+            shouldTurnOn = true;
           }
 
           //디버깅용, 원래 0 못들어옴
@@ -182,6 +180,14 @@ public:
 
           dbManager->execute(sqlBuffer);
           LOGLN("nextHandler Light no updated");
+        }
+      }
+
+      if (foundRecord) {
+        if (shouldTurnOn) {
+          lightStand->on();
+        } else {
+          lightStand->off();
         }
       }
     }
@@ -248,13 +254,17 @@ public:
 
       LOGF("Handling Water Manual... CurrentTime: %s\n", currentTimestamp.c_str());
 
-      // Go through each record and check if the timestamp matches the current time
+      bool foundRecord = false;  
+      int maxVal = -1;           
+
       for (NextOperData& record : data) {
         if (strcmp(record.no, currentTimestamp.c_str()) == 0) {
-          // If the timestamp matches, control the light based on the value
+          foundRecord = true;
           LOGF("\tHandling Water Manual founds same time: %s\n", record.no);
 
-          waterJar->feed(record.val * 1000);
+          if (record.val > maxVal) {
+            maxVal = record.val;
+          }
 
           //디버깅용, 원래 0 못들어옴
           if (record.ud == 0) record.ud = 1;
@@ -267,6 +277,10 @@ public:
           dbManager->execute(sqlBuffer);
           LOGLN("nextHandler Water no updated");
         }
+      }
+
+      if (foundRecord) {
+        waterJar->feed(maxVal * 1000);
       }
     }
   }
@@ -282,8 +296,7 @@ public:
     if (dbManager->execute(sqlCommand.c_str()) == SQLITE_OK) {
       char* result = dbManager->getResult();
 
-      // Parse the result JSON
-      StaticJsonDocument<DB_RESULT_BUFFER_SIZE> doc;  // Change the size to fit your JSON
+      StaticJsonDocument<DB_RESULT_BUFFER_SIZE> doc;  
       DeserializationError error = deserializeJson(doc, result);
 
       if (error) {
