@@ -42,17 +42,10 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.HashMap;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link Fragment1#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class Fragment1 extends Fragment{
     public static HashMap<String, String> mDataHashMap;
     public static float score;
-    public static ImageView smileface;
-    public static ImageView noface ;
-    public static ImageView angryface;
+    public static ImageView smileface,noface, angryface;
     Button rBtn;
     AppCompatButton waterBtn;
     ToggleButton toggleButton;
@@ -60,13 +53,11 @@ public class Fragment1 extends Fragment{
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_1, container, false);
         smileface=view.findViewById(R.id.face1);
         noface = view.findViewById(R.id.face2);
         angryface =view.findViewById(R.id.face3);
         setBlack();
-
         return view;
     }
 
@@ -74,28 +65,21 @@ public class Fragment1 extends Fragment{
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         SharedViewModel viewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
-
-
         rBtn = view.findViewById(R.id.rButton);
         waterBtn = view.findViewById(R.id.nowWater);
         toggleButton = view.findViewById(R.id.toggleButton);
         viewModel.getWaterState().observe(getViewLifecycleOwner(), state -> {
-            //            water.setVisibility(state ? View.GONE : View.VISIBLE);
             waterBtn.setEnabled(state ? false : true);
         });
-
         viewModel.getLightState().observe(getViewLifecycleOwner(), state -> {
-            //            toggleButton.setVisibility(state ? View.GONE : View.VISIBLE);
             toggleButton.setEnabled(state ? false : true);
-
         });
 
         rBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                if (popup.url != null && !popup.url.isEmpty()) {//아두이노 IP를 알때만 사용가능
+                if (popup.url != null && !popup.url.isEmpty()) //아두이노 IP를 알때만 사용가능
                         new updateRequest().execute();
-                }
             }
         });
         waterBtn.setOnClickListener(new View.OnClickListener(){
@@ -143,7 +127,6 @@ public class Fragment1 extends Fragment{
                         e.printStackTrace();
                     }
                 }).start();
-                System.out.println("급수 테스트 코드");
             }
         });
         toggleButton.setOnClickListener(new View.OnClickListener(){
@@ -191,7 +174,6 @@ public class Fragment1 extends Fragment{
                             e.printStackTrace();
                         }
                     }).start();
-                    System.out.println("조명켜짐");
                 }
                 else {
                     new Thread (()->{
@@ -235,15 +217,16 @@ public class Fragment1 extends Fragment{
                             e.printStackTrace();
                         }
                     }).start();
-                    System.out.println("조명꺼짐");
                 }
             }
         });
         toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {toggleButton.setBackgroundColor(Color.rgb(255,165,0));}
-                else {toggleButton.setBackgroundColor(Color.LTGRAY);}
+                if (isChecked)
+                    toggleButton.setBackgroundColor(Color.rgb(255,165,0));
+                else
+                    toggleButton.setBackgroundColor(Color.LTGRAY);
             }
         });
     }
@@ -267,11 +250,10 @@ public class Fragment1 extends Fragment{
                 reader.close();
 
                 String parsed[] = responseData.toString().split("\\|");
-                if (parsed[0].equals("ok")) {
+                if (parsed[0].equals("ok"))
                     return popup.url;
-                } else if (parsed[0].equals("err")) {
+                 else if (parsed[0].equals("err"))
                     return null;
-                }
                 connection.disconnect();
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
@@ -286,9 +268,8 @@ public class Fragment1 extends Fragment{
             if (result != null) {
                 new GetJsonDataTask().execute(result);
                 Toast.makeText(getContext(), "측정 완료", Toast.LENGTH_SHORT).show();                // 측정 완료 toast메시지 출력
-            } else {
+            } else
                 Toast.makeText(getContext(), "측정 실패", Toast.LENGTH_SHORT).show();                // 측정 실패 toast메시지 출력
-            }
         }
     }
     private class GetJsonDataTask extends AsyncTask<String, Void, HashMap<String, String>> {
@@ -297,7 +278,6 @@ public class Fragment1 extends Fragment{
             mDataHashMap=null;
             HashMap<String, String> resultHashMap = new HashMap<>();
             try {
-                //URL url = new URL(urls[0]);
                 URL url = new URL(urls[0]+"getTableData?name=soil_data");
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
 
@@ -349,17 +329,11 @@ public class Fragment1 extends Fragment{
                     String dataString2 = parsed2[2];
                     JSONArray jsonArray2 = new JSONArray(dataString2);
                     if (jsonArray2.length() > 0) {
-                        JSONObject jsonObject2 = jsonArray2.getJSONObject(0);
-                        System.out.println(jsonObject2);
-                        if (jsonObject2.optString("w_auto").equals("0")) {   //자동=1, 수동=0
-                            water = true;  //수동
-                            System.out.println("버튼 활성화");
-                        }
-                        else if (jsonObject2.optString("w_auto").equals("1")){
+                        JSONObject jsonObject2 = jsonArray2.getJSONObject(0); //자동=1, 수동=0
+                        if (jsonObject2.optString("w_auto").equals("0"))
+                            water = true;   //수동
+                        else if (jsonObject2.optString("w_auto").equals("1"))
                             water = false;
-                            System.out.println("버튼 비활성화");
-                        }
-
                         if (jsonObject2.optString("l_auto").equals("0")) {
                             light0=true;
                             if (jsonObject2.optString("l_on").equals("1"))
@@ -374,10 +348,8 @@ public class Fragment1 extends Fragment{
                             else if (jsonObject2.optString("l_on").equals("0"))
                                 light1 = false;
                         }
-
                     }
                 }
-
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -447,7 +419,6 @@ public class Fragment1 extends Fragment{
                                     String scoreString = json.getString("총점");
                                     score = Float.parseFloat(scoreString);
                                     setFace();
-                                    System.out.println(score);
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }

@@ -13,17 +13,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#048808">
-
         <TextView
             android:id="@+id/toolbar_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
             android:includeFontPadding="false"
-            android:text="@string/title_name"
+            android:text="SmartPotModule"
             android:textColor="@color/white"
             android:textSize="25sp"/>
-
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/wifi_button"
             android:layout_width="50dp"
@@ -44,23 +42,21 @@
             android:id="@+id/tab1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/dashboard"/>
+            android:text="대시보드"/>
         <com.google.android.material.tabs.TabItem
             android:id="@+id/tab2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/detail_review" />
+            android:text="상세분석" />
         <com.google.android.material.tabs.TabItem
             android:id="@+id/tab3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/pot_manage" />
+            android:text="식물관리" />
     </com.google.android.material.tabs.TabLayout>
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-
-
 </LinearLayout>
